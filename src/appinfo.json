@@ -6,7 +6,6 @@
   "vendorurl":"http://www.tegi-stuff.de",
   "main":"index.html",
   "icon":"icon.png",
-  "miniicon":"miniicon.png",
   "type":"web",
   "theme":"light",
   "noWindow":true,

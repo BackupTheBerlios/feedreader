@@ -6,7 +6,9 @@ var prefs = Class.create({
 	timer: {},
 	
 	initialize: function() {
-		this.cookie = new Mojo.Model.Cookie("comtegi-stuffAppFeedReaderPrefs");		
+		this.cookie = new Mojo.Model.Cookie("comtegi-stuffAppFeedReaderPrefs");
+		this.setTimerSuccessHandler = this.setTimerSuccess.bind(this);
+		this.setTimerFailedHandler  = this.setTimerFailed.bind(this);
 	},
 	
 	load: function() {
@@ -26,6 +28,14 @@ var prefs = Class.create({
 			wakingEnabled: this.wakingEnabled
 		});
 		this.setTimer();
+	},
+	
+	setTimerSuccess: function(response) {
+		Mojo.Log.info("Timer successfully set");
+	},
+	
+	setTimerFailed: function(reponse) {
+		Mojo.Log.warn("Unable to set timer:", response);
 	},
 	
 	setTimer: function() {
@@ -60,12 +70,8 @@ var prefs = Class.create({
 						}
                     }
                 },
-                onSuccess: function(response) {
-					Mojo.Log.info("timer sucessfully set");
-				},
-                onFailure: function(response) {
-                    Mojo.Log.info("Unable to set timer", response.returnValue, response.errorText);
-                }
+                onSuccess: this.setTimerSuccessHandler,
+                onFailure: this.setTimerFailedHandler
             });
         } else {
 			this.timer = new Mojo.Service.Request("palm://com.palm.power/timeout", {
@@ -73,12 +79,9 @@ var prefs = Class.create({
 				parameters: {
 					"key": "com.tegi-stuff.feedreader.timer"
 				},
-				onSuccess: function(response) {
-					Mojo.Log.info("timer sucessfully set");
-				},
-				onFailure: function(response) {
-					Mojo.Log.info("Unable to set timer", response.returnValue, response.errorText);
-				}});
+				onSuccess: this.setTimerSuccessHandler,
+                onFailure: this.setTimerFailedHandler
+			});
 		}	
 	}
 });
