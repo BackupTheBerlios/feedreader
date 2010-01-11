@@ -391,11 +391,10 @@ var feeds = Class.create ({
 					this.list[index].type = "atom";		// ATOM
 				} else {
 					if (this.interactiveUpdate) {
-						var errorMsg = new Template($L("The format of Feed '#{title}' is unsupported. The Feed was automatically disabled."));
+						var errorMsg = new Template($L("The format of Feed '#{title}' is unsupported."));
 						FeedReader.showError(errorMsg, {title: this.list[index].url});
 					}
 					Mojo.Log.warn("Unsupported feed format in", this.list[index].url);
-					this.list[index].enabled = false;
 					this.list[index].type = "unknown";
 					return false;
 				}

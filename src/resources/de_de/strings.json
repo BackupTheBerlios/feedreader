@@ -31,4 +31,15 @@
 	"Wake device": "Gerät einschalten",
 	"Show notification": "Benarichtigungen anzeigen",
 	"FeedReader Preferences": "FeedReader Einstellungen",
+	"The format of Feed '#{title}' is unsupported.": "Das Format des Feeds '#{title}' ist unbekannt.",
+	"Update": "Aktualisieren",
+	"The Feed '#{title}' could not be retrieved. The server responded: #{err}. The Feed was automatically disabled.": "Der Feed '#{title}' konnte nicht abgerufen werden. Der Server antwortete: #{err}. Der Feed wurde deaktiviert.",
+	"Bad Request": "Fehlerhafte Anfrage",
+	"Unauthorized": "Nicht authorisiert",
+	"Forbidden": "Kein Zugriff",
+	"Not Found": "Nicht gefunden",
+	"Method Not Allowed": "Anfrage nicht erlaubt",
+	"Not Acceptable": "Anfrage nicht akzeptiert",
+	"Server error": "Serverfehler",
+	"Unexpected error": "Unerwarteter Fehler"
 }

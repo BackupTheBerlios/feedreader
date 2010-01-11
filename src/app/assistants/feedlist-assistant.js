@@ -94,6 +94,7 @@ FeedlistAssistant.prototype.showFeed = function(event) {
 	        {label: $L("Mark all unread"), command: "feed-unread"},
 	        {label: $L("Mark all read"), command: "feed-read"},
 	        {label: $L("Edit"), command: "feed-edit"},
+			{label: $L("Update"), command: "feed-update"},
 	        {label: $L("Show"), command: "feed-show"}
 	        ]
 	      });
@@ -134,6 +135,10 @@ FeedlistAssistant.prototype.popupHandler = function(command) {
 			
 		case "feed-unread":
 			this.feeds.markAllUnRead(this.popupIndex);
+			break;
+			
+		case "feed-update":
+			this.feeds.updateFeed(this.popupIndex);
 			break;
 			
 		case "feed-show":
