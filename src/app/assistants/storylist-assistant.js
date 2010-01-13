@@ -2,7 +2,8 @@ function StorylistAssistant(feeds, index) {
 	this.feeds = feeds;
 	this.feedIndex = index;
 	
-	this.feed = feeds.list[index];
+	this.feed = this.feeds.list[index];
+	this.filter = "";
 }
 
 StorylistAssistant.prototype.setup = function() {
@@ -19,13 +20,16 @@ StorylistAssistant.prototype.setup = function() {
 			},
             swipeToDelete:	false, 
             renderLimit: 	40,
-            reorderable:	false
+            reorderable:	false,
+			delay:			700,
+			filterFunction: this.listFind.bind(this)	
         },
-        this.storyListModel = {items: this.feed.stories});
+        this.storyListModel = {
+			items: this.feed.stories
+	});
 		
     this.controller.listen("storyList", Mojo.Event.listTap,
         				   this.showStory.bindAsEventListener(this));
-
 	this.controller.get("feed-title").update(this.feed.title);
 
 	for(var i = 0; i < this.feed.stories.length; i++) {
@@ -52,6 +56,28 @@ StorylistAssistant.prototype.listFormatter = function(property, model) {
 		model.titleStyle = "story-title-unread";
 		model.contentStyle = "story-content-unread";
 	}
+};
+
+StorylistAssistant.prototype.listFind = function(filterString, listWidget, offset, count) {
+	var subset = [];
+	var totalSubsetSize = 0;
+	var lwrFilterString = filterString.toLowerCase();
+	
+	for(var i = 0; i < this.feed.stories.length; i++) {
+		if (this.feed.stories[i].title.toLowerCase().include(lwrFilterString)) {
+			if ((subset.length < count) && (totalSubsetSize >= offset)) {
+				subset.push(this.feed.stories[i]);
+			}
+			totalSubsetSize++;
+		}
+	}
+	listWidget.mojo.noticeUpdatedItems(offset, subset);
+	
+	if (this.filter !== filterString) {
+		listWidget.mojo.setLength(totalSubsetSize);
+		listWidget.mojo.setCount(totalSubsetSize);
+	}
+	this.filter = filterString;
 };
 
 StorylistAssistant.prototype.showStory = function(event) {

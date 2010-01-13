@@ -1,6 +1,7 @@
 function FeedlistAssistant(feeds) {
 	this.feeds = feeds;
 	this.setupComplete = false;
+	this.filter = "";
 }
 
 FeedlistAssistant.prototype.setup = function() {
@@ -22,7 +23,9 @@ FeedlistAssistant.prototype.setup = function() {
         addItemLabel:	$L("Add new Feed..."), 
         swipeToDelete:	true, 
         renderLimit: 	40,
-        reorderable:	true
+        reorderable:	true,
+		delay:			700,
+		filterFunction: this.listFind.bind(this)
     },
     this.feedListModel = {
 		items: this.feeds.list
@@ -105,6 +108,30 @@ FeedlistAssistant.prototype.deleteFeed =  function(event) {
     this.feeds.list.splice(this.feeds.list.indexOf(event.item), 1);
     this.feedListModel.items = this.feeds.list;
 	this.feeds.save();
+};
+
+FeedlistAssistant.prototype.listFind = function(filterString, listWidget, offset, count) {
+	var subset = [];
+	var totalSubsetSize = 0;
+	var lwrFilterString = filterString.toLowerCase();
+	
+	for(var i = 0; i < this.feeds.list.length; i++) {
+		if (this.feeds.list[i].title.toLowerCase().include(lwrFilterString) ||
+			this.feeds.list[i].url.toLowerCase().include(lwrFilterString)) {
+			
+			if ((subset.length < count) && (totalSubsetSize >= offset)) {
+				subset.push(this.feeds.list[i]);
+			}
+			totalSubsetSize++;
+		}
+	}
+	listWidget.mojo.noticeUpdatedItems(offset, subset);
+	
+	if (this.filter !== filterString) {
+		listWidget.mojo.setLength(totalSubsetSize);
+		listWidget.mojo.setCount(totalSubsetSize);
+	}
+	this.filter = filterString;
 };
 
 FeedlistAssistant.prototype.reOrderFeed =  function(event) {
