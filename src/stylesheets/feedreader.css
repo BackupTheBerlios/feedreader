@@ -27,6 +27,25 @@
 	top: -36px;
 }
 
+.list-fade-top {
+	position: fixed; 
+	top: 0; 
+	z-index: 100000;
+	height: 54px; 
+	width: 100%;
+	background: url(../images/list-fade-top.png) top center repeat-x;
+}
+
+.list-fade-bottom {
+	position: fixed; 
+	bottom: 0; 
+	z-index: 100000;
+	height: 54px; 
+	width: 100%;
+	background: url(../images/list-fade-bottom.png) bottom center repeat-x;
+}
+
+
 .feed-icon-rss {
     background: url(../images/list-icon-rssfeed.png) center no-repeat;
 }
