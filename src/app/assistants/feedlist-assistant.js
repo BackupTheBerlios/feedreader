@@ -41,7 +41,15 @@ FeedlistAssistant.prototype.setup = function() {
         				   this.deleteFeed.bindAsEventListener(this));
     this.controller.listen("feedList", Mojo.Event.listReorder,
 					       this.reOrderFeed.bindAsEventListener(this));
-						   
+	
+	// Setup command menu.
+    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, {
+		label: "",
+        items: [
+            { icon: "refresh", checkEnabled: true, command: "do-fullUpdate" }
+        ]
+	});
+	
 	this.controller.stageController.setWindowOrientation("free");
 	this.setupComplete = true;
 };
@@ -171,8 +179,23 @@ FeedlistAssistant.prototype.popupHandler = function(command) {
 		case "feed-show":
 			this.controller.stageController.pushScene("storylist", this.feeds, this.popupIndex);
 			break;
-	}
-	  
+	}	  
+};
+
+FeedlistAssistant.prototype.handleCommand = function(event) {       
+    if (event.type == Mojo.Event.commandEnable) {
+        if (FeedReader.feeds.updateInProgress && (event.command == "do-fullUpdate")) {
+            event.preventDefault();
+		}
+    } else {
+        if(event.type == Mojo.Event.command) {
+            switch(event.command) {
+                case "do-fullUpdate":
+					this.feeds.update();
+                	break;
+            }
+        }
+    }
 };
 
 FeedlistAssistant.prototype.considerForNotification = function(params){

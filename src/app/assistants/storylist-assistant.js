@@ -12,22 +12,30 @@ StorylistAssistant.prototype.setup = function() {
 
     // Setup the story list.
 	this.controller.setupWidget("storyList", {
-            itemTemplate:	"storylist/storylistRowTemplate", 
-            listTemplate:	"storylist/storylistListTemplate", 
-			formatters:  { 
-				titleStyle: 	this.listFormatter.bind(this),
-				summaryStyle: 	this.listFormatter.bind(this)
-			},
-            swipeToDelete:	false, 
-            renderLimit: 	40,
-            reorderable:	false,
-			delay:			700,
-			filterFunction: this.listFind.bind(this)	
-        },
-        this.storyListModel = {
-			items: this.feed.stories
+		itemTemplate:	"storylist/storylistRowTemplate", 
+		listTemplate:	"storylist/storylistListTemplate", 
+		formatters:  { 
+			titleStyle: 	this.listFormatter.bind(this),
+			summaryStyle: 	this.listFormatter.bind(this)
+		},
+		swipeToDelete:	false, 
+		renderLimit: 	40,
+		reorderable:	false,
+		delay:			700,
+		filterFunction: this.listFind.bind(this)	
+	},
+	this.storyListModel = {
+		items: this.feed.stories
 	});
-		
+	
+	// Setup command menu.
+    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, {
+		label: "",
+        items: [
+            { icon: "refresh", checkEnabled: true, command: "do-feedUpdate" }
+        ]
+	});
+
     this.controller.listen("storyList", Mojo.Event.listTap,
         				   this.showStory.bindAsEventListener(this));
 	this.controller.get("feed-title").update(this.feed.title);
@@ -97,6 +105,22 @@ StorylistAssistant.prototype.showStory = function(event) {
 			}
 		}
 	});
+};
+
+StorylistAssistant.prototype.handleCommand = function(event) {       
+    if (event.type == Mojo.Event.commandEnable) {
+        if (FeedReader.feeds.updateInProgress && (event.command == "do-fullUpdate")) {
+            event.preventDefault();
+		}
+    } else {
+        if(event.type == Mojo.Event.command) {
+            switch(event.command) {
+                case "do-feedUpdate":
+					this.feeds.updateFeed(this.feedIndex);
+                	break;
+            }
+        }
+    }
 };
 
 StorylistAssistant.prototype.considerForNotification = function(params){

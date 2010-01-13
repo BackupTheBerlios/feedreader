@@ -1,9 +1,16 @@
-/* Changes to Palm styles*/
+/*
+ * Changes to Palm styles
+ */
+
 .palm-page-header-wrapper > .icon {
 	background: url(../images/header-icon.png) center center no-repeat;
 }
 
-/* Custom styles */
+/*
+ * Custom styles
+ */
+
+/* lists */
 .list-title {
 	padding-top: 5px;
 	padding-left: 4px;
@@ -30,7 +37,7 @@
 .list-fade-top {
 	position: fixed; 
 	top: 0; 
-	z-index: 100000;
+	z-index: 10000;
 	height: 54px; 
 	width: 100%;
 	background: url(../images/list-fade-top.png) top center repeat-x;
@@ -39,13 +46,13 @@
 .list-fade-bottom {
 	position: fixed; 
 	bottom: 0; 
-	z-index: 100000;
+	z-index: 10000;
 	height: 54px; 
 	width: 100%;
 	background: url(../images/list-fade-bottom.png) bottom center repeat-x;
 }
 
-
+/* feed icons */
 .feed-icon-rss {
     background: url(../images/list-icon-rssfeed.png) center no-repeat;
 }
@@ -69,6 +76,7 @@
 	background: url(../images/list-icon-unknown.png) center no-repeat;
 }
 
+/* item badges */
 .feed-newitem {
  	float: left;
 	font-weight: bold;
@@ -95,10 +103,7 @@
 	color: white;
 }
 
-.togglebutton-title {
-	float: left;
-}
-
+/* styles for the story list */
 .story-date {
 	color: gray;
 	font-size: 12px;
@@ -130,6 +135,11 @@
 	font-weight: normal;
 }
 
+/* misc */
+.togglebutton-title {
+	float: left;
+}
+
 .img_email {
 	position: relative;
 	left: 8px;
@@ -143,7 +153,7 @@
 }
 
 .img_web {
-	position:relative;
+	position: relative;
 	left: 8px;
 	top: 10px;
 	width: 32px; 
