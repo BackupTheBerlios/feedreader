@@ -2,7 +2,6 @@ var feeds = Class.create ({
 	db: {},
 	list: [],
 	fullUpdateInProgress: false,
-	partialUpdateInProgress: false,
 	updateInProgress: false,
 	interactiveUpdate: false,
 	activityLevel: 0,
@@ -137,7 +136,6 @@ var feeds = Class.create ({
 		});
 		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-newfeed" });
 		this.updateFeed(this.list.length - 1);
-		this.save();
 	},
 	
 	/**
@@ -226,7 +224,6 @@ var feeds = Class.create ({
 	 * @param {Boolean} updating	update state
 	 */
 	notifyOfFeedUpdate: function(index, updating) {
-		this.list[index].updated = updating;
 		Mojo.Controller.getAppController().sendToNotificationChain({
 			type: "feed-update",
 			inProgress: updating,
@@ -243,14 +240,17 @@ var feeds = Class.create ({
 		// Tell the current scene that we're about to update a feed.
 		if ((index >= 0) && (index < this.list.length)) {
 			this.enterActivity(index);
-			this.partialUpdateInProgress = true;
+			this.updateInProgress = true;
 			if(!this.list[index].enabled) {
 				this.list[index].updated = true;
 				Mojo.Log.info("Feed", index, "will not be updated due being disabled");
 				return;
 			}
 			
-			this.notifyOfFeedUpdate(index, true);
+			Mojo.Log.info("Feed", index, "will be updated NOW");
+			this.list[index].updated  = false;
+			
+			this.notifyOfFeedUpdate(index);
 			var request = new Ajax.Request(this.list[index].url, {
 	    	        method: "get",
 	        	    evalJSON: "false",
@@ -439,8 +439,7 @@ var feeds = Class.create ({
 					}
 				
 				// Set the publishing date.
-				if (atomItems[i].getElementsByTagName("updated") &&
-				atomItems[i].getElementsByTagName("updated").item(0)) {
+				if (atomItems[i].getElementsByTagName("updated") && atomItems[i].getElementsByTagName("updated").item(0)) {
 					story.date = this.reformatDate(atomItems[i].getElementsByTagName("updated").item(0).textContent);
 				}
 				
@@ -469,6 +468,13 @@ var feeds = Class.create ({
 	parseRSS: function(transport) {
 		var container = [];
 		var rssItems = transport.responseXML.getElementsByTagName("item");
+		if(!rssItems) {
+			Mojo.Log.warn("Feed is empty");
+			return container;
+		} else {
+			Mojo.Log.info("Feed contains", rssItems.length, "items");
+		}
+		
 		for (var i = 0; i < rssItems.length; i++) {
 			try {
 				story = {
@@ -499,6 +505,7 @@ var feeds = Class.create ({
 				
 				container.push(story);
 			} catch(e) {
+				Mojo.Log.warn("Exception occurred during feed item processing", i);
 			}
 		}
 		return container;
@@ -526,26 +533,29 @@ var feeds = Class.create ({
 	updateFeedSuccess: function(index, transport) {
 		try {
 			if ((transport.responseXML === null) && (transport.responseText !== null)) {
+				Mojo.Log.info("Manually converting feed info to xml");
 				transport.responseXML = new DOMParser().parseFromString(transport.responseText, "text/xml");
 			}
 			
 			if(this.determineFeedType(index, transport)) {
+				Mojo.Log.info("Feed", index, "is of type", this.list[index].type);
 				var newStories = [];
 				
 				switch(this.list[index].type) {
 					case "RDF":
-						newStories = parseRDF(transport);
+						newStories = this.parseRDF(transport);
 						break;
 						
 					case "rss":
-						newStories = parseRSS(transport);
+						newStories = this.parseRSS(transport);
 						break;
 						
 					case "atom":
-						newStories = parseAtom(transport);
+						newStories = this.parseAtom(transport);
 						break;
 				}
 				
+				Mojo.Log.info("Feed", index, "retrieved;", newStories.length, "stories");
 				var isNew;										
 				this.list[index].numUnRead = newStories.length;
 				this.list[index].numNew = 0;
@@ -574,6 +584,7 @@ var feeds = Class.create ({
 				this.list[index].numNew = 0;
 			}
 		} catch(e) {
+			Mojo.Log.warn("Exception during feed processing", e);
 		}
 		this.finishUpdate(index);	
 	},
@@ -635,17 +646,16 @@ var feeds = Class.create ({
 	 */
 	finishUpdate: function(index) {
 		this.notifyOfFeedUpdate(index, false);
+		this.list[index].updated = true;
 		
 		if(this.fullUpdateInProgress) {
 			var updateComplete = true;
-			for(var i; i < this.list.length; i++) {
-				updateComplete = updateComplete && this.list[index].updated;
-				if(!updateComplete) {
-					break;
-				}
+			for(var i = 0; (i < this.list.length) && updateComplete; i++) {
+				updateComplete = this.list[i].updated;
 			}
 			
 			if(updateComplete) {
+				Mojo.Log.info("Full Update completed.");
 				this.fullUpdateInProgress = false;
 				
 				// Post a banner notification if applicable.
@@ -654,7 +664,7 @@ var feeds = Class.create ({
 					for(i = 0; i < this.list.length; i++) {
 						n += this.list[i].numNew;
 					}
-				
+					
 					if (n > 0) {
 						var t = new Template($L("#{num} new stories"));
 						Mojo.Controller.getAppController().showBanner({
@@ -666,12 +676,15 @@ var feeds = Class.create ({
 					}
 				}
 				
+				// save after a full update.
 				this.save();
 				this.leaveActivity();
 			}
+		} else {
+			// Save after a single update.
+			this.save();
 		}
 
-		this.partialUpdateInProgress = false;
 		this.updateInProgress = this.fullUpdateInProgress;
 		this.interactiveUpdate = false;
 		this.leaveActivity();
@@ -682,6 +695,10 @@ var feeds = Class.create ({
 	 */
 	update: function() {
 		var i;
+		
+		if(this.list.length < 1) {
+			return;
+		}
 		
 		Mojo.Log.info("Full update requested");
 		this.fullUpdateInProgress = true;

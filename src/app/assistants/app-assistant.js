@@ -82,7 +82,7 @@ AppAssistant.prototype.setup = function() {
  * @param {Object} launchParams
  */
 AppAssistant.prototype.handleLaunch = function (launchParams) {
-    Mojo.Log.error("ReLaunch");
+    Mojo.Log.info("ReLaunch requested");
 
 	FeedReader.controller = this.controller;
     var cardStageController = this.controller.getStageController(FeedReader.mainStageName);
