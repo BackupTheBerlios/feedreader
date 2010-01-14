@@ -1,6 +1,7 @@
 {
 	"About FeedReader": "Über FeedReader",
 	"Update all Feeds": "Alle Feeds abrufen",
+	"License": "Lizenz",
 	"Add new Feed...": "Feed hinzufügen...",
 	"Mark all read": "Alle gelesen",
 	"Mark all unread": "Alle ungelesen",
@@ -41,5 +42,7 @@
 	"Method Not Allowed": "Anfrage nicht erlaubt",
 	"Not Acceptable": "Anfrage nicht akzeptiert",
 	"Server error": "Serverfehler",
-	"Unexpected error": "Unerwarteter Fehler"
+	"Unexpected error": "Unerwarteter Fehler",
+	"#{appName} — v#{version}": "#{appName} — v#{version}",
+	"Copyright #{years} #{author}, published under the terms of the GNU GPL v2. See License for details.": "Copyright #{years} #{author}, veröffentlicht unter den Bedingungen der GNU GPL v2."
 }
