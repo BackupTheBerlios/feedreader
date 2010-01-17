@@ -65,10 +65,10 @@ FeedlistAssistant.prototype.setup = function() {
 					       this.reOrderFeed.bindAsEventListener(this));
 	
 	// Setup command menu.
-    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, {
+    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.updateModel = {
 		label: "",
         items: [
-            { icon: "refresh", checkEnabled: true, command: "do-fullUpdate" }
+            { icon: "refresh", disabled: this.feeds.updateInProgress, command: "do-fullUpdate" }
         ]
 	});
 	
@@ -231,7 +231,10 @@ FeedlistAssistant.prototype.considerForNotification = function(params){
 				if(!params.inProgress) {
 					this.feedListModel.items[params.feedIndex] = this.feeds.list[params.feedIndex];
 				}
-					
+				if(this.updateModel.items[0].disabled != this.feeds.updateInProgress) {
+					this.updateModel.items[0].disabled = this.feeds.updateInProgress;
+					this.controller.modelChanged(this.updateModel);
+				}
 				this.feedListModel.items[params.feedIndex].updating = params.inProgress;
 				this.controller.modelChanged(this.feedListModel);
 				params = undefined;

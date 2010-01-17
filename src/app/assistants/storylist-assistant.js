@@ -61,17 +61,13 @@ StorylistAssistant.prototype.setup = function() {
     this.controller.listen("storyList", Mojo.Event.listTap,
         				   this.showStory.bindAsEventListener(this));
 	this.controller.get("feed-title").update(this.feed.title);
-
-	for(var i = 0; i < this.feed.stories.length; i++) {
-		this.feed.stories[i].isNew = false;
-	}
-	this.feed.numNew = 0;
 };
 
 StorylistAssistant.prototype.activate = function(event) {
 };
 
 StorylistAssistant.prototype.deactivate = function(event) {
+	this.feeds.markSeen(this.feedIndex);
 	this.feeds.save();
 };
 
@@ -115,6 +111,7 @@ StorylistAssistant.prototype.showStory = function(event) {
 		this.feeds.markStoryRead(this.feedIndex, event.index);
 		this.storyListModel.items = this.feed.stories;
 		this.controller.modelChanged(this.storyListModel);
+		this.feeds.save();
 	}
 	
 	this.controller.serviceRequest("palm://com.palm.applicationManager", {

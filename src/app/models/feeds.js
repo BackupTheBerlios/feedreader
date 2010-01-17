@@ -111,6 +111,8 @@ var feeds = Class.create ({
 			this.db.add("feedList", this.list,
 						this.saveFeedListSuccessHandler,
 						this.saveFeedListFailedHandler);
+		} else {
+			Mojo.Log.info("list not changed; no saving needed");
 		}
 	},
 	
@@ -813,6 +815,21 @@ var feeds = Class.create ({
 			this.modified = true;
 			this.notifyOfFeedUpdate(index, false);
 		}		
+	},
+
+	/**
+	 * Mark a feed as being seen (not new).
+	 *
+	 * @param {int} index		Index of the feed to process
+	 */
+	markSeen: function(index) {
+		if ((index >= 0) && (index < this.list.length)) {
+			for(var i = 0; i < this.list[index].stories.length; i++) {
+				this.list[index].stories[i].isNew = false;
+			}
+			this.list[index].numNew = 0;
+			this.modified = true;
+		}
 	},
 	
 	/**
