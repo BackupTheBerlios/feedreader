@@ -18,3 +18,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+Changelog
+=========
+
+Version 1.1
+-----------
+ * the feed list is now saved only when something has changed
+ * old feed contents are no longer deleted if an error occurs
+ * the network connection is checked before an update process is started
+ * the update button in the story list is now correctly enabled and disabled
+ * removed some JSLint warnings
+
+Version 1.0
+-----------
+ * initial Release

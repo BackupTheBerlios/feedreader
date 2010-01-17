@@ -25,7 +25,8 @@ function LicenseAssistant() {
 
 LicenseAssistant.prototype.setup = function() {
 	this.controller.get("license-title").update($L("License"));
-}
+};
 
 LicenseAssistant.prototype.cleanup = function(event) {
-}
+	FeedReader.feeds.save();
+};

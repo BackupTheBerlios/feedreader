@@ -57,4 +57,5 @@ PreferencesAssistant.prototype.cleanup = function(event) {
 	this.prefs.updateInterval = this.updateIntervalModel.value;
 	
 	this.prefs.save();
+	FeedReader.feeds.save();
 };

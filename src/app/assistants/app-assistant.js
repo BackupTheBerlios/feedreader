@@ -27,7 +27,7 @@
 FeedReader = {
 	appName:			"FeedReader",
 	appAuthor:			"Timo Tegtmeier",
-	versionString:		"1.0",
+	versionString:		"1.1",
 	copyrightYears:		"2009, 2010",
 
 	mainStageName: 		"FeedReaderStage",
@@ -84,18 +84,17 @@ FeedReader = {
  * @param {Object} appController
  */
 function AppAssistant (appController) {
-}
-
-/**
- * Setup function for the AppAssistant.
- */
-AppAssistant.prototype.setup = function() {
 	FeedReader.prefs = new prefs();
 	FeedReader.prefs.load();
 	
 	FeedReader.feeds = new feeds();
 	FeedReader.feeds.load();
-		          
+}
+
+/**
+ * Setup function for the AppAssistant.
+ */
+AppAssistant.prototype.setup = function() {	
 	FeedReader.prefs.setTimer();
 };
 

@@ -26,8 +26,10 @@ var feeds = Class.create ({
 	fullUpdateInProgress: false,
 	updateInProgress: false,
 	interactiveUpdate: false,
+	modified: false,
 	activityLevel: 0,
 	activity: {},
+	connStatus: {},
 
 	/** @private
 	 *
@@ -105,9 +107,11 @@ var feeds = Class.create ({
 	 * Save the feed list to a depot.
 	 */
 	save: function() {
-		this.db.add("feedList", this.list,
-					this.saveFeedListSuccessHandler,
-					this.saveFeedListFailedHandler);
+		if(this.modified) {
+			this.db.add("feedList", this.list,
+						this.saveFeedListSuccessHandler,
+						this.saveFeedListFailedHandler);
+		}
 	},
 	
 	/** @private
@@ -115,6 +119,7 @@ var feeds = Class.create ({
 	 * Called when saving the feed list succeeds.
 	 */
 	saveFeedListSuccess: function() {
+		this.modified = false;
 		Mojo.Log.info("feed list saved");
 	},
 	
@@ -156,6 +161,7 @@ var feeds = Class.create ({
 			updated: true,
 			stories: []
 		});
+		this.modified = true;
 		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-newfeed" });
 		this.updateFeed(this.list.length - 1);
 	},
@@ -174,9 +180,9 @@ var feeds = Class.create ({
 			this.list[index].title = title;
 			this.list[index].url = url;
 			this.list[index].enabled = enabled;
+			this.modified = true;
 			Mojo.Controller.getAppController().sendToNotificationChain({type: "feedlist-editedfeed"});
 			this.updateFeed(index);
-			this.save();
 		}
 	},
 		
@@ -213,7 +219,7 @@ var feeds = Class.create ({
 		this.activityLevel--;
 		if(this.activityLevel <= 0) {
 			this.activityLevel = 0;
-			this.activita = new Mojo.Service.Request("palm://com.palm.power/com/palm/power", {
+			this.activity = new Mojo.Service.Request("palm://com.palm.power/com/palm/power", {
 				method: "activityEnd",
 				parameters: {
 					id: "com.tegi-stuff.app.feedreader"
@@ -261,6 +267,24 @@ var feeds = Class.create ({
 	updateFeed: function(index) {
 		// Tell the current scene that we're about to update a feed.
 		if ((index >= 0) && (index < this.list.length)) {
+			this.connStatus = new Mojo.Service.Request('palm://com.palm.connectionmanager', {
+				method: 'getstatus',
+				parameters: {},
+				onSuccess: this.getConnStatusSuccess.bind(this, index),
+				onFailure: this.getConnStatusFailed.bind(this, index)
+			});
+		}		
+	},
+
+	/** @private
+	 * 
+	 * Called when the connection status could be retrieved.
+	 *
+	 * @param {int} index		Feed Index to be updated
+	 * @param {Object} result	Information about the connection status
+	 */	
+	getConnStatusSuccess: function(index, result) {
+		if(result.isInternetConnectionAvailable) {
 			this.enterActivity(index);
 			this.updateInProgress = true;
 			if(!this.list[index].enabled) {
@@ -268,17 +292,27 @@ var feeds = Class.create ({
 				Mojo.Log.info("Feed", index, "will not be updated due being disabled");
 				return;
 			}
-			
-			Mojo.Log.info("Feed", index, "will be updated NOW");
-			this.list[index].updated  = false;
-			
+			this.list[index].updated  = false;			
 			this.notifyOfFeedUpdate(index);
 			var request = new Ajax.Request(this.list[index].url, {
 	    	        method: "get",
 	        	    evalJSON: "false",
 	            	onSuccess: this.updateFeedSuccess.bind(this, index),
-	            	onFailure: this.updateFeedFailed.bind(this, index)});
-		}		
+	            	onFailure: this.updateFeedFailed.bind(this, index)});			
+		} else {
+			Mojo.Log.info("No internet connection available");
+		}
+	},
+	
+	/** @private
+	 * 
+	 * Called when the connection status could not be retrieved.
+	 *
+	 * @param {int} index		Feed Index to be updated
+	 * @param {Object} result	Information about the connection status
+	 */	
+	getConnStatusFailed: function(index, result) {
+		Mojo.Log.warn("Unable to determine connection status");
 	},
 	
 	/** @private
@@ -600,11 +634,7 @@ var feeds = Class.create ({
 				}
 				this.list[index].stories = newStories;
 				
-			} else {
-				this.list[index].stories = [];
-				this.list[index].numUnRead = 0;
-				this.list[index].numNew = 0;
-			}
+			} 
 		} catch(e) {
 			Mojo.Log.warn("Exception during feed processing", e);
 		}
@@ -667,7 +697,6 @@ var feeds = Class.create ({
 	 * Finishes feed updates.
 	 */
 	finishUpdate: function(index) {
-		this.notifyOfFeedUpdate(index, false);
 		this.list[index].updated = true;
 		
 		if(this.fullUpdateInProgress) {
@@ -698,17 +727,13 @@ var feeds = Class.create ({
 					}
 				}
 				
-				// save after a full update.
-				this.save();
 				this.leaveActivity();
 			}
-		} else {
-			// Save after a single update.
-			this.save();
 		}
-
+		this.modified = true;
 		this.updateInProgress = this.fullUpdateInProgress;
 		this.interactiveUpdate = false;
+		this.notifyOfFeedUpdate(index, false);
 		this.leaveActivity();
 	},
 
@@ -753,7 +778,24 @@ var feeds = Class.create ({
 			for(var i = 0; i < this.list[index].stories.length; i++) {
 				this.list[index].stories[i].isRead = true;
 			}
+			this.modified = true;
 			this.notifyOfFeedUpdate(index, false);
+		}
+	},
+	
+	/**
+	 * Mark a given story as being read.
+	 *
+	 * @param {int} index		Index of the feed
+	 * @param {int} story		Index of the story
+	 */
+	markStoryRead: function(index, story) {
+		if ((index >= 0) && (index < this.list.length)) {
+			if((story >= 0) && (story < this.list[index].stories.length)) {
+				this.list[index].stories[story].isRead = true;
+				this.list[index].numUnRead--;
+				this.modified = true;
+			}
 		}
 	},
 	
@@ -768,7 +810,36 @@ var feeds = Class.create ({
 			for(var i = 0; i < this.list[index].stories.length; i++) {
 				this.list[index].stories[i].isRead = false;
 			}
+			this.modified = true;
 			this.notifyOfFeedUpdate(index, false);
 		}		
+	},
+	
+	/**
+	 * Delete a given feed.
+	 *
+	 * @param {int} index		Index of the feed to delete
+	 */
+	deleteFeed: function(index) {
+		if ((index >= 0) && (index < this.list.length)) {
+			this.list.splice(index, 1);
+			this.modified = true;
+		}
+	},
+	
+	/**
+	 * Exchange two feeds.
+	 *
+	 * @param {int} a			Index of the first feed
+	 * @param {int} b			Index of the second feed
+	 */
+	exchangeFeeds: function(a, b) {
+		if ((a >= 0) && (a < this.list.length) && (b >= 0) && (b < this.list.length)) {
+			var from = this.list[a];
+			var to   = this.list[b];
+			this.list[a] = to;
+			this.list[b] = from;
+			this.modified = true;
+		}
 	}
 });

@@ -51,10 +51,10 @@ StorylistAssistant.prototype.setup = function() {
 	});
 	
 	// Setup command menu.
-    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, {
+    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.updateModel = {
 		label: "",
         items: [
-            { icon: "refresh", checkEnabled: true, command: "do-feedUpdate" }
+            { icon: "refresh", disabled: this.feeds.updateInProgress, command: "do-feedUpdate" }
         ]
 	});
 
@@ -112,8 +112,7 @@ StorylistAssistant.prototype.listFind = function(filterString, listWidget, offse
 
 StorylistAssistant.prototype.showStory = function(event) {
 	if (!this.feed.stories[event.index].isRead) {
-		this.feed.stories[event.index].isRead = true;
-		this.feed.numUnRead--;
+		this.feeds.markStoryRead(this.feedIndex, event.index);
 		this.storyListModel.items = this.feed.stories;
 		this.controller.modelChanged(this.storyListModel);
 	}
@@ -129,20 +128,15 @@ StorylistAssistant.prototype.showStory = function(event) {
 	});
 };
 
-StorylistAssistant.prototype.handleCommand = function(event) {       
-    if (event.type == Mojo.Event.commandEnable) {
-        if (FeedReader.feeds.updateInProgress && (event.command == "do-fullUpdate")) {
-            event.preventDefault();
+StorylistAssistant.prototype.handleCommand = function(event) {
+	if(event.type === Mojo.Event.command) {
+		switch(event.command) {
+			case "do-feedUpdate":
+				event.stopPropagation();
+				this.feeds.updateFeed(this.feedIndex);
+				break;
 		}
-    } else {
-        if(event.type == Mojo.Event.command) {
-            switch(event.command) {
-                case "do-feedUpdate":
-					this.feeds.updateFeed(this.feedIndex);
-                	break;
-            }
-        }
-    }
+	}
 };
 
 StorylistAssistant.prototype.considerForNotification = function(params){
@@ -152,6 +146,10 @@ StorylistAssistant.prototype.considerForNotification = function(params){
 				if(this.feedIndex == params.feedIndex) {
 					this.storyListModel.items = this.feed.stories;
 					this.controller.modelChanged(this.storyListModel);
+				}
+				if(this.updateModel.items[0].disabled != this.feeds.updateInProgress) {
+					this.updateModel.items[0].disabled = this.feeds.updateInProgress;
+					this.controller.modelChanged(this.updateModel);
 				}
 				break;
 		}

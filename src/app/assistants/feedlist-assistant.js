@@ -106,6 +106,7 @@ FeedlistAssistant.prototype.activate = function(event) {
 };
 
 FeedlistAssistant.prototype.deactivate = function(event) {
+	this.feeds.save();
 };
 
 FeedlistAssistant.prototype.cleanup = function(event) {
@@ -135,9 +136,8 @@ FeedlistAssistant.prototype.showFeed = function(event) {
 };
 
 FeedlistAssistant.prototype.deleteFeed =  function(event) {
-    this.feeds.list.splice(this.feeds.list.indexOf(event.item), 1);
+	this.feeds.deleteFeed(this.feeds.list.indexOf(event.item));
     this.feedListModel.items = this.feeds.list;
-	this.feeds.save();
 };
 
 FeedlistAssistant.prototype.listFind = function(filterString, listWidget, offset, count) {
@@ -165,11 +165,7 @@ FeedlistAssistant.prototype.listFind = function(filterString, listWidget, offset
 };
 
 FeedlistAssistant.prototype.reOrderFeed =  function(event) {
-	var from = this.feeds.list[event.fromIndex];
-	var to   = this.feeds.list[event.toIndex];
-	this.feeds.list[event.fromIndex] = to;
-	this.feeds.list[event.toIndex]   = from;
-	this.feeds.save();
+	this.feeds.exchangeFeeds(event.fromIndex, event.toIndex);
 };
 
 FeedlistAssistant.prototype.addNewFeed = function(event) {
@@ -205,12 +201,12 @@ FeedlistAssistant.prototype.popupHandler = function(command) {
 };
 
 FeedlistAssistant.prototype.handleCommand = function(event) {       
-    if (event.type == Mojo.Event.commandEnable) {
+    if (event.type === Mojo.Event.commandEnable) {
         if (FeedReader.feeds.updateInProgress && (event.command == "do-fullUpdate")) {
             event.preventDefault();
 		}
     } else {
-        if(event.type == Mojo.Event.command) {
+        if(event.type === Mojo.Event.command) {
             switch(event.command) {
                 case "do-fullUpdate":
 					this.feeds.update();

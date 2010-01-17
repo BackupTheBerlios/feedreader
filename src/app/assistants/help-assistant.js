@@ -38,6 +38,7 @@ HelpAssistant.prototype.setup = function() {
 };
 
 HelpAssistant.prototype.cleanup = function(event) {
+	FeedReader.feeds.save();
 };
 
 HelpAssistant.prototype.supportWebTap = function(event) {
