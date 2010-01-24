@@ -54,7 +54,7 @@ var feeds = Class.create ({
 	 * Load the feed list from a Depot.
 	 */
 	load: function() {
-		this.db = new Mojo.Depot({name: "FeedListDB", version: 1, estimatedSize: 100000, replace: false},
+		this.db = new Mojo.Depot({name: "FeedListDB", version: 1, estimatedSize: 500000, replace: false},
 			this.openDBSuccessHandler,
             this.openDBFailedHandler);
 	},
@@ -90,8 +90,16 @@ var feeds = Class.create ({
 			this.list = [];
         } else {
             this.list = data;
+			
+			// Add data of newer versions, if necessary.
+			for(var i = 0; i < this.list.length; i++) {
+				if(this.list[i].viewMode === undefined) {
+					this.list[i].viewMode = 0;
+					this.modified = true;
+				}
+			}
         }
-		Mojo.Controller.getAppController().sendToNotificationChain({type: "feedlist-loaded"});
+		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-loaded" });
         this.update();
 	},
 	
@@ -139,8 +147,9 @@ var feeds = Class.create ({
 	 * @param {String} title
 	 * @param {String} url
 	 * @param {Boolean} enabled
+	 * @param {Int} viewMode
 	 */
-	addFeed: function(title, url, enabled) {
+	addFeed: function(title, url, enabled, viewMode) {
 		this.interactiveUpdate = true;
 		if (title === "") {
 			title = "News Feed";
@@ -148,7 +157,7 @@ var feeds = Class.create ({
 			
 		for(var i; i < this.list.length; i++) {
 			if (this.list[i].url == url) {
-				this.editFeed(i, title, url, enabled);
+				this.editFeed(i, title, url, enabled, viewmode);
 				return;
 			} 
 		}
@@ -160,11 +169,14 @@ var feeds = Class.create ({
 			numUnRead: 0,
 			numNew: 0,
 			enabled: enabled,
+			viewMode: viewMode,
 			updated: true,
+			spinning: false,
 			stories: []
 		});
 		this.modified = true;
 		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-newfeed" });
+		this.interactiveUpdate = true;
 		this.updateFeed(this.list.length - 1);
 	},
 	
@@ -175,15 +187,20 @@ var feeds = Class.create ({
 	 * @param {String} title
 	 * @param {String} url
 	 * @param {Boolean} enabled
+	 * @param {Int} viewMode
 	 */
-	editFeed: function(index, title, url, enabled) {
+	editFeed: function(index, title, url, enabled, viewMode) {
 		if((index >= 0) && (index < this.list.length)) {
 			this.interactiveUpdate = true;
 			this.list[index].title = title;
 			this.list[index].url = url;
 			this.list[index].enabled = enabled;
+			this.list[index].viewMode = viewMode;
 			this.modified = true;
-			Mojo.Controller.getAppController().sendToNotificationChain({type: "feedlist-editedfeed"});
+			Mojo.Controller.getAppController().sendToNotificationChain({
+				type: "feedlist-editedfeed",
+				feedIndex: index
+			});
 			this.updateFeed(index);
 		}
 	},
@@ -254,6 +271,7 @@ var feeds = Class.create ({
 	 * @param {Boolean} updating	update state
 	 */
 	notifyOfFeedUpdate: function(index, updating) {
+		this.list[index].spinning = updating;
 		Mojo.Controller.getAppController().sendToNotificationChain({
 			type: "feed-update",
 			inProgress: updating,
@@ -295,12 +313,13 @@ var feeds = Class.create ({
 				return;
 			}
 			this.list[index].updated  = false;			
-			this.notifyOfFeedUpdate(index);
+			this.notifyOfFeedUpdate(index, true);
 			var request = new Ajax.Request(this.list[index].url, {
 	    	        method: "get",
+					evalJS: "false",
 	        	    evalJSON: "false",
 	            	onSuccess: this.updateFeedSuccess.bind(this, index),
-	            	onFailure: this.updateFeedFailed.bind(this, index)});			
+	            	onFailure: this.updateFeedFailed.bind(this, index)});
 		} else {
 			Mojo.Log.info("No internet connection available");
 		}
@@ -331,9 +350,6 @@ var feeds = Class.create ({
         summary = summary.replace(/(\{([^\}]+)\})/ig, "");
         summary = summary.replace(/digg_url .../, "");
         summary = unescape(summary);
-		if(summary.length > 130) {
-			summary = summary.substring(0, 120) + '...';
-		}
 		return summary;	
 	},
 	
@@ -358,18 +374,18 @@ var feeds = Class.create ({
 				parts = dateString.split(" ");
 				
 				switch(parts[1]) {
-					case "Jan":	d.setMonth(1); break;
-					case "Feb": d.setMonth(2); break;
-					case "Mar": d.setMonth(3); break;
-					case "Apr": d.setMonth(4); break;
-					case "May": d.setMonth(5); break;
-					case "Jun": d.setMonth(6); break;
-					case "Jul": d.setMonth(7); break;
-					case "Aug": d.setMonth(8); break;
-					case "Sep": d.setMonth(9); break;
-					case "Oct": d.setMonth(10); break;
-					case "Nov": d.setMonth(11); break;
-					case "Dec": d.setMonth(12); break;
+					case "Jan":	d.setMonth(0); break;
+					case "Feb": d.setMonth(1); break;
+					case "Mar": d.setMonth(2); break;
+					case "Apr": d.setMonth(3); break;
+					case "May": d.setMonth(4); break;
+					case "Jun": d.setMonth(5); break;
+					case "Jul": d.setMonth(6); break;
+					case "Aug": d.setMonth(7); break;
+					case "Sep": d.setMonth(8); break;
+					case "Oct": d.setMonth(9); break;
+					case "Nov": d.setMonth(10); break;
+					case "Dec": d.setMonth(11); break;
 				}
 				d.setDate(parseInt(parts[2], 10));
 				d.setYear(parseInt(parts[5], 10));
@@ -389,7 +405,7 @@ var feeds = Class.create ({
 						d.setFullYear(parseInt(dateComponents[0], 10));
 					}
 					if(dateComponents[1]) {
-						d.setMonth(parseInt(dateComponents[1], 10));
+						d.setMonth(parseInt(dateComponents[1], 10) - 1);
 					}
 					if(dateComponents[2]) {
 						d.setDate(parseInt(dateComponents[2], 10));
@@ -436,6 +452,16 @@ var feeds = Class.create ({
 	 */
 	determineFeedType: function(index, transport) {
 		var feedType = transport.responseXML.getElementsByTagName("rss");
+		
+		if(transport.responseText.length == 0) {
+			if (this.interactiveUpdate) {
+				var errorMsg = new Template($L("The Feed '#{title}' does not return data."));
+				FeedReader.showError(errorMsg, { title: this.list[index].url });
+			}
+			ojo.Log.warn("Empty responseText in", this.list[index].url);
+			this.list[index].type = "unknown";
+			return false;			
+		}
 
 		if (feedType.length > 0) {
 			this.list[index].type = "rss";				// RSS 2 
@@ -591,7 +617,9 @@ var feeds = Class.create ({
 	updateFeedSuccess: function(index, transport) {
 		try {
 			if ((transport.responseXML === null) && (transport.responseText !== null)) {
-				Mojo.Log.info("Manually converting feed info to xml");
+				Mojo.Log.info("Status:", transport.status, transport.responseText.length);
+				Mojo.Log.info(transport.getAllHeaders());
+				Mojo.Log.info("Manually converting feed info to xml", transport.responseText);
 				transport.responseXML = new DOMParser().parseFromString(transport.responseText, "text/xml");
 			}
 			

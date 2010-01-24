@@ -44,5 +44,21 @@
 	"Server error": "Serverfehler",
 	"Unexpected error": "Unerwarteter Fehler",
 	"#{appName} — v#{version}": "#{appName} — v#{version}",
-	"Copyright #{years} #{author}, published under the terms of the GNU GPL v2. See License for details.": "Copyright #{years} #{author}, veröffentlicht unter den Bedingungen der GNU GPL v2."
+	"Copyright #{years} #{author}, published under the terms of the GNU GPL v2. See License for details.": "Copyright #{years} #{author}, veröffentlicht unter den Bedingungen der GNU GPL v2.",
+	"Title color": "Titelfarbe",
+	"Red": "Rot",
+	"Green": "Grün",
+	"Blue": "Blau",
+	"Yellow": "Gelb",
+	"Purple": "Violett",
+	"Length": "Länge",
+	"100 characters": "100 Zeichen",
+	"120 characters": "120 Zeichen",
+	"150 characters": "150 Zeichen",
+	"200 characters": "200 Zeichen",
+	"250 characters": "250 Zeichen",
+	"Show stories": "Anzeige",
+	"in Browser": "im Browser",
+	"in FeedReader": "in FeedReader",
+	"The Feed '#{title}' does not return data.": "Der Feed '#{title}' enthält keine Daten."
 }

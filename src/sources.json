@@ -7,10 +7,14 @@
         "scenes": "feedlist",
         "source": "app/assistants/feedlist-assistant.js"
     },
-	{"source": "app/assistants/addfeed-assistant.js"},
+    {"source": "app/assistants/addfeed-assistant.js"},
     {
         "scenes": "storylist",
         "source": "app/assistants/storylist-assistant.js"
+    },
+    {
+        "scenes": "fullStory",
+        "source": "app/assistants/fullStory-assistant.js"
     },
     {
         "scenes": "preferences",

@@ -52,7 +52,9 @@ FeedlistAssistant.prototype.setup = function() {
     this.feedListModel = {
 		items: this.feeds.list
 	});
-	this.controller.setupWidget("feedSpinner", { property: "updating" });
+	this.controller.setupWidget("feedSpinner", {
+		spinnerSize: "small"
+	});
 	  
     // Setup event handlers: list selection, add, delete and reorder feed entry
     this.controller.listen("feedList", Mojo.Event.listTap,
@@ -228,14 +230,11 @@ FeedlistAssistant.prototype.considerForNotification = function(params){
 				break;
 				
 			case "feed-update":
-				if(!params.inProgress) {
-					this.feedListModel.items[params.feedIndex] = this.feeds.list[params.feedIndex];
-				}
 				if(this.updateModel.items[0].disabled != this.feeds.updateInProgress) {
 					this.updateModel.items[0].disabled = this.feeds.updateInProgress;
 					this.controller.modelChanged(this.updateModel);
 				}
-				this.feedListModel.items[params.feedIndex].updating = params.inProgress;
+				this.feedListModel.items[params.feedIndex] = this.feeds.list[params.feedIndex];
 				this.controller.modelChanged(this.feedListModel);
 				params = undefined;
 				break;

@@ -29,6 +29,7 @@ Version 1.1
  * the network connection is checked before an update process is started
  * the update button in the story list is now correctly enabled and disabled
  * removed some JSLint warnings
+ * the feed update spinner works again
 
 Version 1.0
 -----------

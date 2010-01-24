@@ -26,6 +26,9 @@ function StorylistAssistant(feeds, index) {
 	
 	this.feed = this.feeds.list[index];
 	this.filter = "";
+	
+	this.listFormatterHandler = this.listFormatter.bind(this);
+	this.listFindHandler = this.listFind.bind(this);
 }
 
 StorylistAssistant.prototype.setup = function() {
@@ -37,14 +40,15 @@ StorylistAssistant.prototype.setup = function() {
 		itemTemplate:	"storylist/storylistRowTemplate", 
 		listTemplate:	"storylist/storylistListTemplate", 
 		formatters:  { 
-			titleStyle: 	this.listFormatter.bind(this),
-			summaryStyle: 	this.listFormatter.bind(this)
+			"titleStyle": 		this.listFormatterHandler,
+			"titleColor":		this.listFormatterHandler,
+			"contentStyle": 	this.listFormatterHandler
 		},
 		swipeToDelete:	false, 
 		renderLimit: 	40,
 		reorderable:	false,
 		delay:			700,
-		filterFunction: this.listFind.bind(this)	
+		filterFunction: this.listFindHandler
 	},
 	this.storyListModel = {
 		items: this.feed.stories
@@ -64,6 +68,7 @@ StorylistAssistant.prototype.setup = function() {
 };
 
 StorylistAssistant.prototype.activate = function(event) {
+	this.controller.modelChanged(this.storyListModel);
 };
 
 StorylistAssistant.prototype.deactivate = function(event) {
@@ -75,12 +80,15 @@ StorylistAssistant.prototype.cleanup = function(event) {
 };
 
 StorylistAssistant.prototype.listFormatter = function(property, model) {
-	if(model.isRead) {
-		model.titleStyle = "story-title-read";
-		model.contentStyle = "story-content-read";
-	} else {
-		model.titleStyle = "story-title-unread";
-		model.contentStyle = "story-content-unread";
+	model.titleStyle = model.isRead ? "normal-text" : "bold-text";
+	model.titleColor = FeedReader.prefs.titleColor;
+	model.contentStyle = "normal-text";
+	if(model.summary) {
+		if(model.summary.length > (FeedReader.prefs.summaryLength + 10)) {
+			model.shortSummary = model.summary.slice(0, FeedReader.prefs.summaryLength - 1) + '...';
+		} else {
+			model.shortSummary = model.summary;
+		}
 	}
 };
 
@@ -114,15 +122,24 @@ StorylistAssistant.prototype.showStory = function(event) {
 		this.feeds.save();
 	}
 	
-	this.controller.serviceRequest("palm://com.palm.applicationManager", {
-		method: "open",
-		parameters: {
-			id: "com.palm.app.browser",
-			params: {
-				target: this.feed.stories[event.index].url
-			}
-		}
-	});
+	switch(parseInt(this.feed.viewMode, 10)) {
+		case 0:
+			this.controller.serviceRequest("palm://com.palm.applicationManager", {
+				method: "open",
+				parameters: {
+					id: "com.palm.app.browser",
+					params: {
+						target: this.feed.stories[event.index].url
+					}
+				}
+			});
+			break;
+
+		case 1:
+			this.controller.stageController.pushScene("fullStory", this.feeds,
+													  this.feedIndex, event.index);
+			break;
+	}
 };
 
 StorylistAssistant.prototype.handleCommand = function(event) {

@@ -26,7 +26,8 @@ function PreferencesAssistant() {
 
 PreferencesAssistant.prototype.setup = function() {
 	this.controller.get("prefs-title").update($L("FeedReader Preferences"));
-	this.controller.get("prefs-group-title").update($L("Automatic updating"));
+	this.controller.get("prefs-updating-group-title").update($L("Automatic updating"));
+	this.controller.get("prefs-appearance-group-title").update($L("Summary appearance"));
 	
 	this.controller.get("notify-title").update($L("Show notification"));
 	this.controller.get("wake-device-title").update($L("Wake device"));
@@ -49,12 +50,38 @@ PreferencesAssistant.prototype.setup = function() {
 			{ label: $L("1 Day"),			value: 1440}
 		]    
 	}, this.updateIntervalModel = { value : this.prefs.updateInterval });
+	
+	this.controller.setupWidget("feedTitleColor", {
+		label: $L("Title color"),
+		choices: [
+			{ label: $L("Black"),   value: "black" },
+			{ label: $L("Red"),		value: "red" },
+			{ label: $L("Green"),	value: "green" },
+			{ label: $L("Blue"),	value: "blue" },
+			{ label: $L("Yellow"),	value: "yellow" },
+			{ label: $L("Purple"),	value: "purple" }
+		]    
+	}, this.titleColorModel = { value : this.prefs.titleColor });
+
+	this.controller.setupWidget("summaryLength", {
+		label: $L("Length"),
+		choices: [
+			{ label: $L("100 characters"),	value: 100},
+			{ label: $L("120 characters"),	value: 120},    
+			{ label: $L("150 characters"),	value: 150},
+			{ label: $L("200 characters"),	value: 200},
+			{ label: $L("250 characters"),	value: 250}
+		]    
+	}, this.summaryLengthModel = { value : this.prefs.summaryLength });
+	
 };
 
 PreferencesAssistant.prototype.cleanup = function(event) {
 	this.prefs.notificationEnabled = this.notificationModel.value;
 	this.prefs.wakingEnabled = this.wakingModel.value;
 	this.prefs.updateInterval = this.updateIntervalModel.value;
+	this.prefs.titleColor = this.titleColorModel.value;
+	this.prefs.summaryLength = this.summaryLengthModel.value;
 	
 	this.prefs.save();
 	FeedReader.feeds.save();

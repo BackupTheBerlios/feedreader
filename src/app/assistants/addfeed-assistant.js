@@ -35,12 +35,14 @@ function AddfeedAssistant(controller, feeds, index) {
 		this.url = "";
 		this.title = "";
 		this.enabled = true;
+		this.viewMode = 0;
 	} else {
 		this.feed = feeds.list[index];
 		this.index = index;
 		this.url = this.feed.url;
 		this.title = this.feed.title;
 		this.enabled = this.feed.enabled;
+		this.viewMode = this.feed.viewMode;
 	}
 }
 
@@ -55,6 +57,17 @@ AddfeedAssistant.prototype.setup = function(widget) {
 								{ hintText: $L("Optional"), limitResize: true, autoReplace: false,
 								  textCase: Mojo.Widget.steModeTitleCase, enterSubmits: false },
 								this.titleModel = {value: this.title});
+    this.controller.setupWidget("feedShow", {
+		label: $L("Show stories"),
+        choices: [
+            { label: $L("in Browser"),		value: 0 },
+            { label: $L("in FeedReader"),	value: 1 }
+        ]},
+		this.viewModeModel = {
+			value: this.viewMode,
+			disabled: false
+		});
+
 	this.controller.setupWidget("feedEnabled",
     							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
          						this.enabledModel = {value: this.enabled, disabled: false});
@@ -88,10 +101,10 @@ AddfeedAssistant.prototype.cleanup = function(event) {
 AddfeedAssistant.prototype.updateFeed = function() {
     var url = this.urlModel.value;
 	var title = this.titleModel.value;
-	 
+	
     if(/^[a-z]{1,5}:/.test(url) === false) {
         url = url.replace(/^\/{1,2}/, "");                                
-        url = "http://" + url;                                                        
+        url = "http://" + url;                                          
     }
     
     // Update the entered URL & model.
@@ -104,11 +117,11 @@ AddfeedAssistant.prototype.updateFeed = function() {
 	this.controller.modelChanged(this.okButtonModel);
 
 	if(this.feed !== null) {
-		FeedReader.feeds.editFeed(this.index, title, url, this.enabledModel.value);
+		FeedReader.feeds.editFeed(this.index, title, url, this.enabledModel.value, this.viewModeModel.value);
 		this.okButton.mojo.deactivate();
 		this.widget.mojo.close();	
 	} else {
-		FeedReader.feeds.addFeed(title, url, this.enabledModel.value);
+		FeedReader.feeds.addFeed(title, url, this.enabledModel.value, this.viewModeModel.value);
 		this.okButton.mojo.deactivate();
 		this.widget.mojo.close();
 	}

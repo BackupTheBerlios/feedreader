@@ -24,6 +24,8 @@ var prefs = Class.create({
 	updateInterval:	15,
 	notificationEnabled: true,
 	wakingEnabled: false,
+	titleColor: "red",
+	summaryLength: 120,
 	
 	timer: {},
 	
@@ -39,15 +41,21 @@ var prefs = Class.create({
 			this.updateInterval = settings.updateInterval;
 			this.notificationEnabled = settings.notificationEnabled;
 			this.wakingEnabled = settings.wakingEnabled;
+			if(settings.version > 0) {
+				this.summaryLength = settings.summaryLength;
+				this.titleColor = settings.titleColor;
+			}
 		}
 	},
 	
 	save: function() {
 		this.cookie.put({
-			version: 0,
+			version: 1,
 			updateInterval: this.updateInterval,
 			notificationEnabled: this.notificationEnabled,
-			wakingEnabled: this.wakingEnabled
+			wakingEnabled: this.wakingEnabled,
+			summaryLength: this.summaryLength,
+			titleColor: this.titleColor
 		});
 		this.setTimer();
 	},

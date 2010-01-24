@@ -32,6 +32,7 @@
 .list-icon-spinner {
 	position: relative;
 	top: -36px;
+	left: -1px;
 }
 
 .list-fade-top {
@@ -110,16 +111,7 @@
 }
 
 .story-title {
-	color: red;
 	font-size: 16px;
-}
-
-.story-title-read {
-	font-weight: normal; 
-}
-
-.story-title-unread {
-	font-weight: bold;
 }
 
 .story-content {
@@ -127,12 +119,37 @@
 	font-size: 15px;
 }
 
-.story-content-read {
-	font-weight: normal;
+/* Text styling */
+.red {
+	color: red;
 }
 
-.story-content-unread {
-	font-weight: normal;
+.green {
+	color: green;
+}
+
+.blue {
+	color: blue;
+}
+
+.yellow {
+	color: yellow;
+}
+
+.purple {
+	color: #800080;
+}
+
+.black {
+	color: black;
+}
+
+.normal-text {
+	font-weight: normal; 
+}
+
+.bold-text {
+	font-weight: bold;
 }
 
 /* misc */
