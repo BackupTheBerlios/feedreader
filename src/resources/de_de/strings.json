@@ -61,6 +61,11 @@
 	"in Browser": "im Browser",
 	"in FeedReader": "in FeedReader",
 	"The Feed '#{title}' does not return data.": "Der Feed '#{title}' enthält keine Daten.",
+	"Summary appearance": "Zusammenfassungen",
 	"All items": "Alle Nachrichten",
-	"Aggregation of all feeds": "Zusammenfassung aller Feeds"
+	"All unread items": "Ungelesene Nachrichten",
+	"All new items": "Neue Nachrichten",
+	"Aggregation of all feeds": "Zusammenfassung aller Feeds",
+	"Aggregation of all unread items": "Zusammenfassung aller ungelesenen Nachrichten",
+	"Aggregation of all new items": "Zusammenfassung aller neuen Nachrichten"
 }
