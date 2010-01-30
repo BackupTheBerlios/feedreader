@@ -20,6 +20,33 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+/*
+ * The sort function are currently not in use. Just as the feed.sortMode
+ * property these functions are dedicated to a future version of FeedReader.
+ */
+ 
+/** @private
+ *
+ * Sort stories, so that unread ones come in front. 
+ */
+function SortRead(a, b) {
+	if(a.isRead == b.isRead) {
+		return 0;
+	} else if(a.isRead) {
+		return 1;
+	} else {
+		return -1;
+	}
+}
+
+/** @private
+ *
+ * Sort stories by date.
+ */
+function SortDate(a, b) {
+	return a.intDate - b.intDate;
+}
+
 function StorylistAssistant(feeds, index) {
 	this.feeds = feeds;
 	this.feedIndex = index;
@@ -27,25 +54,28 @@ function StorylistAssistant(feeds, index) {
 	this.feed = this.feeds.list[index];
 	this.filter = "";
 	
-	this.listFormatterHandler = this.listFormatter.bind(this);
 	this.listFindHandler = this.listFind.bind(this);
 }
 
 StorylistAssistant.prototype.setup = function() {
 	// Setup application menu.
 	this.controller.setupWidget(Mojo.Menu.appMenu, FeedReader.menuAttr, FeedReader.menuModel);
+	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feed));
+	this.controller.get("appIcon").className += " " + this.feeds.getFeedHeaderIcon(this.feed);
 
     // Setup the story list.
 	this.controller.setupWidget("storyList", {
 		itemTemplate:	"storylist/storylistRowTemplate", 
 		listTemplate:	"storylist/storylistListTemplate", 
 		formatters:  { 
-			"titleStyle": 		this.listFormatterHandler,
-			"titleColor":		this.listFormatterHandler,
-			"contentStyle": 	this.listFormatterHandler
+			"isRead": 			this.getTitleStyle.bind(this),
+			"titleColor":		this.getTitleColor.bind(this),
+			"contentStyle": 	this.getContentStyle.bind(this),
+			"summary":			this.getSummary.bind(this),
+			"originFeed":		this.getOrigin.bind(this)
 		},
 		swipeToDelete:	false, 
-		renderLimit: 	40,
+		renderLimit: 	100,
 		reorderable:	false,
 		delay:			700,
 		filterFunction: this.listFindHandler
@@ -54,21 +84,46 @@ StorylistAssistant.prototype.setup = function() {
 		items: this.feed.stories
 	});
 	
+	this.controller.listen("storyList", Mojo.Event.listTap,
+					   this.showStory.bindAsEventListener(this));
+
 	// Setup command menu.
-    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.updateModel = {
+    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel = {
 		label: "",
         items: [
-            { icon: "refresh", disabled: this.feeds.updateInProgress, command: "do-feedUpdate" }
+			{
+				items: [
+					{
+						icon: "back",
+						disabled: this.feedIndex === 0,
+						command: "do-previousFeed"
+					},
+					{
+						icon: "forward",
+						disabled: this.feedIndex === (this.feeds.list.length - 1),
+						command: "do-nextFeed"
+					}
+				]
+			},
+            {
+				icon: "refresh",
+				disabled: this.feeds.updateInProgress,
+				command: "do-feedUpdate"
+			}
         ]
 	});
+		
+	this.feeds.save();
+};
 
-    this.controller.listen("storyList", Mojo.Event.listTap,
-        				   this.showStory.bindAsEventListener(this));
-	this.controller.get("feed-title").update(this.feed.title);
+StorylistAssistant.prototype.updateModel = function() {
+	this.prepareFeed();
+	this.storyListModel.items = this.feed.stories;
+	this.controller.modelChanged(this.storyListModel);	
 };
 
 StorylistAssistant.prototype.activate = function(event) {
-	this.controller.modelChanged(this.storyListModel);
+	this.updateModel();
 };
 
 StorylistAssistant.prototype.deactivate = function(event) {
@@ -79,16 +134,74 @@ StorylistAssistant.prototype.deactivate = function(event) {
 StorylistAssistant.prototype.cleanup = function(event) {
 };
 
-StorylistAssistant.prototype.listFormatter = function(property, model) {
-	model.titleStyle = model.isRead ? "normal-text" : "bold-text";
-	model.titleColor = FeedReader.prefs.titleColor;
-	model.contentStyle = "normal-text";
-	if(model.summary) {
-		if(model.summary.length > (FeedReader.prefs.summaryLength + 10)) {
-			model.shortSummary = model.summary.slice(0, FeedReader.prefs.summaryLength - 1) + '...';
-		} else {
-			model.shortSummary = model.summary;
+StorylistAssistant.prototype.getTitleStyle = function(property, model) {
+	return { titleStyle: property ? "normal-text" : "bold-text" };
+};
+
+StorylistAssistant.prototype.getTitleColor = function(property, model) {
+	return { titleColor: FeedReader.prefs.titleColor };
+};
+
+StorylistAssistant.prototype.getContentStyle = function(property, model) {
+	return { contentStyle: "normal-text" };
+};
+
+StorylistAssistant.prototype.getOrigin = function(property, model) {
+	if(!property) {
+		return undefined;
+	}
+	
+	return { origin: "(" + this.feeds.list[property].title + 
+	//' #' + this.feed.stories.indexOf(model) +
+	")" };
+};
+
+StorylistAssistant.prototype.getSummary = function(property, model) {
+	if(!property) {
+		return undefined;
+	} else if(property.length > (FeedReader.prefs.summaryLength + 10)) {
+		return { shortSummary: property.slice(0, FeedReader.prefs.summaryLength - 1) + '...' };
+	} else {
+		return { shortSummary: property };
+	}	
+};
+
+StorylistAssistant.prototype.prepareFeed = function() {
+	if(this.feed.type != "allItems") {
+		return;
+	}
+	
+	var j, stories;
+	
+	try {
+		this.feeds.updatePseudoFeeds(true);
+		this.feed = undefined;	// clear first.
+		this.feed = {
+			type: "allItems",
+			stories: []
+		};
+		for(var i = 0; i < this.feeds.list.length; i++) {
+			if((this.feeds.list[i].type == "allItems") ||
+			   (this.feeds.list[i].type == "allUnRead") ||
+			   (this.feeds.list[i].type == "allNew")) {
+				continue;
+			}
+			
+			for(j = 0; j < this.feeds.list[i].stories.length; j++) {
+				this.feed.stories.push({
+					title:			this.feeds.list[i].stories[j].title,
+					url:			this.feeds.list[i].stories[j].url,
+					summary:		this.feeds.list[i].stories[j].summary,
+					date:			this.feeds.list[i].stories[j].date,
+					isNew:			this.feeds.list[i].stories[j].isNew,
+					isRead:			this.feeds.list[i].stories[j].isRead,
+					originFeed:		i,
+					originStory:	j
+				});
+			}
 		}
+	} catch(e) {
+		Mojo.Log.error("error during while aggregating allItems feed", e);
 	}
 };
 
@@ -115,29 +228,41 @@ StorylistAssistant.prototype.listFind = function(filterString, listWidget, offse
 };
 
 StorylistAssistant.prototype.showStory = function(event) {
-	if (!this.feed.stories[event.index].isRead) {
-		this.feeds.markStoryRead(this.feedIndex, event.index);
-		this.storyListModel.items = this.feed.stories;
-		this.controller.modelChanged(this.storyListModel);
+	var storyIndex = this.feed.stories.indexOf(event.item);
+	var story = this.feed.stories[storyIndex];
+	
+	if (!story.isRead) {
+		if(story.originFeed) {
+			this.feeds.markStoryRead(story.originFeed, story.originStory);
+		} else {
+			this.feeds.markStoryRead(this.feedIndex, storyIndex);
+		}
+		this.updateModel();
 		this.feeds.save();
 	}
 	
-	switch(parseInt(this.feed.viewMode, 10)) {
+	var viewMode = this.feed.viewMode;
+	var feedIndex = this.feedIndex;
+	if(story.originFeed)  {
+		viewMode = this.feeds.list[story.originFeed].viewMode;
+		feedIndex = story.originFeed;
+	}
+	
+	switch(parseInt(viewMode, 10)) {
 		case 0:
 			this.controller.serviceRequest("palm://com.palm.applicationManager", {
 				method: "open",
 				parameters: {
 					id: "com.palm.app.browser",
 					params: {
-						target: this.feed.stories[event.index].url
+						target: story.url
 					}
 				}
 			});
 			break;
-
+			
 		case 1:
-			this.controller.stageController.pushScene("fullStory", this.feeds,
-													  this.feedIndex, event.index);
+			this.controller.stageController.pushScene("fullStory", this.feeds, this.feed, feedIndex, storyIndex);
 			break;
 	}
 };
@@ -145,9 +270,29 @@ StorylistAssistant.prototype.showStory = function(event) {
 StorylistAssistant.prototype.handleCommand = function(event) {
 	if(event.type === Mojo.Event.command) {
 		switch(event.command) {
+			case "do-previousFeed":
+				this.controller.stageController.swapScene({
+					name: "storylist",
+					transition: Mojo.Transition.crossFade
+				}, this.feeds, this.feedIndex - 1);
+				break;
+				
+			case "do-nextFeed":
+				this.controller.stageController.swapScene({
+					name: "storylist",
+					transition: Mojo.Transition.crossFade
+				}, this.feeds, this.feedIndex + 1);
+				break;
+			
 			case "do-feedUpdate":
 				event.stopPropagation();
-				this.feeds.updateFeed(this.feedIndex);
+				if((this.feed.type == "allItems") ||
+				   (this.feed.type == "allUnRead") ||
+				   (this.feed.type == "allNew")) {
+					this.feeds.update();	
+				} else {
+					this.feeds.updateFeed(this.feedIndex);
+				}
 				break;
 		}
 	}
@@ -158,12 +303,11 @@ StorylistAssistant.prototype.considerForNotification = function(params){
 		switch(params.type) {
 			case "feed-update":
 				if(this.feedIndex == params.feedIndex) {
-					this.storyListModel.items = this.feed.stories;
-					this.controller.modelChanged(this.storyListModel);
+					this.updateModel();
 				}
-				if(this.updateModel.items[0].disabled != this.feeds.updateInProgress) {
-					this.updateModel.items[0].disabled = this.feeds.updateInProgress;
-					this.controller.modelChanged(this.updateModel);
+				if(this.commandModel.items[1].disabled != this.feeds.updateInProgress) {
+					this.commandModel.items[1].disabled = this.feeds.updateInProgress;
+					this.controller.modelChanged(this.commandModel);
 				}
 				break;
 		}

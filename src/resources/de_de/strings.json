@@ -60,5 +60,7 @@
 	"Show stories": "Anzeige",
 	"in Browser": "im Browser",
 	"in FeedReader": "in FeedReader",
-	"The Feed '#{title}' does not return data.": "Der Feed '#{title}' enthält keine Daten."
+	"The Feed '#{title}' does not return data.": "Der Feed '#{title}' enthält keine Daten.",
+	"All items": "Alle Nachrichten",
+	"Aggregation of all feeds": "Zusammenfassung aller Feeds"
 }

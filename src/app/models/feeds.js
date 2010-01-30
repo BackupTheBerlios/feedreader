@@ -30,12 +30,25 @@ var feeds = Class.create ({
 	activityLevel: 0,
 	activity: {},
 	connStatus: {},
+	cookie: {},
+	properties: {
+		migratingFrom: 1
+	},
 
 	/** @private
 	 *
 	 * Initializing.
 	 */	
 	initialize: function() {
+		this.cookie = new Mojo.Model.Cookie("comtegi-stuffAppFeedReaderProps");
+		
+		var data = this.cookie.get();
+		if(data) {
+			this.properties.migratingFrom = data.version;
+		} else {
+			this.properties.migratingFrom = 1;
+		}
+		
 		// Pre-bind some things to speed up repetitive usage.
 		this.setActivitySuccessHandler = this.setActivitySuccess.bind(this);
 		this.setActivityFailedHandler  = this.setActivityFailed.bind(this);
@@ -54,9 +67,12 @@ var feeds = Class.create ({
 	 * Load the feed list from a Depot.
 	 */
 	load: function() {
-		this.db = new Mojo.Depot({name: "FeedListDB", version: 1, estimatedSize: 500000, replace: false},
-			this.openDBSuccessHandler,
-            this.openDBFailedHandler);
+		this.db = new Mojo.Depot({
+			name: "FeedListDB",
+			version: 1,
+			estimatedSize: 500000,
+			replace: false
+		}, this.openDBSuccessHandler, this.openDBFailedHandler);
 	},
 	
 	/** @private
@@ -88,19 +104,91 @@ var feeds = Class.create ({
 	    
         if (Object.toJSON(data) == "{}" || data === null) { 
 			this.list = [];
-        } else {
-            this.list = data;
-			
-			// Add data of newer versions, if necessary.
-			for(var i = 0; i < this.list.length; i++) {
-				if(this.list[i].viewMode === undefined) {
-					this.list[i].viewMode = 0;
-					this.modified = true;
-				}
+        } else {		
+			if(this.properties.migratingFrom < 2) {
+				data = this.migrateV1(data);
 			}
-        }
+            this.list = data;
+		}
+			
+		this.cookie.put({ version: FeedReader.versionInt });
 		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-loaded" });
         this.update();
+	},
+	
+	/** @private
+	 *
+	 * Migrate a v1 database to v2 format.
+	 *
+	 */
+	migrateV1: function(data) {
+		var j;
+		var newdata = [];
+		
+		for(var i = 0; i < data.length; i++) {
+			// Skip invalid feeds.
+			if((data[i].type != "rss") &&
+			   (data[i].type != "RDF") &&
+			   (data[i].type != "atom")) {
+				continue;	
+			}
+			
+			// Update all feeds to new format.
+			// New properties:	viewMode		Show feeds in FeedReader or in Browser
+			//					sortMode		How the feed should be sorted
+			//					spnning			Wether the feed's spinner is spinning
+			//					preventDelete	Prevent deletion (to avoid delete pseudo feeds)
+			newdata.push({
+				type: 			data[i].type,
+				url: 			data[i].url,
+				title: 			data[i].title,
+				enabled: 		data[i].enabled,
+				numUnRead: 		data[i].numUnRead,
+				numNew: 		data[i].numNew,
+				viewMode: 		0,
+				sortMode:		0,
+				updated: 		true,
+				spinning: 		false,
+				preventDelete: 	false,
+				stories: 		[]
+			});
+			
+			// Update stories.
+			// New properties:	intDate			Takes the date as an integer, will be used
+			//									for sorting purposes in future.
+			// Changed:			summary			Will contain the full story from now on.
+			//									This cannot be reconstructed.
+			for(j = 0; j < data[i].stories.length; j++) {
+				newdata[newdata.length - 1].stories.push({
+					title: 		data[i].stories[j].title,
+					summary:	data[i].stories[j].summary,
+					url: 		data[i].stories[j].url,
+					date: 		data[i].stories[j].date,
+					intDate:	0,
+					uid: 		data[i].stories[j].uid,
+					isRead: 	data[i].stories[j].isRead,
+					isNew: 		data[i].stories[j].isNew
+				});
+			}
+		}
+		
+		// Add the new "All Items" pseudo feed.
+		newdata.unshift({
+			type: 			"allItems",
+			url: 			"",
+			title: 			"",
+			enabled: 		true,
+			numUnRead: 		0,
+			numNew: 		0,
+			viewMode: 		0,
+			updated: 		true,
+			spinning: 		false,
+			preventDelete: 	true,
+			stories: 		[]
+		});
+		
+		this.modified = true;
+		return newdata;
 	},
 	
 	/** @private
@@ -170,6 +258,7 @@ var feeds = Class.create ({
 			numNew: 0,
 			enabled: enabled,
 			viewMode: viewMode,
+			preventDelete: false,
 			updated: true,
 			spinning: false,
 			stories: []
@@ -204,7 +293,7 @@ var feeds = Class.create ({
 			this.updateFeed(index);
 		}
 	},
-		
+	
 	/** @private
 	 *
 	 * Tell the system, that we enter a phase of activity.
@@ -287,6 +376,10 @@ var feeds = Class.create ({
 	updateFeed: function(index) {
 		// Tell the current scene that we're about to update a feed.
 		if ((index >= 0) && (index < this.list.length)) {
+			if(this.list[index].type == "allItems") {
+				return;
+			}
+			
 			this.connStatus = new Mojo.Service.Request('palm://com.palm.connectionmanager', {
 				method: 'getstatus',
 				parameters: {},
@@ -357,10 +450,10 @@ var feeds = Class.create ({
 	 * 
 	 * Reformat a date to system locale, supports dc:date and RFC 822 format.
 	 * 
-	 * @param {String} dateString	string representing the date to reformat
-	 * @return {String}				reformatted date 
+	 * @param {Object}		story
+	 * @param {String}		date string to reformat
 	 */
-	reformatDate: function(dateString) {
+	reformatDate: function(story, dateString) {
 		var d;
 		var parts;
 		
@@ -436,10 +529,11 @@ var feeds = Class.create ({
 				}
 			}
 		} catch(e) {
-			return "";
+			Mojo.Log.error("Exception during date processing:", e);
 		}
 		
-		return Mojo.Format.formatDate(d, "medium");
+		story.date = Mojo.Format.formatDate(d, "medium");
+		story.intDate = d.getTime();
 	},
 	
 	/** @private
@@ -452,10 +546,11 @@ var feeds = Class.create ({
 	 */
 	determineFeedType: function(index, transport) {
 		var feedType = transport.responseXML.getElementsByTagName("rss");
+		var errorMsg = {};
 		
-		if(transport.responseText.length == 0) {
+		if(transport.responseText.length === 0) {
 			if (this.interactiveUpdate) {
-				var errorMsg = new Template($L("The Feed '#{title}' does not return data."));
+				errorMsg = new Template($L("The Feed '#{title}' does not return data."));
 				FeedReader.showError(errorMsg, { title: this.list[index].url });
 			}
 			ojo.Log.warn("Empty responseText in", this.list[index].url);
@@ -475,7 +570,7 @@ var feeds = Class.create ({
 					this.list[index].type = "atom";		// ATOM
 				} else {
 					if (this.interactiveUpdate) {
-						var errorMsg = new Template($L("The format of Feed '#{title}' is unsupported."));
+						errorMsg = new Template($L("The format of Feed '#{title}' is unsupported."));
 						FeedReader.showError(errorMsg, {title: this.list[index].url});
 					}
 					Mojo.Log.warn("Unsupported feed format in", this.list[index].url);
@@ -494,7 +589,7 @@ var feeds = Class.create ({
 	 * @param {Object} transport
 	 * @returns {Array} story container
 	 */
-	parseAtom: function(transport) {
+	parseAtom: function(index, transport) {
 		var container = [];
 		var atomItems = transport.responseXML.getElementsByTagName("entry");
 		for (var i = 0; i < atomItems.length; i++) {
@@ -504,6 +599,7 @@ var feeds = Class.create ({
 					summary: "",
 					url: atomItems[i].getElementsByTagName("link").item(0).getAttribute("href"),
 					date: "",
+					intDate: 0,
 					uid: "",
 					isRead: false,
 					isNew: true
@@ -524,7 +620,7 @@ var feeds = Class.create ({
 				
 				// Set the publishing date.
 				if (atomItems[i].getElementsByTagName("updated") && atomItems[i].getElementsByTagName("updated").item(0)) {
-					story.date = this.reformatDate(atomItems[i].getElementsByTagName("updated").item(0).textContent);
+					this.reformatDate(story, atomItems[i].getElementsByTagName("updated").item(0).textContent);
 				}
 				
 				// Set the unique id.
@@ -549,7 +645,7 @@ var feeds = Class.create ({
 	 * @param {Object} transport
 	 * @returns {Array} story container
 	 */
-	parseRSS: function(transport) {
+	parseRSS: function(index, transport) {
 		var container = [];
 		var rssItems = transport.responseXML.getElementsByTagName("item");
 		if(!rssItems) {
@@ -566,17 +662,22 @@ var feeds = Class.create ({
 					summary: this.reformatSummary(rssItems[i].getElementsByTagName("description").item(0).textContent),
 					url: rssItems[i].getElementsByTagName("link").item(0).textContent,
 					date: "",
+					intDate: 0,
 					uid: "",
 					isRead: false,
-					isNew: true
+					isNew: true,
+					originIndex: {
+						feedIndex: index,
+						storyIndex: i
+					}
 				};
 				
 				// Set the publishing date.
 				if (rssItems[i].getElementsByTagName("pubDate") && rssItems[i].getElementsByTagName("pubDate").item(0)) {
-					story.date = this.reformatDate(rssItems[i].getElementsByTagName("pubDate").item(0).textContent);
+					this.reformatDate(story, rssItems[i].getElementsByTagName("pubDate").item(0).textContent);
 				} else if (rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date") &&
 						   rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0)) {
-					story.date = this.reformatDate(rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0).textContent);
+					this.reformatDate(story, rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0).textContent);
 				}
 				
 				// Set the unique id.
@@ -602,9 +703,9 @@ var feeds = Class.create ({
 	 * @param {Object} transport
 	 * @returns {Array} story container
 	 */
-	parseRDF: function(transport) {
+	parseRDF: function(index, transport) {
 		// Currently we do the same as for RSS.
-		return this.parseRSS(transport);
+		return this.parseRSS(index, transport);
 	},
 	
 	/** @private
@@ -617,8 +718,6 @@ var feeds = Class.create ({
 	updateFeedSuccess: function(index, transport) {
 		try {
 			if ((transport.responseXML === null) && (transport.responseText !== null)) {
-				Mojo.Log.info("Status:", transport.status, transport.responseText.length);
-				Mojo.Log.info(transport.getAllHeaders());
 				Mojo.Log.info("Manually converting feed info to xml", transport.responseText);
 				transport.responseXML = new DOMParser().parseFromString(transport.responseText, "text/xml");
 			}
@@ -629,15 +728,15 @@ var feeds = Class.create ({
 				
 				switch(this.list[index].type) {
 					case "RDF":
-						newStories = this.parseRDF(transport);
+						newStories = this.parseRDF(index, transport);
 						break;
 						
 					case "rss":
-						newStories = this.parseRSS(transport);
+						newStories = this.parseRSS(index, transport);
 						break;
 						
 					case "atom":
-						newStories = this.parseAtom(transport);
+						newStories = this.parseAtom(index, transport);
 						break;
 				}
 				
@@ -764,6 +863,7 @@ var feeds = Class.create ({
 		this.updateInProgress = this.fullUpdateInProgress;
 		this.interactiveUpdate = false;
 		this.notifyOfFeedUpdate(index, false);
+		this.updatePseudoFeeds();
 		this.leaveActivity();
 	},
 
@@ -773,7 +873,7 @@ var feeds = Class.create ({
 	update: function() {
 		var i;
 		
-		if(this.list.length < 1) {
+		if(this.list.length < 2) {
 			return;
 		}
 		
@@ -788,13 +888,36 @@ var feeds = Class.create ({
 	},
 	
 	/**
-	 * Clears the feed list.
+	 * Update the pseudo feeds.
+	 *
+	 * @param {Boolean}	disableNotification		If set, omit the notification
 	 */
-	clear: function() {
-		Mojo.Log.info("Feedlist is about to be cleared");
-		this.list = {};
-		this.save();
-		this.load();
+	updatePseudoFeeds: function(disableNotification) {
+		if(this.updateInProgress) {
+			return;
+		}
+		
+		var allItemsIndex = -1;
+		var numUnRead = 0, numNew = 0;
+		
+		for(var i = 0; i < this.list.length; i++) {
+			if(this.list[i].type != "allItems") {
+				numUnRead += this.list[i].numUnRead;
+				numNew += this.list[i].numNew;
+			} else {
+				allItemsIndex = i;
+			}
+		}
+		
+		if(allItemsIndex >= 0) {
+			this.list[allItemsIndex].numNew = numNew;
+			this.list[allItemsIndex].numUnRead = numUnRead;
+			if(!disableNotification) {
+				this.notifyOfFeedUpdate(allItemsIndex, false);
+			}
+		} else {
+			Mojo.Log.warn("Something went wrong: no allItems feed found!");
+		}
 	},
 	
 	/**
@@ -803,13 +926,24 @@ var feeds = Class.create ({
 	 * @param {int}	index		Index of the feed
 	 */
 	markAllRead: function(index) {
-		if ((index >= 0) && (index < this.list.length)) {
-			this.list[index].numUnRead = 0;
-			for(var i = 0; i < this.list[index].stories.length; i++) {
-				this.list[index].stories[i].isRead = true;
+		if((index >= 0) && (index < this.list.length)) {
+			if(this.list[index].type == "allItems") {
+				for(var j = 0; j < this.list.length; j++) {
+					this.list[j].numUnRead = 0;
+					for(var k = 0; k < this.list[j].stories.length; j++) {
+						this.list[j].stories[k].isRead = true;
+					}
+					this.notifyOfFeedUpdate(j, false);
+				}
+			} else {
+				this.list[index].numUnRead = 0;
+				for(var i = 0; i < this.list[index].stories.length; i++) {
+					this.list[index].stories[i].isRead = true;
+				}
+				this.updatePseudoFeeds();
+				this.notifyOfFeedUpdate(index, false);
 			}
 			this.modified = true;
-			this.notifyOfFeedUpdate(index, false);
 		}
 	},
 	
@@ -820,11 +954,14 @@ var feeds = Class.create ({
 	 * @param {int} story		Index of the story
 	 */
 	markStoryRead: function(index, story) {
-		if ((index >= 0) && (index < this.list.length)) {
+		if((index >= 0) && (index < this.list.length)) {
 			if((story >= 0) && (story < this.list[index].stories.length)) {
-				this.list[index].stories[story].isRead = true;
-				this.list[index].numUnRead--;
-				this.modified = true;
+				if(! this.list[index].stories[story].isRead) {
+					this.list[index].stories[story].isRead = true;
+					this.list[index].numUnRead--;
+					this.updatePseudoFeeds();
+					this.modified = true;
+				}
 			}
 		}
 	},
@@ -835,14 +972,25 @@ var feeds = Class.create ({
 	 * @param {int} index		Index of the feed
 	 */
 	markAllUnRead: function(index) {
-		if ((index >= 0) && (index < this.list.length)) {
-			this.list[index].numUnRead = this.list[index].stories.length;
-			for(var i = 0; i < this.list[index].stories.length; i++) {
-				this.list[index].stories[i].isRead = false;
+		if((index >= 0) && (index < this.list.length)) {
+			if(this.list[index].type == "allItems") {
+				for(var j = 0; j < this.list.length; j++) {
+					this.list[j].numUnRead = this.list[j].stories.length;
+					for(var k = 0; k < this.list[j].stories.length; j++) {
+						this.list[j].stories[k].isRead = false;
+					}
+					this.notifyOfFeedUpdate(j, false);
+				}
+			} else {
+				this.list[index].numUnRead = this.list[index].stories.length;
+				for(var i = 0; i < this.list[index].stories.length; i++) {
+					this.list[index].stories[i].isRead = false;
+				}
+				this.updatePseudoFeeds();
+				this.notifyOfFeedUpdate(index, false);
 			}
 			this.modified = true;
-			this.notifyOfFeedUpdate(index, false);
-		}		
+		}
 	},
 
 	/**
@@ -851,11 +999,21 @@ var feeds = Class.create ({
 	 * @param {int} index		Index of the feed to process
 	 */
 	markSeen: function(index) {
-		if ((index >= 0) && (index < this.list.length)) {
-			for(var i = 0; i < this.list[index].stories.length; i++) {
-				this.list[index].stories[i].isNew = false;
+		if((index >= 0) && (index < this.list.length)) {
+			if(this.list[index].type == "allItems") {
+				for(var j = 0; j < this.list.length; j++) {
+					for(var k = 0; k < this.list[j].stories.length; k++) {
+						this.list[j].stories[k].isNew = false;
+					}
+					this.list[j].numNew = 0;
+				}
+			} else {
+				for(var i = 0; i < this.list[index].stories.length; i++) {
+					this.list[index].stories[i].isNew = false;
+				}
+				this.list[index].numNew = 0;
+				this.updatePseudoFeeds();
 			}
-			this.list[index].numNew = 0;
 			this.modified = true;
 		}
 	},
@@ -866,8 +1024,9 @@ var feeds = Class.create ({
 	 * @param {int} index		Index of the feed to delete
 	 */
 	deleteFeed: function(index) {
-		if ((index >= 0) && (index < this.list.length)) {
+		if((index >= 0) && (index < this.list.length)) {
 			this.list.splice(index, 1);
+			this.updatePseudoFeeds();
 			this.modified = true;
 		}
 	},
@@ -879,12 +1038,71 @@ var feeds = Class.create ({
 	 * @param {int} b			Index of the second feed
 	 */
 	exchangeFeeds: function(a, b) {
-		if ((a >= 0) && (a < this.list.length) && (b >= 0) && (b < this.list.length)) {
+		if((a >= 0) && (a < this.list.length) && (b >= 0) && (b < this.list.length)) {
 			var from = this.list[a];
 			var to   = this.list[b];
 			this.list[a] = to;
 			this.list[b] = from;
 			this.modified = true;
+		}
+	},
+	
+	/**
+	 * Return the feed's title.
+	 *
+	 * @param {Object} feed		a feed object
+	 * @return {String}			the feed's title
+	 */
+	getFeedTitle: function(feed) {
+		switch(feed.type) {
+			case "allItems":	return $L("All items");
+			case "allUnRead":	return $L("All unread items");
+			case "allNew":		return $L("All new items");
+			
+			default:
+				return feed.title;
+		}
+	},
+	
+	/**
+	 * Return the feed's url.
+	 *
+	 * @param {Object} feed		a feed object
+	 * @return {String}			the feed's url
+	 */
+	getFeedURL: function(feed) {
+		switch(feed.type) {
+			case "allItems":	return $L("Aggregation of all feeds");
+			case "allUnRead":	return $L("Aggregation of all unread items");
+			case "allNew":		return $L("Aggregation of all new items");
+			
+			default:
+				return feed.url;
+		}		
+	},
+	
+	/**
+	 * Return a feeds header icon class.
+	 *
+	 * @param {Object} feed		a feed object
+	 * @return {String}			the header icon class
+	 */
+	getFeedHeaderIcon: function(feed) {
+		switch(feed.type) {
+			case "allItems":
+			case "allUnRead":
+			case "allNew":
+				return "allitems";
+			
+			case "RDF":
+			case "rss":
+				return "rss";
+				
+			case "atom":
+				return "atom";
+			
+			default:
+				return "";
 		}
 	}
 });

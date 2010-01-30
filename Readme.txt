@@ -24,12 +24,17 @@ Changelog
 
 Version 1.1
 -----------
+ * all unread stories are now aggregated into a pseudo feed
+ * the full stories can now be read in FeedReader
+ * the title color can now be customized
+ * one can now quickly change between feeds in the story list
  * the feed list is now saved only when something has changed
  * old feed contents are no longer deleted if an error occurs
  * the network connection is checked before an update process is started
  * the update button in the story list is now correctly enabled and disabled
- * removed some JSLint warnings
  * the feed update spinner works again
+ * the list formatters no longer modify the model itself
+ * removed some JSLint warnings
 
 Version 1.0
 -----------

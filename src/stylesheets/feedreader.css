@@ -2,8 +2,16 @@
  * Changes to Palm styles
  */
 
-.palm-page-header-wrapper > .icon {
-	background: url(../images/header-icon.png) center center no-repeat;
+.icon.rss {
+    background: url(../images/header/rss-icon.png) center center no-repeat;
+}
+
+.icon.atom {
+    background: url(../images/header/atom-icon.png) center center no-repeat;
+}
+
+.icon.allitems {
+    background: url(../images/header/icon-allitems.png) center center no-repeat;
 }
 
 /*
@@ -26,7 +34,7 @@
 }
 
 .list-info-icon {
-    background: url(../images/info-icon.png) center center no-repeat;
+    background: url(../images/lists/info-icon.png) center center no-repeat;
 }
 
 .list-icon-spinner {
@@ -41,7 +49,7 @@
 	z-index: 10000;
 	height: 54px; 
 	width: 100%;
-	background: url(../images/list-fade-top.png) top center repeat-x;
+	background: url(../images/fade-top.png) top center repeat-x;
 }
 
 .list-fade-bottom {
@@ -50,35 +58,41 @@
 	z-index: 10000;
 	height: 54px; 
 	width: 100%;
-	background: url(../images/list-fade-bottom.png) bottom center repeat-x;
+	background: url(../images/fade-bottom.png) bottom center repeat-x;
 }
 
 /* feed icons */
+.feed-icon-allitems {
+    background: url(../images/lists/icon-allitems.png) center no-repeat;	
+}
+
 .feed-icon-rss {
-    background: url(../images/list-icon-rssfeed.png) center no-repeat;
+    background: url(../images/lists/icon-rss.png) center no-repeat;
 }
 
 .feed-icon-atom {
-    background: url(../images/list-icon-atomfeed.png) center no-repeat;
+    background: url(../images/lists/icon-atom.png) center no-repeat;
 }
 
 .feed-icon-unknown {
-	background: url(../images/list-icon-unknown.png) center no-repeat;
+	background: url(../images/lists/icon-unknown.png) center no-repeat;
 }
 
-.feed-icon-atom-disabled {
-	background: url(../images/list-icon-rssfeed-disabled.png) center no-repeat;
+.feed-icon-rss-disabled {
+	background: url(../images/lists/icon-rss-disabled.png) center no-repeat;
 }
 .feed-icon-atom-disabled {
-	background: url(../images/list-icon-atomfeed-disabled.png) center no-repeat;
+	background: url(../images/lists/icon-atom-disabled.png) center no-repeat;
 }
 
 .feed-icon-unknown-disabled {
-	background: url(../images/list-icon-unknown.png) center no-repeat;
+	background: url(../images/lists/icon-unknown.png) center no-repeat;
 }
 
 /* item badges */
 .feed-newitem {
+	position: absolute;
+	display: inline;
  	float: left;
 	font-weight: bold;
  	line-height: 30px;
@@ -88,7 +102,7 @@
  	margin-left: -15px;
  	text-align: center;
  	vertical-align: baseline;
- 	-webkit-border-image: url(../images/list-icon-newitem.png) 0 12 0 12 repeat stretch;
+ 	-webkit-border-image: url(../images/lists/icon-newitem.png) 0 12 0 12 repeat stretch;
  	-webkit-box-sizing: border-box;
 	border-width: 0px 12px 0px 12px;
 }
@@ -182,7 +196,7 @@ h3 {
 	top: 10px;
 	width: 32px; 
 	height: 32px;
-	background: url(../images/email-icon.png) no-repeat bottom;
+	background: url(../images/support/email-icon.png) no-repeat bottom;
 	vertical-align: bottom;
 	padding: 0px 0px 0px 5px;
 	float:left;
@@ -194,7 +208,7 @@ h3 {
 	top: 10px;
 	width: 32px; 
 	height: 32px;
-	background: url(../images/web-icon.png) no-repeat bottom;
+	background: url(../images/support/web-icon.png) no-repeat bottom;
 	vertical-align: bottom;
 	padding: 0px 0px 0px 5px;
 	float:left;

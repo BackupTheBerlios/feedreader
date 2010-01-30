@@ -28,11 +28,13 @@ FeedReader = {
 	appName:			"FeedReader",
 	appAuthor:			"Timo Tegtmeier",
 	versionString:		"1.1",
+	versionInt:			2,
 	copyrightYears:		"2009, 2010",
 
 	mainStageName: 		"FeedReaderStage",
 	
 	isActive: 			false,
+	showChangeLog:		false,
 	
 	menuAttr: {},
 	menuModel: {
@@ -40,7 +42,6 @@ FeedReader = {
     	items: [ 
         	{ label: $L("About FeedReader"), command: "do-about" },
 			{ label: $L("License"), command: "do-license" }
-//        	{ label: $L("Update all Feeds"), checkEnabled: true, command: "do-feedUpdate" }
     	]
 	},
 	

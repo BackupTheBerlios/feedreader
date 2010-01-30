@@ -26,6 +26,7 @@ var prefs = Class.create({
 	wakingEnabled: false,
 	titleColor: "red",
 	summaryLength: 120,
+	showChanges: false,
 	
 	timer: {},
 	
@@ -45,17 +46,21 @@ var prefs = Class.create({
 				this.summaryLength = settings.summaryLength;
 				this.titleColor = settings.titleColor;
 			}
+			if(settings.version < FeedReader.versionInt) {
+				this.showChanges = true;
+				this.save();
+			}
 		}
 	},
 	
 	save: function() {
 		this.cookie.put({
-			version: 1,
-			updateInterval: this.updateInterval,
-			notificationEnabled: this.notificationEnabled,
-			wakingEnabled: this.wakingEnabled,
-			summaryLength: this.summaryLength,
-			titleColor: this.titleColor
+			version: 				FeedReader.versionInt,
+			updateInterval: 		this.updateInterval,
+			notificationEnabled: 	this.notificationEnabled,
+			wakingEnabled: 			this.wakingEnabled,
+			summaryLength: 			this.summaryLength,
+			titleColor: 			this.titleColor
 		});
 		this.setTimer();
 	},
