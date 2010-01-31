@@ -103,7 +103,18 @@ var feeds = Class.create ({
         Mojo.Log.info("Database size: " , Object.values(data).size());
 	    
         if (Object.toJSON(data) == "{}" || data === null) { 
-			this.list = [];
+			this.list = [ {
+				type: 			"allItems",
+				url: 			"",
+				title: 			"",
+				enabled: 		true,
+				numUnRead: 		0,
+				numNew: 		0,
+				viewMode: 		0,
+				updated: 		true,
+				spinning: 		false,
+				preventDelete: 	true,
+				stories: 		[] } ];
         } else {		
 			if(this.properties.migratingFrom < 2) {
 				data = this.migrateV1(data);
@@ -649,10 +660,8 @@ var feeds = Class.create ({
 		var container = [];
 		var rssItems = transport.responseXML.getElementsByTagName("item");
 		if(!rssItems) {
-			Mojo.Log.warn("Feed is empty");
+			Mojo.Log.info("Feed", index, "is empty");
 			return container;
-		} else {
-			Mojo.Log.info("Feed contains", rssItems.length, "items");
 		}
 		
 		for (var i = 0; i < rssItems.length; i++) {
@@ -709,6 +718,77 @@ var feeds = Class.create ({
 	},
 	
 	/** @private
+	 *
+	 * !! HACK WARNING !!
+	 * This should not be needed theoretically. But prototype or maybe even
+	 * WebOS gets the encoding wrong as it displays the corresponding
+	 * characters from windows-1252. This thingy does the conversion.
+	 * 
+	 * Coverts text from codepage 1250.
+	 */
+	convertWin1250: function(text) {
+		if(text) {
+			text = text.replace(/Œ/g, "Ś");	// 8C
+			
+			text = text.replace(/œ/g, "ś");	// 9C
+			text = text.replace(/Ÿ/g, "ź");	// 9F
+			
+			text = text.replace(/¢/g, "˘");	// A2
+			text = text.replace(/£/g, "Ł"); // A3
+			text = text.replace(/¥/g, "Ą");	// A5
+			text = text.replace(/ª/g, "Ş");	// AA
+			
+			text = text.replace(/³/g, "ł");	// B3
+			text = text.replace(/¹/g, "ą");	// B9
+			text = text.replace(/º/g, "ş");	// BA
+			text = text.replace(/¼/g, "Ľ");	// BC
+			text = text.replace(/½/g, "˝"); // BD
+			text = text.replace(/¾/g, "ľ");	// BE
+			text = text.replace(/¿/g, "ż");	// BF
+			
+			text = text.replace(/À/g, "Ŕ");	// C0
+			text = text.replace(/Ã/g, "Ă");	// C3
+			text = text.replace(/Å/g, "Ĺ");	// C5
+			text = text.replace(/Æ/g, "Ć");	// C6
+			text = text.replace(/È/g, "Č");	// C8
+			text = text.replace(/Ê/g, "Ę");	// CA
+			text = text.replace(/Ì/g, "Ě");	// CC
+			text = text.replace(/Ï/g, "Ď");	// CF
+			
+			text = text.replace(/Ñ/g, "Ń");	// D1
+			text = text.replace(/Ò/g, "Ň");	// D2
+			text = text.replace(/Õ/g, "Ő");	// D5
+			text = text.replace(/Ø/g, "Ř");	// D8
+			text = text.replace(/Ù/g, "Ů");	// D9
+			text = text.replace(/Û/g, "Ű");	// DB
+			text = text.replace(/Þ/g, "Ţ");	// DE
+			
+			text = text.replace(/à/g, "ŕ");	// E0
+			text = text.replace(/ã/g, "ă");	// E3
+			text = text.replace(/å/g, "ĺ");	// E5
+			text = text.replace(/æ/g, "ć");	// E6
+			text = text.replace(/è/g, "č");	// E8
+			text = text.replace(/ê/g, "ę");	// EA
+			text = text.replace(/ì/g, "ě");	// EC
+			text = text.replace(/ï/g, "ď");	// EF
+			
+			text = text.replace(/ð/g, "đ");	// F0
+			text = text.replace(/ñ/g, "ń");	// F1
+			text = text.replace(/ò/g, "ň");	// F2
+			text = text.replace(/õ/g, "ő");	// F5
+			text = text.replace(/ø/g, "ř");	// F8
+			text = text.replace(/ù/g, "ů");	// F9
+			text = text.replace(/û/g, "ű");	// FB
+			text = text.replace(/þ/g, "ţ");	// FE
+			text = text.replace(/ÿ/g, "˙");	// FF
+			
+			return text;
+		} else {
+			return "";
+		}
+	},
+	
+	/** @private
 	 * 
 	 * Called when an Ajax request succeeds.
 	 * 
@@ -717,9 +797,17 @@ var feeds = Class.create ({
 	 */
 	updateFeedSuccess: function(index, transport) {
 		try {
-			if ((transport.responseXML === null) && (transport.responseText !== null)) {
+			if((transport.responseXML === null) && (transport.responseText !== null)) {
 				Mojo.Log.info("Manually converting feed info to xml", transport.responseText);
 				transport.responseXML = new DOMParser().parseFromString(transport.responseText, "text/xml");
+			}
+			
+			var converter = undefined;
+			if(transport.getHeader("Content-Type")) {
+				if(transport.getHeader("Content-Type").match(/.*windows\-1250.*/) ||
+				   transport.getHeader("Content-Type").match(/.*win\-1250.*/)) {
+					converter = this.convertWin1250;
+				}
 			}
 			
 			if(this.determineFeedType(index, transport)) {
@@ -747,6 +835,10 @@ var feeds = Class.create ({
 				
 				for (var i = 0; i < newStories.length; i++) {
 					for (var j = 0; j < this.list[index].stories.length; j++) {
+						if(converter) {
+							newStories[i].title = converter(newStories[i].title);
+							newStories[i].summary = converter(newStories[i].summary);
+						}
 						if(newStories[i].uid == this.list[index].stories[j].uid) {
 							newStories[i].isRead = this.list[index].stories[j].isRead;
 							newStories[i].isNew = this.list[index].stories[j].isNew;
