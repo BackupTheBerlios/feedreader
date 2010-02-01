@@ -48,6 +48,7 @@ var prefs = Class.create({
 			}
 			if(settings.version < FeedReader.versionInt) {
 				this.showChanges = true;
+				Mojo.Log.error("!!!! show !!!!")
 				this.save();
 			}
 		}
