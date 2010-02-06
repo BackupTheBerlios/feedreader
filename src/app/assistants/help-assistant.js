@@ -57,7 +57,7 @@ HelpAssistant.prototype.supportEMailTap = function(event) {
 	this.controller.serviceRequest('palm://com.palm.applicationManager', {
 		method: "open",
 		parameters: {
-			target: "mailto:timo@tegi-stuff.de?subject=FeedReader"
+			target: "mailto:general@tegi-stuff.de?subject=FeedReader"
 		}
 	});	
 };
