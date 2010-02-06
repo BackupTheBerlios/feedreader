@@ -95,7 +95,6 @@ AddfeedAssistant.prototype.setup = function(widget) {
 };
 
 AddfeedAssistant.prototype.cleanup = function(event) {
-	this.feeds.save();
 };
 
 AddfeedAssistant.prototype.updateFeed = function() {

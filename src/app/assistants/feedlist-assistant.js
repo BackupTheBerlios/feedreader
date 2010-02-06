@@ -36,6 +36,7 @@ FeedlistAssistant.prototype.setup = function() {
 	Mojo.Event.listen(stageDocument, Mojo.Event.stageDeactivate, this.deactivateWindow.bindAsEventListener(this));
 	
 	// Setup the feed list.
+	this.feedListWidget = this.controller.get("feedList");
 	this.controller.setupWidget("feedList", {
         itemTemplate:	"feedlist/feedlistRowTemplate", 
         listTemplate:	"feedlist/feedlistListTemplate", 
@@ -79,9 +80,7 @@ FeedlistAssistant.prototype.setup = function() {
         ]
 	});
 	
-	this.controller.stageController.setWindowOrientation("free");
 	this.setupComplete = true;
-
 	if(FeedReader.prefs.showChanges) {
 		FeedReader.prefs.showChanges = false;
 		this.controller.showDialog({template: "changelog/changelog-scene",
@@ -123,20 +122,20 @@ FeedlistAssistant.prototype.activate = function(event) {
 	if(this.setupComplete) {
 		this.updateFeedModel();
 	}
-	this.feeds.save();
 };
 
 FeedlistAssistant.prototype.deactivate = function(event) {
-	this.feeds.save();
 };
 
 FeedlistAssistant.prototype.cleanup = function(event) {
 };
 
-FeedlistAssistant.prototype.updateFeedModel = function() {
-	this.feeds.updatePseudoFeeds(true);
-	this.feedListModel.items = this.feeds.list;
-	this.controller.modelChanged(this.feedListModel);
+FeedlistAssistant.prototype.updateFeedModel = function(who) {
+	if(this.setupComplete) {
+		this.feeds.updatePseudoFeeds(true);
+		this.feedListModel.items = this.feeds.list;
+		this.feedListWidget.mojo.noticeUpdatedItems(0, this.feedListModel.items);
+	}
 };
 
 FeedlistAssistant.prototype.showFeed = function(event) {
@@ -192,7 +191,7 @@ FeedlistAssistant.prototype.listFind = function(filterString, listWidget, offset
 };
 
 FeedlistAssistant.prototype.reOrderFeed =  function(event) {
-	this.feeds.exchangeFeeds(event.fromIndex, event.toIndex);
+	this.feeds.moveFeed(event.fromIndex, event.toIndex);
 };
 
 FeedlistAssistant.prototype.addNewFeed = function(event) {

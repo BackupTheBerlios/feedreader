@@ -84,5 +84,4 @@ PreferencesAssistant.prototype.cleanup = function(event) {
 	this.prefs.summaryLength = this.summaryLengthModel.value;
 	
 	this.prefs.save();
-	FeedReader.feeds.save();
 };

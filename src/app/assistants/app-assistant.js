@@ -113,11 +113,13 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
     
     if (!launchParams) {
         if (cardStageController) {
+			cardStageController.setWindowOrientation("free");
             cardStageController.popScenesTo("feedlist");    
             cardStageController.activate();
         } else {
             this.controller.createStageWithCallback({name: FeedReader.mainStageName, lightweight: true}, 
                 									function(stageController) {
+														stageController.setWindowOrientation("free");
 														stageController.pushScene("feedlist", FeedReader.feeds);
 													},
 													"card");
@@ -132,12 +134,14 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
         
 			case "bannerPressed":
 				if (cardStageController) {
+					cardStageController.setWindowOrientation("free");
 				    cardStageController.popScenesTo("feedlist");
 				} else {
 	                this.controller.createStageWithCallback({
 						name: FeedReader.mainStageName,
 						lightweight: true
 					}, function(stageController) {
+						stageController.setWindowOrientation("free");
 	                	stageController.pushScene("feedlist", FeedReader.feeds);
 	                }, "card");        
 	            }

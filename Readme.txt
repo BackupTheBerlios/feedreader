@@ -22,8 +22,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 Changelog
 =========
 
-Version 1.1
------------
+Version 1.1.1 (Maintenance Release)
+-----------------------------------
+ * Fixed some bugs regarding list re-ordering
+ * Fixed a bug concerning feed deletion
+ * Fixed a bug concerning the list header icon
+ * Removed some debug messages
+ * Introduced a spooler class
+ * Moved the codepage conversion into a seperate class
+
+Version 1.1 (Feature Release)
+-----------------------------
  * all unread stories are now aggregated into a pseudo feed
  * the full stories can now be read in FeedReader
  * the title color can now be customized

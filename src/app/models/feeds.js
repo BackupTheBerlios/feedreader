@@ -21,18 +21,23 @@
  */
 
 var feeds = Class.create ({
-	db: {},
-	list: [],
-	fullUpdateInProgress: false,
-	updateInProgress: false,
-	interactiveUpdate: false,
-	modified: false,
-	activityLevel: 0,
-	activity: {},
-	connStatus: {},
-	cookie: {},
+	list: [],		// contains the individual feeds
+
+	db: {},			// takes the depot object
+	activity: {},	// takes the activity service
+	connStatus: {},	// takes the connection state service
+	cookie: {},		// takes the database info cookie
+	spooler: {},	// action spooler
+	converter: {},	// codepage converter
+
+	fullUpdateInProgress: false,	// true if a full update is in progress
+	updateInProgress: false,		// true if any kind of update is in progress
+	interactiveUpdate: false,		// true if the update is interactive
+	modified: false,				// used by save() to indicate changes
+	saveInProgress: false,			// true if a save process is ongoing
+	activityLevel: 0,				// activity counter
 	properties: {
-		migratingFrom: 1
+		migratingFrom: 1			// db version loaded
 	},
 
 	/** @private
@@ -40,6 +45,9 @@ var feeds = Class.create ({
 	 * Initializing.
 	 */	
 	initialize: function() {
+		this.spooler = new spooler();
+		this.converter = new codepageConverter();
+		
 		this.cookie = new Mojo.Model.Cookie("comtegi-stuffAppFeedReaderProps");
 		
 		var data = this.cookie.get();
@@ -61,6 +69,8 @@ var feeds = Class.create ({
 		
 		this.saveFeedListSuccessHandler = this.saveFeedListSuccess.bind(this);
 		this.saveFeedListFailedHandler  = this.saveFeedListFailed.bind(this);
+		
+		this.doSaveHandler = this.doSave.bind(this);
 	},
 	
 	/**
@@ -198,7 +208,6 @@ var feeds = Class.create ({
 			stories: 		[]
 		});
 		
-		this.modified = true;
 		return newdata;
 	},
 	
@@ -214,13 +223,17 @@ var feeds = Class.create ({
 	 * Save the feed list to a depot.
 	 */
 	save: function() {
-		if(this.modified) {
-			this.db.add("feedList", this.list,
-						this.saveFeedListSuccessHandler,
-						this.saveFeedListFailedHandler);
-		} else {
-			Mojo.Log.info("list not changed; no saving needed");
-		}
+		this.spooler.addAction(this.doSaveHandler);
+	},
+	
+	/** @private
+	 *
+	 */
+	doSave: function() {
+		this.saveInProgress = true;
+		this.db.add("feedList", this.list,
+					this.saveFeedListSuccessHandler,
+					this.saveFeedListFailedHandler);
 	},
 	
 	/** @private
@@ -228,8 +241,10 @@ var feeds = Class.create ({
 	 * Called when saving the feed list succeeds.
 	 */
 	saveFeedListSuccess: function() {
-		this.modified = false;
+		this.saveInProgress = false;
 		Mojo.Log.info("feed list saved");
+		
+		this.spooler.nextAction();
 	},
 	
 	/** @private
@@ -237,7 +252,10 @@ var feeds = Class.create ({
 	 * Called when saving the feed list fails.
 	 */
 	saveFeedListFailed: function(transaction, result) {
+		this.saveInProgress = false;
 		Mojo.Log.warn("feed list could not be saved: ", result.message);
+
+		this.spooler.nextAction();
 	},
 	
 	/**
@@ -274,7 +292,6 @@ var feeds = Class.create ({
 			spinning: false,
 			stories: []
 		});
-		this.modified = true;
 		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-newfeed" });
 		this.interactiveUpdate = true;
 		this.updateFeed(this.list.length - 1);
@@ -296,7 +313,6 @@ var feeds = Class.create ({
 			this.list[index].url = url;
 			this.list[index].enabled = enabled;
 			this.list[index].viewMode = viewMode;
-			this.modified = true;
 			Mojo.Controller.getAppController().sendToNotificationChain({
 				type: "feedlist-editedfeed",
 				feedIndex: index
@@ -391,13 +407,17 @@ var feeds = Class.create ({
 				return;
 			}
 			
-			this.connStatus = new Mojo.Service.Request('palm://com.palm.connectionmanager', {
-				method: 'getstatus',
-				parameters: {},
-				onSuccess: this.getConnStatusSuccess.bind(this, index),
-				onFailure: this.getConnStatusFailed.bind(this, index)
-			});
+			this.spooler.addAction(this.doUpdateFeed.bind(this, index));
 		}		
+	},
+	
+	doUpdateFeed: function(index) {
+		this.connStatus = new Mojo.Service.Request('palm://com.palm.connectionmanager', {
+			method: 'getstatus',
+			parameters: {},
+			onSuccess: this.getConnStatusSuccess.bind(this, index),
+			onFailure: this.getConnStatusFailed.bind(this, index)
+		});		
 	},
 
 	/** @private
@@ -564,7 +584,7 @@ var feeds = Class.create ({
 				errorMsg = new Template($L("The Feed '#{title}' does not return data."));
 				FeedReader.showError(errorMsg, { title: this.list[index].url });
 			}
-			ojo.Log.warn("Empty responseText in", this.list[index].url);
+			Mojo.Log.warn("Empty responseText in", this.list[index].url);
 			this.list[index].type = "unknown";
 			return false;			
 		}
@@ -715,78 +735,7 @@ var feeds = Class.create ({
 	parseRDF: function(index, transport) {
 		// Currently we do the same as for RSS.
 		return this.parseRSS(index, transport);
-	},
-	
-	/** @private
-	 *
-	 * !! HACK WARNING !!
-	 * This should not be needed theoretically. But prototype or maybe even
-	 * WebOS gets the encoding wrong as it displays the corresponding
-	 * characters from windows-1252. This thingy does the conversion.
-	 * 
-	 * Coverts text from codepage 1250.
-	 */
-	convertWin1250: function(text) {
-		if(text) {
-			text = text.replace(/Œ/g, "Ś");	// 8C
-			
-			text = text.replace(/œ/g, "ś");	// 9C
-			text = text.replace(/Ÿ/g, "ź");	// 9F
-			
-			text = text.replace(/¢/g, "˘");	// A2
-			text = text.replace(/£/g, "Ł"); // A3
-			text = text.replace(/¥/g, "Ą");	// A5
-			text = text.replace(/ª/g, "Ş");	// AA
-			
-			text = text.replace(/³/g, "ł");	// B3
-			text = text.replace(/¹/g, "ą");	// B9
-			text = text.replace(/º/g, "ş");	// BA
-			text = text.replace(/¼/g, "Ľ");	// BC
-			text = text.replace(/½/g, "˝"); // BD
-			text = text.replace(/¾/g, "ľ");	// BE
-			text = text.replace(/¿/g, "ż");	// BF
-			
-			text = text.replace(/À/g, "Ŕ");	// C0
-			text = text.replace(/Ã/g, "Ă");	// C3
-			text = text.replace(/Å/g, "Ĺ");	// C5
-			text = text.replace(/Æ/g, "Ć");	// C6
-			text = text.replace(/È/g, "Č");	// C8
-			text = text.replace(/Ê/g, "Ę");	// CA
-			text = text.replace(/Ì/g, "Ě");	// CC
-			text = text.replace(/Ï/g, "Ď");	// CF
-			
-			text = text.replace(/Ñ/g, "Ń");	// D1
-			text = text.replace(/Ò/g, "Ň");	// D2
-			text = text.replace(/Õ/g, "Ő");	// D5
-			text = text.replace(/Ø/g, "Ř");	// D8
-			text = text.replace(/Ù/g, "Ů");	// D9
-			text = text.replace(/Û/g, "Ű");	// DB
-			text = text.replace(/Þ/g, "Ţ");	// DE
-			
-			text = text.replace(/à/g, "ŕ");	// E0
-			text = text.replace(/ã/g, "ă");	// E3
-			text = text.replace(/å/g, "ĺ");	// E5
-			text = text.replace(/æ/g, "ć");	// E6
-			text = text.replace(/è/g, "č");	// E8
-			text = text.replace(/ê/g, "ę");	// EA
-			text = text.replace(/ì/g, "ě");	// EC
-			text = text.replace(/ï/g, "ď");	// EF
-			
-			text = text.replace(/ð/g, "đ");	// F0
-			text = text.replace(/ñ/g, "ń");	// F1
-			text = text.replace(/ò/g, "ň");	// F2
-			text = text.replace(/õ/g, "ő");	// F5
-			text = text.replace(/ø/g, "ř");	// F8
-			text = text.replace(/ù/g, "ů");	// F9
-			text = text.replace(/û/g, "ű");	// FB
-			text = text.replace(/þ/g, "ţ");	// FE
-			text = text.replace(/ÿ/g, "˙");	// FF
-			
-			return text;
-		} else {
-			return "";
-		}
-	},
+	},	
 	
 	/** @private
 	 * 
@@ -802,14 +751,7 @@ var feeds = Class.create ({
 				transport.responseXML = new DOMParser().parseFromString(transport.responseText, "text/xml");
 			}
 			
-			var converter = undefined;
-			if(transport.getHeader("Content-Type")) {
-				if(transport.getHeader("Content-Type").match(/.*windows\-1250.*/) ||
-				   transport.getHeader("Content-Type").match(/.*win\-1250.*/)) {
-					converter = this.convertWin1250;
-				}
-			}
-			
+			var contentType = transport.getHeader("Content-Type");
 			if(this.determineFeedType(index, transport)) {
 				Mojo.Log.info("Feed", index, "is of type", this.list[index].type);
 				var newStories = [];
@@ -835,17 +777,15 @@ var feeds = Class.create ({
 				
 				for (var i = 0; i < newStories.length; i++) {
 					for (var j = 0; j < this.list[index].stories.length; j++) {
-						if(converter) {
-							newStories[i].title = converter(newStories[i].title);
-							newStories[i].summary = converter(newStories[i].summary);
-						}
+						newStories[i].title = this.converter.convert(contentType, newStories[i].title);
+						newStories[i].summary = this.converter.convert(contentType, newStories[i].summary);
+						
 						if(newStories[i].uid == this.list[index].stories[j].uid) {
 							newStories[i].isRead = this.list[index].stories[j].isRead;
 							newStories[i].isNew = this.list[index].stories[j].isNew;
 							break;
 						}            
 					}
-					
 					if(newStories[i].isNew) {
 						this.list[index].numNew++;
 					}
@@ -949,14 +889,18 @@ var feeds = Class.create ({
 				}
 				
 				this.leaveActivity();
+				this.save();
 			}
+		} else {
+			this.save();
 		}
-		this.modified = true;
 		this.updateInProgress = this.fullUpdateInProgress;
 		this.interactiveUpdate = false;
 		this.notifyOfFeedUpdate(index, false);
 		this.updatePseudoFeeds();
 		this.leaveActivity();
+		
+		this.spooler.nextAction();
 	},
 
 	/**
@@ -1035,7 +979,7 @@ var feeds = Class.create ({
 				this.updatePseudoFeeds();
 				this.notifyOfFeedUpdate(index, false);
 			}
-			this.modified = true;
+			this.save();
 		}
 	},
 	
@@ -1052,9 +996,9 @@ var feeds = Class.create ({
 					this.list[index].stories[story].isRead = true;
 					this.list[index].numUnRead--;
 					this.updatePseudoFeeds();
-					this.modified = true;
 				}
 			}
+			this.save();
 		}
 	},
 	
@@ -1073,6 +1017,7 @@ var feeds = Class.create ({
 					}
 					this.notifyOfFeedUpdate(j, false);
 				}
+				this.save();
 			} else {
 				this.list[index].numUnRead = this.list[index].stories.length;
 				for(var i = 0; i < this.list[index].stories.length; i++) {
@@ -1081,7 +1026,7 @@ var feeds = Class.create ({
 				this.updatePseudoFeeds();
 				this.notifyOfFeedUpdate(index, false);
 			}
-			this.modified = true;
+			this.save();
 		}
 	},
 
@@ -1099,6 +1044,7 @@ var feeds = Class.create ({
 					}
 					this.list[j].numNew = 0;
 				}
+				this.save();
 			} else {
 				for(var i = 0; i < this.list[index].stories.length; i++) {
 					this.list[index].stories[i].isNew = false;
@@ -1106,7 +1052,7 @@ var feeds = Class.create ({
 				this.list[index].numNew = 0;
 				this.updatePseudoFeeds();
 			}
-			this.modified = true;
+			this.save();
 		}
 	},
 	
@@ -1118,24 +1064,37 @@ var feeds = Class.create ({
 	deleteFeed: function(index) {
 		if((index >= 0) && (index < this.list.length)) {
 			this.list.splice(index, 1);
+			this.save();
 			this.updatePseudoFeeds();
-			this.modified = true;
 		}
 	},
 	
 	/**
-	 * Exchange two feeds.
+	 * Move a feed in the list.
 	 *
-	 * @param {int} a			Index of the first feed
-	 * @param {int} b			Index of the second feed
+	 * @param {int} fromIndex	Feed to be moved
+	 * @param {int} toIndex		Index to move it to
 	 */
-	exchangeFeeds: function(a, b) {
-		if((a >= 0) && (a < this.list.length) && (b >= 0) && (b < this.list.length)) {
-			var from = this.list[a];
-			var to   = this.list[b];
-			this.list[a] = to;
-			this.list[b] = from;
-			this.modified = true;
+	moveFeed: function(fromIndex, toIndex) {
+		if(fromIndex == toIndex) {
+			return;
+		}
+		
+		try {
+			if((fromIndex >= 0) && (fromIndex < this.list.length) &&
+			   (toIndex >= 0) && (toIndex < this.list.length)) {
+				var elem = this.list.slice(fromIndex);
+				this.list.splice(fromIndex, 1);
+				var behind = this.list.slice(toIndex);
+				this.list.splice(toIndex, this.list.length - toIndex);
+				this.list.push(elem[0]);
+				for(var i = 0; i < behind.length; i++) {
+					this.list.push(behind[i]);
+				}
+				this.save();
+			}
+		} catch(e) {
+			Mojo.Log.error("!!!", e);	
 		}
 	},
 	
@@ -1194,7 +1153,7 @@ var feeds = Class.create ({
 				return "atom";
 			
 			default:
-				return "";
+				return "rss";
 		}
 	}
 });

@@ -28,5 +28,4 @@ LicenseAssistant.prototype.setup = function() {
 };
 
 LicenseAssistant.prototype.cleanup = function(event) {
-	FeedReader.feeds.save();
 };

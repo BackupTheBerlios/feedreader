@@ -55,15 +55,20 @@ function StorylistAssistant(feeds, index) {
 	this.filter = "";
 	
 	this.listFindHandler = this.listFind.bind(this);
+	this.setupComplete = false;
 }
 
 StorylistAssistant.prototype.setup = function() {
 	// Setup application menu.
 	this.controller.setupWidget(Mojo.Menu.appMenu, FeedReader.menuAttr, FeedReader.menuModel);
+
 	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feed));
 	this.controller.get("appIcon").className += " " + this.feeds.getFeedHeaderIcon(this.feed);
 
+	this.controller.setDefaultTransition(Mojo.Transition.defaultTransition);
+
     // Setup the story list.
+	this.storyListWidget = this.controller.get("storyList");
 	this.controller.setupWidget("storyList", {
 		itemTemplate:	"storylist/storylistRowTemplate", 
 		listTemplate:	"storylist/storylistListTemplate", 
@@ -112,14 +117,16 @@ StorylistAssistant.prototype.setup = function() {
 			}
         ]
 	});
-		
-	this.feeds.save();
+	
+	this.setupComplete = true;
 };
 
 StorylistAssistant.prototype.updateModel = function() {
-	this.prepareFeed();
-	this.storyListModel.items = this.feed.stories;
-	this.controller.modelChanged(this.storyListModel);	
+	if(this.setupComplete) {
+		this.prepareFeed();
+		this.storyListModel.items = this.feed.stories;
+		this.storyListWidget.mojo.noticeUpdatedItems(0, this.storyListModel.items);
+	}
 };
 
 StorylistAssistant.prototype.activate = function(event) {
@@ -128,7 +135,6 @@ StorylistAssistant.prototype.activate = function(event) {
 
 StorylistAssistant.prototype.deactivate = function(event) {
 	this.feeds.markSeen(this.feedIndex);
-	this.feeds.save();
 };
 
 StorylistAssistant.prototype.cleanup = function(event) {
@@ -238,7 +244,6 @@ StorylistAssistant.prototype.showStory = function(event) {
 			this.feeds.markStoryRead(this.feedIndex, storyIndex);
 		}
 		this.updateModel();
-		this.feeds.save();
 	}
 	
 	var viewMode = this.feed.viewMode;

@@ -42,6 +42,8 @@ FullStoryAssistant.prototype.setup = function() {
 	// Setup application menu.
 	this.controller.setupWidget(Mojo.Menu.appMenu, FeedReader.menuAttr, FeedReader.menuModel);
 
+	this.controller.setDefaultTransition(Mojo.Transition.defaultTransition);
+
 	this.controller.get("appIcon").className += " " + this.feeds.getFeedHeaderIcon(this.feed);
 	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feeds.list[this.originFeed]));
 	this.controller.get("story-date").update(this.story.date);
@@ -73,8 +75,6 @@ FullStoryAssistant.prototype.setup = function() {
 
     this.controller.listen("fullStory", Mojo.Event.tap,
         				   this.storyTap.bindAsEventListener(this));
-	
-	this.feeds.save();
 };
 
 FullStoryAssistant.prototype.activate = function(event) {
@@ -83,7 +83,6 @@ FullStoryAssistant.prototype.activate = function(event) {
 
 
 FullStoryAssistant.prototype.deactivate = function(event) {
-	this.feeds.save();
 };
 
 FullStoryAssistant.prototype.cleanup = function(event) {
