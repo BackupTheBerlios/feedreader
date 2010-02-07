@@ -165,8 +165,8 @@ StorylistAssistant.prototype.getOrigin = function(property, model) {
 StorylistAssistant.prototype.getSummary = function(property, model) {
 	if(!property) {
 		return undefined;
-	} else if(property.length > (FeedReader.prefs.summaryLength + 10)) {
-		return { shortSummary: property.slice(0, FeedReader.prefs.summaryLength - 1) + '...' };
+	} else if(property.length > (parseInt(FeedReader.prefs.summaryLength, 10) + 10)) {
+		return { shortSummary: property.slice(0, parseInt(FeedReader.prefs.summaryLength, 10) - 1) + '...' };
 	} else {
 		return { shortSummary: property };
 	}	
@@ -180,7 +180,6 @@ StorylistAssistant.prototype.prepareFeed = function() {
 	var j, stories;
 	
 	try {
-		this.feeds.updatePseudoFeeds(true);
 		this.feed = undefined;	// clear first.
 		this.feed = {
 			type: "allItems",

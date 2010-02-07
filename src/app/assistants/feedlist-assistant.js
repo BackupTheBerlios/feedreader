@@ -132,7 +132,6 @@ FeedlistAssistant.prototype.cleanup = function(event) {
 
 FeedlistAssistant.prototype.updateFeedModel = function(who) {
 	if(this.setupComplete) {
-		this.feeds.updatePseudoFeeds(true);
 		this.feedListModel.items = this.feeds.list;
 		this.feedListWidget.mojo.noticeUpdatedItems(0, this.feedListModel.items);
 	}

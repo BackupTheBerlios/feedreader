@@ -1080,21 +1080,17 @@ var feeds = Class.create ({
 			return;
 		}
 		
-		try {
-			if((fromIndex >= 0) && (fromIndex < this.list.length) &&
-			   (toIndex >= 0) && (toIndex < this.list.length)) {
-				var elem = this.list.slice(fromIndex);
-				this.list.splice(fromIndex, 1);
-				var behind = this.list.slice(toIndex);
-				this.list.splice(toIndex, this.list.length - toIndex);
-				this.list.push(elem[0]);
-				for(var i = 0; i < behind.length; i++) {
-					this.list.push(behind[i]);
-				}
-				this.save();
+		if((fromIndex >= 0) && (fromIndex < this.list.length) &&
+		   (toIndex >= 0) && (toIndex < this.list.length)) {
+			var elem = this.list.slice(fromIndex);
+			this.list.splice(fromIndex, 1);
+			var behind = this.list.slice(toIndex);
+			this.list.splice(toIndex, this.list.length - toIndex);
+			this.list.push(elem[0]);
+			for(var i = 0; i < behind.length; i++) {
+				this.list.push(behind[i]);
 			}
-		} catch(e) {
-			Mojo.Log.error("!!!", e);	
+			this.save();
 		}
 	},
 	
