@@ -77,7 +77,8 @@ StorylistAssistant.prototype.setup = function() {
 			"titleColor":		this.getTitleColor.bind(this),
 			"contentStyle": 	this.getContentStyle.bind(this),
 			"summary":			this.getSummary.bind(this),
-			"originFeed":		this.getOrigin.bind(this)
+			"originFeed":		this.getOrigin.bind(this),
+			"large":			this.getLargeFont.bind(this)
 		},
 		swipeToDelete:	false, 
 		renderLimit: 	100,
@@ -170,6 +171,10 @@ StorylistAssistant.prototype.getSummary = function(property, model) {
 	} else {
 		return { shortSummary: property };
 	}	
+};
+
+StorylistAssistant.prototype.getLargeFont = function(property, model) {
+	return { large: FeedReader.prefs.largeFont ? "large": "" };
 };
 
 StorylistAssistant.prototype.prepareFeed = function() {

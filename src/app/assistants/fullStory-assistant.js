@@ -50,7 +50,9 @@ FullStoryAssistant.prototype.setup = function() {
 	this.controller.get("story-title").update(this.story.title);
 	this.controller.get("story-content").update(this.story.summary);
 
-	this.controller.get("story-title").className = "story-title bold-text multiline " + FeedReader.prefs.titleColor;
+	this.controller.get("story-title").className += " " + FeedReader.prefs.titleColor
+												 + (FeedReader.prefs.largeFont ? " large" : "");
+	this.controller.get("story-content").className += (FeedReader.prefs.largeFont ? " large" : "");
 	
 	// Setup command menu.
     this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel = {
@@ -78,9 +80,7 @@ FullStoryAssistant.prototype.setup = function() {
 };
 
 FullStoryAssistant.prototype.activate = function(event) {
-	this.controller.get("story-title").className = "story-title bold-text multiline " + FeedReader.prefs.titleColor;
 };
-
 
 FullStoryAssistant.prototype.deactivate = function(event) {
 };

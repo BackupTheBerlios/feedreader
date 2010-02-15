@@ -44,7 +44,8 @@ FeedlistAssistant.prototype.setup = function() {
 			feedIcon: 		this.getFeedIcon.bind(this),
 			showOptions: 	this.getShowOptions.bind(this),
 			title:			this.getTitle.bind(this),
-			url:			this.getURL.bind(this)
+			url:			this.getURL.bind(this),
+			large:			this.getLargeFont.bind(this)
 		},
 		preventDeleteProperty: "preventDelete",
         addItemLabel:	$L("Add new Feed..."),
@@ -90,11 +91,14 @@ FeedlistAssistant.prototype.setup = function() {
 
 FeedlistAssistant.prototype.getFeedIcon = function(property, model) {
 	switch(model.type) {
-		case "allItems":	return { feedIcon: "feed-icon-allitems" };
-		case "atom":		return { feedIcon: "feed-icon-atom" };
+		case "allItems":	return { feedIcon: "allitems" };
+		case "atom":		return { feedIcon: "atom" };
 		case "rss":
-		case "RDF":			return { feedIcon: "feed-icon-rss"};
-		default:			return { feedIcon: "feed-icon-unknown"};
+		case "RDF":			return { feedIcon: "rss"};
+		default:			return { feedIcon: "unknown"};
+	}
+	if(!model.enabled) {
+		feedIcon += " disabled";
 	}
 };
 
@@ -104,6 +108,10 @@ FeedlistAssistant.prototype.getTitle = function(property, model) {
 
 FeedlistAssistant.prototype.getURL = function(property, model) {
 	return { url: model.type == "allItems" ? $L("Aggregation of all feeds") : model.url };	
+};
+
+FeedlistAssistant.prototype.getLargeFont = function(property, model) {
+	return { large: FeedReader.prefs.largeFont ? "large" : "" };
 };
 
 FeedlistAssistant.prototype.getShowOptions = function(property, model) {

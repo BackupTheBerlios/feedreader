@@ -22,6 +22,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 Changelog
 =========
 
+Version 1.2 (Feature Release)
+-----------------------------
+ * The feed contents can now be displayed using a larger font
+ * The Add/Edit-Feed dialog has been changed to be a scene and is re-designed
+ * It is now possible to show only captions, only summarys or both (default)
+ * The CSS structure has been changed
+
 Version 1.1.1 (Maintenance Release)
 -----------------------------------
  * Fixed some bugs regarding list re-ordering

@@ -33,11 +33,19 @@
     color: black;
 }
 
+.list-title.large {
+	font-size: 18px;
+}
+
 .list-text {
 	padding-left: 4px;
 	margin-top: -2px;
     font-size: 14px;
     color: gray;
+}
+
+.list-text.large {
+	font-size: 16px;
 }
 
 .list-info-icon {
@@ -69,30 +77,30 @@
 }
 
 /* feed icons */
-.feed-icon-allitems {
+.feed-icon.allitems {
     background: url(../images/lists/icon-allitems.png) center no-repeat;	
 }
 
-.feed-icon-rss {
+.feed-icon.rss {
     background: url(../images/lists/icon-rss.png) center no-repeat;
 }
 
-.feed-icon-atom {
+.feed-icon.atom {
     background: url(../images/lists/icon-atom.png) center no-repeat;
 }
 
-.feed-icon-unknown {
+.feed-icon.unknown {
 	background: url(../images/lists/icon-unknown.png) center no-repeat;
 }
 
-.feed-icon-rss-disabled {
+.feed-icon.rss.disabled {
 	background: url(../images/lists/icon-rss-disabled.png) center no-repeat;
 }
-.feed-icon-atom-disabled {
+.feed-icon.atom.disabled {
 	background: url(../images/lists/icon-atom-disabled.png) center no-repeat;
 }
 
-.feed-icon-unknown-disabled {
+.feed-icon.unknown.disabled {
 	background: url(../images/lists/icon-unknown.png) center no-repeat;
 }
 
@@ -135,9 +143,17 @@
 	font-size: 16px;
 }
 
+.story-title.large {
+	font-size: 20px;
+}
+
 .story-content {
 	color: black;
 	font-size: 15px;
+}
+
+.story-content.large {
+	font-size: 17px;
 }
 
 /* Text styling */

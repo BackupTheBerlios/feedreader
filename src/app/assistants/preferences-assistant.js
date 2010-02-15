@@ -91,6 +91,7 @@ PreferencesAssistant.prototype.cleanup = function(event) {
 	this.prefs.updateInterval = this.updateIntervalModel.value;
 	this.prefs.titleColor = this.titleColorModel.value;
 	this.prefs.summaryLength = this.summaryLengthModel.value;
+	this.prefs.largeFont = this.largeFontModel.value;
 	
 	this.prefs.save();
 };

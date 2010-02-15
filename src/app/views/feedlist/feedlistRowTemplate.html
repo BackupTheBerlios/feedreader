@@ -7,11 +7,11 @@
 			<div class="feed-newitem">
 				<span class="feed-count">#{numNew}</span>
 			</div>
-			<div id="dashboard-icon" class="palm-dashboard-icon #{feedIcon}"></div>
+			<div id="dashboard-icon" class="palm-dashboard-icon feed-icon #{feedIcon}"></div>
 			<div x-mojo-element="Spinner" name="feedSpinner" class="list-icon-spinner"></div>			
 		</div>
 		<div class="list-info-icon icon right" id="info" style="display: #{showOptions}"></div>
-		<div class="list-title truncating-text">#{title}</div>   
-		<div class="list-text truncating-text">#{url}</div>
+		<div class="list-title truncating-text #{large}">#{title}</div>   
+		<div class="list-text truncating-text #{large}">#{url}</div>
 	</div>
 </div>
