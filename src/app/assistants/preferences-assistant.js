@@ -31,6 +31,7 @@ PreferencesAssistant.prototype.setup = function() {
 	
 	this.controller.get("notify-title").update($L("Show notification"));
 	this.controller.get("wake-device-title").update($L("Wake device"));
+	this.controller.get("largeFont-title").update($L("Use large fonts"));
 	
 	this.controller.setupWidget("notificationEnabled",
     							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
@@ -63,6 +64,15 @@ PreferencesAssistant.prototype.setup = function() {
 		]    
 	}, this.titleColorModel = { value : this.prefs.titleColor });
 
+	this.controller.setupWidget("largeFont", {
+		property: "value",
+		trueLabel: $L("Yes"),
+		falseLabel: $L("No")
+	}, this.largeFontModel = {
+		value: this.prefs.largeFont,
+		disabled: false
+	});
+
 	this.controller.setupWidget("summaryLength", {
 		label: $L("Length"),
 		choices: [
@@ -73,7 +83,6 @@ PreferencesAssistant.prototype.setup = function() {
 			{ label: $L("250 characters"),	value: 250}
 		]    
 	}, this.summaryLengthModel = { value : this.prefs.summaryLength });
-	
 };
 
 PreferencesAssistant.prototype.cleanup = function(event) {

@@ -26,6 +26,7 @@ var prefs = Class.create({
 	wakingEnabled: false,
 	titleColor: "red",
 	summaryLength: 120,
+	largeFont: false,
 	showChanges: false,
 	
 	timer: {},
@@ -42,10 +43,15 @@ var prefs = Class.create({
 			this.updateInterval = settings.updateInterval;
 			this.notificationEnabled = settings.notificationEnabled;
 			this.wakingEnabled = settings.wakingEnabled;
+			
 			if(settings.version > 0) {
 				this.summaryLength = settings.summaryLength;
 				this.titleColor = settings.titleColor;
 			}
+			if(settings.version > 1) {
+				this.largeFont = settings.largeFont;
+			}
+			
 			if(settings.version < FeedReader.versionInt) {
 				this.showChanges = true;
 				this.save();
@@ -60,7 +66,8 @@ var prefs = Class.create({
 			notificationEnabled: 	this.notificationEnabled,
 			wakingEnabled: 			this.wakingEnabled,
 			summaryLength: 			this.summaryLength,
-			titleColor: 			this.titleColor
+			titleColor: 			this.titleColor,
+			largeFont:				this.largeFont
 		});
 		this.setTimer();
 	},

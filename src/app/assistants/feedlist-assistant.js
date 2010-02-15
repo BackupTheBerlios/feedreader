@@ -194,17 +194,13 @@ FeedlistAssistant.prototype.reOrderFeed =  function(event) {
 };
 
 FeedlistAssistant.prototype.addNewFeed = function(event) {
-    this.controller.showDialog({template: "addfeed/addfeed-scene",
-        					    assistant: new AddfeedAssistant(this.controller, this.feeds)});
+	this.controller.stageController.pushScene("addfeed", this.feeds, this.popupIndex);
 };
 
 FeedlistAssistant.prototype.popupHandler = function(command) {
 	switch(command) {
 		case "feed-edit":
-		    this.controller.showDialog({template: "addfeed/addfeed-scene",
-        							    assistant: new AddfeedAssistant(this.controller,
-											this.feeds,
-											this.popupIndex)});
+		    this.controller.stageController.pushScene("addfeed", this.feeds, this.popupIndex);
 			break;
 		
 		case "feed-read":

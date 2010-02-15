@@ -1,13 +1,19 @@
-<div class="palm-dialog-content">
-    <span id="addfeed-title" class="palm-dialog-title"></span>
-	<div class="palm-group unlabeled">
+<div id="addfeedScene">
+	<div class="palm-page-header">
+		<div class="palm-page-header-wrapper">
+		    <div class="header-icon icon rss"></div>
+			<div id="addfeed-title" class="title"></div>
+		</div>
+	</div>
+	<div class="palm-group">
+		<div id="feed-group-title" class="palm-group-title"></div>
 		<div class="palm-list">
 			<div class="palm-row first">
 	    		<div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight="true">
 	        		<div class="title">
 	        			<div id="feedURL-title" class="label"></div>
 	        	   		<div x-mojo-element="TextField" id="feedURL"></div>
-	        		</div>    
+					</div>
 	    		</div>
 			</div>
 			<div class="palm-row">
@@ -18,12 +24,6 @@
 	        		</div>    
 	    		</div>
 			</div>
-			<div class="palm-row">
-				<div class="palm-row-wrapper"> 
-			 		<div id="feedShow-title" class="label"></div>
-					<div id="feedShow" x-mojo-element="ListSelector"></div>
-				</div>
-			</div>
 			<div class="palm-row last">
 				<div class="palm-row-wrapper"> 
 			 		<div id="feedEnabled-title" class="title togglebutton-title"></div>
@@ -32,7 +32,22 @@
 			</div>
 		</div>
 	</div>
-
+	<div class="palm-group">
+		<div id="storylist-group-title" class="palm-group-title"></div>
+		<div class="palm-list">
+			<div class="palm-row first">
+				<div class="palm-row-wrapper"> 
+					<div id="listMode" x-mojo-element="ListSelector"></div>
+				</div>
+			</div>
+			<div class="palm-row last">
+				<div class="palm-row-wrapper"> 
+			 		<div id="fullStory-title" class="title togglebutton-title"></div>
+					<div id="fullStory" x-mojo-element="ToggleButton"></div>
+				</div>
+			</div>
+		</div>
+	</div>
 	<div class="palm-dialog-buttons">
 		<div x-mojo-element="Button" id="okButton"></div>
 		<div x-mojo-element="Button" id="cancelButton"></div>

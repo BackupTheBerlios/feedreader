@@ -57,9 +57,6 @@
 	"150 characters": "150 Zeichen",
 	"200 characters": "200 Zeichen",
 	"250 characters": "250 Zeichen",
-	"Show stories": "Anzeige",
-	"in Browser": "im Browser",
-	"in FeedReader": "in FeedReader",
 	"The Feed '#{title}' does not return data.": "Der Feed '#{title}' enthält keine Daten.",
 	"Summary appearance": "Zusammenfassungen",
 	"All items": "Alle Nachrichten",
@@ -67,5 +64,13 @@
 	"All new items": "Neue Nachrichten",
 	"Aggregation of all feeds": "Zusammenfassung aller Feeds",
 	"Aggregation of all unread items": "Zusammenfassung aller ungelesenen Nachrichten",
-	"Aggregation of all new items": "Zusammenfassung aller neuen Nachrichten"
+	"Aggregation of all new items": "Zusammenfassung aller neuen Nachrichten",
+	"Basic settings": "Grundeinstellungen",
+	"View settings": "Anzeigeeinstellungen",
+	"Show full stories": "Ganze Nachrichten anzeigen",
+	"Overview": "Übersicht",
+	"Caption and summary": "Vollansicht",
+	"Caption only": "Überschriften",
+	"Summary only": "Zusammenfassungen",
+	"Use large fonts": "Große Schriften benutzen"
 }

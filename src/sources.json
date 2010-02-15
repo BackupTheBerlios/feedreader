@@ -6,7 +6,6 @@
     {"source": "app/models/feeds.js"},
     {"source": "app/models/prefs.js"},
     {"source": "app/assistants/changelog-assistant.js"},
-    {"source": "app/assistants/addfeed-assistant.js"},
     {
         "scenes": "feedlist",
         "source": "app/assistants/feedlist-assistant.js"
@@ -19,6 +18,10 @@
         "scenes": "fullStory",
         "source": "app/assistants/fullStory-assistant.js"
     },
+	{
+		"scenes": "addfeed",
+		"source": "app/assistants/addfeed-assistant.js"
+	},
     {
         "scenes": "preferences",
         "source": "app/assistants/preferences-assistant.js"
