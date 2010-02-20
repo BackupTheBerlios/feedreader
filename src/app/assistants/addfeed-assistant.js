@@ -124,6 +124,10 @@ AddfeedAssistant.prototype.cancelClick = function() {
 AddfeedAssistant.prototype.updateFeed = function() {
     var url = this.urlModel.value;
 	var title = this.titleModel.value;
+	var enabled = this.enabledModel.value;
+	var listMode = this.listModeModel.value;
+	var fullStoryMode = this.fullStoryModel.value;
+	var viewMode = (listMode << 16) | fullStoryMode;
 	
     if(/^[a-z]{1,5}:/.test(url) === false) {
         url = url.replace(/^\/{1,2}/, "");                                
@@ -140,13 +144,11 @@ AddfeedAssistant.prototype.updateFeed = function() {
 	this.controller.modelChanged(this.okButtonModel);
 
 	if(this.feed !== null) {
-		FeedReader.feeds.editFeed(this.index, title, url, this.enabledModel.value,
-								  (this.listModeModel.value << 16) | (this.fullStoryModel.value));
+		FeedReader.feeds.editFeed(this.index, title, url, enabled, viewMode);
 		this.okButton.mojo.deactivate();
 		this.controller.stageController.popScene();
 	} else {
-		FeedReader.feeds.addFeed(title, url, this.enabledModel.value
-								 (this.listModeModel.value << 16) | (this.fullStoryModel.value));
+		FeedReader.feeds.addFeed(title, url, enabled, viewMode);
 		this.okButton.mojo.deactivate();
 		this.controller.stageController.popScene();
 	}

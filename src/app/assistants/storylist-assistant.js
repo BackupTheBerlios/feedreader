@@ -72,7 +72,8 @@ StorylistAssistant.prototype.setup = function() {
 	this.controller.setupWidget("storyList", {
 		itemTemplate:	"storylist/storylistRowTemplate", 
 		listTemplate:	"storylist/storylistListTemplate", 
-		formatters:  { 
+		formatters:  {
+			"date":				this.getDate.bind(this),
 			"isRead": 			this.getTitleStyle.bind(this),
 			"titleColor":		this.getTitleColor.bind(this),
 			"contentStyle": 	this.getContentStyle.bind(this),
@@ -139,6 +140,10 @@ StorylistAssistant.prototype.deactivate = function(event) {
 };
 
 StorylistAssistant.prototype.cleanup = function(event) {
+};
+
+StorylistAssistant.prototype.getDate = function(property, model) {
+	return { date: this.feeds.dateConverter.dateToLocalTime(model.intDate) }
 };
 
 StorylistAssistant.prototype.getTitleStyle = function(property, model) {

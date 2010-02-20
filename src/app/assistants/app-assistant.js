@@ -28,7 +28,7 @@ FeedReader = {
 	appName:			"FeedReader",
 	appAuthor:			"Timo Tegtmeier",
 	versionString:		"1.1",
-	versionInt:			2,
+	versionInt:			3,
 	copyrightYears:		"2009, 2010",
 
 	mainStageName: 		"FeedReaderStage",
@@ -193,7 +193,7 @@ AppAssistant.prototype.handleCommand = function(event) {
                 	break;
                 
                 case Mojo.Menu.helpCmd:
-                    stageController.pushScene("help");
+                    stageController.pushAppSupportInfoScene();
                 	break;
             
                 case "do-feedUpdate":

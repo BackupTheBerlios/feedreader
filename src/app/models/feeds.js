@@ -23,12 +23,13 @@
 var feeds = Class.create ({
 	list: [],		// contains the individual feeds
 
-	db: {},			// takes the depot object
-	activity: {},	// takes the activity service
-	connStatus: {},	// takes the connection state service
-	cookie: {},		// takes the database info cookie
-	spooler: {},	// action spooler
-	converter: {},	// codepage converter
+	db: {},				// takes the depot object
+	activity: {},		// takes the activity service
+	connStatus: {},		// takes the connection state service
+	cookie: {},			// takes the database info cookie
+	spooler: {},		// action spooler
+	converter: {},		// codepage converter
+	dateConverter: {},	// date converter
 
 	fullUpdateInProgress: false,	// true if a full update is in progress
 	updateInProgress: false,		// true if any kind of update is in progress
@@ -47,6 +48,7 @@ var feeds = Class.create ({
 	initialize: function() {
 		this.spooler = new spooler();
 		this.converter = new codepageConverter();
+		this.dateConverter = new dateConverter();
 		
 		this.cookie = new Mojo.Model.Cookie("comtegi-stuffAppFeedReaderProps");
 		
@@ -129,6 +131,9 @@ var feeds = Class.create ({
 			if(this.properties.migratingFrom < 2) {
 				data = this.migrateV1(data);
 			}
+			if(this.properties.migratingFrom < 3) {
+				data = this.migrateV2(data);
+			}
             this.list = data;
 		}
 			
@@ -184,7 +189,6 @@ var feeds = Class.create ({
 					title: 		data[i].stories[j].title,
 					summary:	data[i].stories[j].summary,
 					url: 		data[i].stories[j].url,
-					date: 		data[i].stories[j].date,
 					intDate:	0,
 					uid: 		data[i].stories[j].uid,
 					isRead: 	data[i].stories[j].isRead,
@@ -211,6 +215,23 @@ var feeds = Class.create ({
 		return newdata;
 	},
 	
+	/** @private
+	 *
+	 * Migrate a v2 database to a v3 database.
+	 */
+	migrateV2: function(data) {
+		var j;
+		
+		for(var i = 0; i < data.length; i++) {
+			for(j = 0; j < data[i].stories.length; j++) {
+				data[i].stories[j].picture = "";
+				data[i].stories[j].audio = "";
+			}
+		}
+		
+		return data;
+	},
+
 	/** @private
 	 *
 	 * Called when the feed list cannot be retrieved.
@@ -477,95 +498,6 @@ var feeds = Class.create ({
 		return summary;	
 	},
 	
-	/** @private
-	 * 
-	 * Reformat a date to system locale, supports dc:date and RFC 822 format.
-	 * 
-	 * @param {Object}		story
-	 * @param {String}		date string to reformat
-	 */
-	reformatDate: function(story, dateString) {
-		var d;
-		var parts;
-		
-		try {
-			if (dateString.match(/\D{3},\s\d{1,2}\s\D{3}\s\d{2,4}\s\d{1,2}:\d{1,2}:\d*/)) {
-				// RFC 822 date
-				d = new Date(dateString);
-			} else if (dateString.match(/\D{3}\s\D{3}\s\d{2}\s\d{2}:\d{2}:\d{2}\s[a-zA-Z\+\-0-9]{1,5}\s\d{3}/)) {
-				// Sat Jan 09 17:36:47 CET 2010
-				d = new Date();
-				parts = dateString.split(" ");
-				
-				switch(parts[1]) {
-					case "Jan":	d.setMonth(0); break;
-					case "Feb": d.setMonth(1); break;
-					case "Mar": d.setMonth(2); break;
-					case "Apr": d.setMonth(3); break;
-					case "May": d.setMonth(4); break;
-					case "Jun": d.setMonth(5); break;
-					case "Jul": d.setMonth(6); break;
-					case "Aug": d.setMonth(7); break;
-					case "Sep": d.setMonth(8); break;
-					case "Oct": d.setMonth(9); break;
-					case "Nov": d.setMonth(10); break;
-					case "Dec": d.setMonth(11); break;
-				}
-				d.setDate(parseInt(parts[2], 10));
-				d.setYear(parseInt(parts[5], 10));
-				
-				parts = parts[3].split(":");
-				d.setHours(parts[0]);
-				d.setMinutes(parts[1]);
-				d.setSeconds(parts[2]);
-			} else {
-				d = new Date();
-				
-				// Dublin core date. See: http://www.w3.org/TR/NOTE-datetime
-				parts = dateString.split("T");
-				if(parts[0]) {
-					var dateComponents = parts[0].split("-");
-					if(dateComponents[0]) {
-						d.setFullYear(parseInt(dateComponents[0], 10));
-					}
-					if(dateComponents[1]) {
-						d.setMonth(parseInt(dateComponents[1], 10) - 1);
-					}
-					if(dateComponents[2]) {
-						d.setDate(parseInt(dateComponents[2], 10));
-					}
-				}
-				if(parts[1]) {
-					if (parts[1].match(/.*\-.*/)) {
-						parts = parts[1].split('-');
-					} else if (parts[1].match(/.*\+.*/)) {
-						parts = parts[1].split('+');
-					} else if (parts[1].match(/.*\D{1}/)) {
-						parts[0] = parts[1].substring(0, parts[1].length - 2);
-						parts[1] = parts[1].substring(parts[1].length - 1, 1);
-					}
-					if(parts[0]) {
-						var timeComponents = parts[0].split(":");
-						if(timeComponents[0]) {
-							d.setHours(parseInt(timeComponents[0], 10));
-						}
-						if(timeComponents[1]) {
-							d.setMinutes(parseInt(timeComponents[1], 10));
-						}
-						if(timeComponents[2]) {
-							d.setSeconds(parseInt(timeComponents[2], 10));
-						}
-					}
-					// TODO: respect the time zone.
-				}
-			}
-		} catch(e) {
-			Mojo.Log.error("Exception during date processing:", e);
-		}
-		
-		story.date = Mojo.Format.formatDate(d, "medium");
-		story.intDate = d.getTime();
-	},
 	
 	/** @private
 	 * 
@@ -622,6 +554,8 @@ var feeds = Class.create ({
 	 */
 	parseAtom: function(index, transport) {
 		var container = [];
+		var enclosures, enc, url, rel;
+		
 		var atomItems = transport.responseXML.getElementsByTagName("entry");
 		for (var i = 0; i < atomItems.length; i++) {
 			try {
@@ -629,7 +563,8 @@ var feeds = Class.create ({
 					title: unescape(atomItems[i].getElementsByTagName("title").item(0).textContent),
 					summary: "",
 					url: atomItems[i].getElementsByTagName("link").item(0).getAttribute("href"),
-					date: "",
+					picture: "",
+					audio: "",
 					intDate: 0,
 					uid: "",
 					isRead: false,
@@ -640,18 +575,42 @@ var feeds = Class.create ({
 				// but sometimes this element does not exist.
 				if (atomItems[i].getElementsByTagName("summary") && atomItems[i].getElementsByTagName("summary").item(0)) {
 					story.summary = this.reformatSummary(atomItems[i].getElementsByTagName("summary").item(0).textContent);
+				} else if (atomItems[i].getElementsByTagName("content") && atomItems[i].getElementsByTagName("content").item(0)) {
+					story.summary = this.reformatSummary(atomItems[i].getElementsByTagName("content").item(0).textContent);
+				} else {
+					story.summary = "";
 				}
-				else 
-					if (atomItems[i].getElementsByTagName("content") && atomItems[i].getElementsByTagName("content").item(0)) {
-						story.summary = this.reformatSummary(atomItems[i].getElementsByTagName("content").item(0).textContent);
+				
+				// Analyse the enclosures.
+				enclosures = rssItems[i].getElementsByTagName("link");
+				if(enclosures && (enclosures.length > 0)) {
+					for(enc = 0; enc < enclosures.length; enc++) {
+						rel = enclosures.item(enc).getAttribute("rel");
+						if(!rel || !rel.match(/enclosure/)) {
+							continue;
+						}
+						
+						url = enclosures.item(enc).getAttribute("href");
+						if(url && (url.length > 0)) {
+							url = url.toLowerCase();
+							
+							if(url.match(/.*\.jpg/) ||
+							   url.match(/.*\.jpeg/) ||
+							   url.match(/.*\.gif/) ||
+							   url.match(/.*\.png/)) {
+								story.picture = url;
+							} else if (url.match(/.*\.mp3/) ||
+									   url.match(/.*\.wav/) ||
+									   url.match(/.*\.aac/)) {
+								story.audio = url;
+							}
+						}
 					}
-					else {
-						story.summary = story.title;
-					}
+				}
 				
 				// Set the publishing date.
 				if (atomItems[i].getElementsByTagName("updated") && atomItems[i].getElementsByTagName("updated").item(0)) {
-					this.reformatDate(story, atomItems[i].getElementsByTagName("updated").item(0).textContent);
+					story.intDate = this.dateConverter.dateToInt(atomItems[i].getElementsByTagName("updated").item(0).textContent);
 				}
 				
 				// Set the unique id.
@@ -661,7 +620,7 @@ var feeds = Class.create ({
 				else {
 					story.uid = story.url;
 				}
-				
+								
 				container.push(story);
 			} catch(e) {
 			}
@@ -678,6 +637,8 @@ var feeds = Class.create ({
 	 */
 	parseRSS: function(index, transport) {
 		var container = [];
+		var enclosures, url, enc;
+		
 		var rssItems = transport.responseXML.getElementsByTagName("item");
 		if(!rssItems) {
 			Mojo.Log.info("Feed", index, "is empty");
@@ -690,7 +651,8 @@ var feeds = Class.create ({
 					title: unescape(rssItems[i].getElementsByTagName("title").item(0).textContent),
 					summary: this.reformatSummary(rssItems[i].getElementsByTagName("description").item(0).textContent),
 					url: rssItems[i].getElementsByTagName("link").item(0).textContent,
-					date: "",
+					picture: "",
+					audio: "",
 					intDate: 0,
 					uid: "",
 					isRead: false,
@@ -701,12 +663,34 @@ var feeds = Class.create ({
 					}
 				};
 				
+				// Analyse the enclosures.
+				enclosures = rssItems[i].getElementsByTagName("enclosure");
+				if(enclosures && (enclosures.length > 0)) {
+					for(enc = 0; enc < enclosures.length; enc++) {
+						url = enclosures.item(enc).getAttribute("url");
+						if(url && (url.length > 0)) {
+							url = url.toLowerCase();
+							
+							if(url.match(/.*\.jpg/) ||
+							   url.match(/.*\.jpeg/) ||
+							   url.match(/.*\.gif/) ||
+							   url.match(/.*\.png/)) {
+								story.picture = url;
+							} else if (url.match(/.*\.mp3/) ||
+									   url.match(/.*\.wav/) ||
+									   url.match(/.*\.aac/)) {
+								story.audio = url;
+							}
+						}
+					}
+				}
+				
 				// Set the publishing date.
 				if (rssItems[i].getElementsByTagName("pubDate") && rssItems[i].getElementsByTagName("pubDate").item(0)) {
-					this.reformatDate(story, rssItems[i].getElementsByTagName("pubDate").item(0).textContent);
+					story.intDate = this.dateConverter.dateToInt(rssItems[i].getElementsByTagName("pubDate").item(0).textContent);
 				} else if (rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date") &&
 						   rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0)) {
-					this.reformatDate(story, rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0).textContent);
+					story.intDate = this.dateConverter.dateToInt(story, rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0).textContent);
 				}
 				
 				// Set the unique id.

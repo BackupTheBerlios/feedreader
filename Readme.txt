@@ -28,6 +28,9 @@ Version 1.2 (Feature Release)
  * The Add/Edit-Feed dialog has been changed to be a scene and is re-designed
  * It is now possible to show only captions, only summarys or both (default)
  * The CSS structure has been changed
+ * The date conversion routines have been extracted into a separate class
+ * The dates are no longer stored as strings
+ * Basic PodCast support has been added
 
 Version 1.1.1 (Maintenance Release)
 -----------------------------------
