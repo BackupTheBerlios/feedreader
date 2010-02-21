@@ -78,6 +78,7 @@ var dateConverter = Class.create({
 			}
 			// TODO: respect the time zone.
 		}
+		return d.getTime();
 	},
 
 	/**
@@ -85,19 +86,20 @@ var dateConverter = Class.create({
 	 * 
 	 * @param {String}		date string to reformat
 	 */
-	dateToInt: function(dateString) {	
+	dateToInt: function(dateString) {
 		var intDate;
 		
 		try {
-			
-			if (dateString.match(/\D{3},\s\d{1,2}\s\D{3}\s\d{2,4}\s\d{1,2}:\d{1,2}:\d*/)) {
+			if(!dateString) {
+				var d = new Date();
+				intDate = d.getTime();
+			} else if(dateString.match(/\D{3},\s\d{1,2}\s\D{3}\s\d{2,4}\s\d{1,2}:\d{1,2}:\d*/)) {
 				intDate = this.convertRFC822(dateString);
-			} else if (dateString.match(/\D{3}\s\D{3}\s\d{2}\s\d{2}:\d{2}:\d{2}\s[a-zA-Z\+\-0-9]{1,5}\s\d{3}/)) {
+			} else if(dateString.match(/\D{3}\s\D{3}\s\d{2}\s\d{2}:\d{2}:\d{2}\s[a-zA-Z\+\-0-9]{1,5}\s\d{3}/)) {
 				intDate = this.convertRFC2822(dateString);
 			} else {
 				intDate = this.convertDCDate(dateString);
 			}
-			
 		} catch(e) {
 			
 			Mojo.Log.error("Exception during date processing:", e);
