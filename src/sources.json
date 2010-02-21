@@ -4,6 +4,7 @@
 	{"source": "app/models/spooler.js"},
 	{"source": "app/models/codepages.js"},
 	{"source": "app/models/date.js"},
+	{"source": "app/models/Math.uuid.js"},
     {"source": "app/models/feeds.js"},
     {"source": "app/models/prefs.js"},
     {"source": "app/assistants/changelog-assistant.js"},

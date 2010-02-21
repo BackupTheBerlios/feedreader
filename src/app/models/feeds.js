@@ -223,9 +223,11 @@ var feeds = Class.create ({
 		var j;
 		
 		for(var i = 0; i < data.length; i++) {
+			data[i].uid = Math.uuid(15);
 			for(j = 0; j < data[i].stories.length; j++) {
 				data[i].stories[j].picture = "";
 				data[i].stories[j].audio = "";
+				data[i].stories[j].video = "";
 			}
 		}
 		
@@ -290,7 +292,7 @@ var feeds = Class.create ({
 	addFeed: function(title, url, enabled, viewMode) {
 		this.interactiveUpdate = true;
 		if (title === "") {
-			title = "News Feed";
+			title = "RSS Feed";
 		}
 			
 		for(var i; i < this.list.length; i++) {
@@ -304,6 +306,7 @@ var feeds = Class.create ({
 			title: title,
 			url: url,
 			type: "rss",
+			uid: Math.uuid(15),
 			numUnRead: 0,
 			numNew: 0,
 			enabled: enabled,
@@ -551,7 +554,7 @@ var feeds = Class.create ({
 	 */
 	parseAtom: function(index, transport) {
 		var container = [];
-		var enclosures, enc, url, rel;
+		var enclosures, enc, url, testurl, rel;
 		
 		var atomItems = transport.responseXML.getElementsByTagName("entry");
 		for (var i = 0; i < atomItems.length; i++) {
@@ -562,6 +565,7 @@ var feeds = Class.create ({
 					url: atomItems[i].getElementsByTagName("link").item(0).getAttribute("href"),
 					picture: "",
 					audio: "",
+					video: "",
 					intDate: 0,
 					uid: "",
 					isRead: false,
@@ -589,17 +593,21 @@ var feeds = Class.create ({
 						
 						url = enclosures.item(enc).getAttribute("href");
 						if(url && (url.length > 0)) {
-							url = url.toLowerCase();
+							testurl = url.toLowerCase();
 							
-							if(url.match(/.*\.jpg/) ||
-							   url.match(/.*\.jpeg/) ||
-							   url.match(/.*\.gif/) ||
-							   url.match(/.*\.png/)) {
+							if(testurl.match(/.*\.jpg/) ||
+							   testurl.match(/.*\.jpeg/) ||
+							   testurl.match(/.*\.gif/) ||
+							   testurl.match(/.*\.png/)) {
 								story.picture = url;
-							} else if (url.match(/.*\.mp3/) ||
-									   url.match(/.*\.wav/) ||
-									   url.match(/.*\.aac/)) {
+							} else if(testurl.match(/.*\.mp3/) ||
+									  testurl.match(/.*\.wav/) ||
+									  testurl.match(/.*\.aac/)) {
 								story.audio = url;
+							} else if(testurl.match(/.*\.mpg/) ||
+									  testurl.match(/.*\.mpeg/) ||
+									  testurl.match(/.*\.avi/)) {
+								story.video = url;
 							}
 						}
 					}
@@ -634,7 +642,7 @@ var feeds = Class.create ({
 	 */
 	parseRSS: function(index, transport) {
 		var container = [];
-		var enclosures, url, enc;
+		var enclosures, url, testurl, enc;
 		
 		var rssItems = transport.responseXML.getElementsByTagName("item");
 		if(!rssItems) {
@@ -650,14 +658,11 @@ var feeds = Class.create ({
 					url: rssItems[i].getElementsByTagName("link").item(0).textContent,
 					picture: "",
 					audio: "",
+					video: "",
 					intDate: 0,
 					uid: "",
 					isRead: false,
-					isNew: true,
-					originIndex: {
-						feedIndex: index,
-						storyIndex: i
-					}
+					isNew: true
 				};
 				
 				// Analyse the enclosures.
@@ -666,17 +671,21 @@ var feeds = Class.create ({
 					for(enc = 0; enc < enclosures.length; enc++) {
 						url = enclosures.item(enc).getAttribute("url");
 						if(url && (url.length > 0)) {
-							url = url.toLowerCase();
+							testurl = url.toLowerCase();
 							
-							if(url.match(/.*\.jpg/) ||
-							   url.match(/.*\.jpeg/) ||
-							   url.match(/.*\.gif/) ||
-							   url.match(/.*\.png/)) {
+							if(testurl.match(/.*\.jpg/) ||
+							   testurl.match(/.*\.jpeg/) ||
+							   testurl.match(/.*\.gif/) ||
+							   testurl.match(/.*\.png/)) {
 								story.picture = url;
-							} else if (url.match(/.*\.mp3/) ||
-									   url.match(/.*\.wav/) ||
-									   url.match(/.*\.aac/)) {
+							} else if(testurl.match(/.*\.mp3/) ||
+									  testurl.match(/.*\.wav/) ||
+									  testurl.match(/.*\.aac/)) {
 								story.audio = url;
+							} else if(testurl.match(/.*\.mpg/) ||
+									  testurl.match(/.*\.mpeg/) ||
+									  testurl.match(/.*\.avi/)) {
+								story.video = url;
 							}
 						}
 					}
@@ -1046,6 +1055,7 @@ var feeds = Class.create ({
 	 */
 	deleteFeed: function(index) {
 		if((index >= 0) && (index < this.list.length)) {
+			Mojo.Log.info("FEEDS> Deleting feed", index);
 			this.list.splice(index, 1);
 			this.save();
 			this.updatePseudoFeeds();

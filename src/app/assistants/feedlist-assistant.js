@@ -47,7 +47,8 @@ FeedlistAssistant.prototype.setup = function() {
 			url:			this.getURL.bind(this),
 			large:			this.getLargeFont.bind(this)
 		},
-		preventDeleteProperty: "preventDelete",
+		preventDeleteProperty:	"preventDelete",
+		uniquenessProperty: 	"uid",
         addItemLabel:	$L("Add new Feed..."),
         swipeToDelete:	true,
         renderLimit: 	40,
@@ -170,6 +171,7 @@ FeedlistAssistant.prototype.showFeed = function(event) {
 };
 
 FeedlistAssistant.prototype.deleteFeed = function(event) {
+	event.preventDefault();	// Needed, otherwise bad things can happen.
 	this.feeds.deleteFeed(this.feeds.list.indexOf(event.item));
 };
 
