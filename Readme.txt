@@ -8,7 +8,7 @@ License
 =======
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
+as published by the Free Software Foundation; either version 3
 of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -33,6 +33,7 @@ Version 1.2 (Feature Release)
  * The dates are no longer stored as strings
  * Basic PodCast support has been added
  * Overhauled the spooler class
+ * Changed the license to GNU GPL v3.
 
 Version 1.1.1 (Maintenance Release)
 -----------------------------------

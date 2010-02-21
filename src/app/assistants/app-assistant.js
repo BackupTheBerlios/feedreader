@@ -7,7 +7,7 @@
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
+ * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -170,7 +170,7 @@ AppAssistant.prototype.handleCommand = function(event) {
             switch(event.command) {
                 case "do-about":
 					var t = new Template($L("#{appName} — v#{version}"));
-					var m = new Template($L("Copyright #{years} #{author}, published under the terms of the GNU GPL v2. See License for details."));
+					var m = new Template($L("Copyright #{years} #{author}, published under the terms of the GNU GPL v3. See License for details."));
                     currentScene.showAlertDialog({
                             onChoose: function(value) {},
                             title:  t.evaluate({

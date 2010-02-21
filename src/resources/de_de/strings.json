@@ -44,7 +44,7 @@
 	"Server error": "Serverfehler",
 	"Unexpected error": "Unerwarteter Fehler",
 	"#{appName} — v#{version}": "#{appName} — v#{version}",
-	"Copyright #{years} #{author}, published under the terms of the GNU GPL v2. See License for details.": "Copyright #{years} #{author}, veröffentlicht unter den Bedingungen der GNU GPL v2.",
+	"Copyright #{years} #{author}, published under the terms of the GNU GPL v3. See License for details.": "Copyright #{years} #{author}, veröffentlicht unter den Bedingungen der GNU GPL v3.",
 	"Title color": "Titelfarbe",
 	"Red": "Rot",
 	"Green": "Grün",
