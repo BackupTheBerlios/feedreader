@@ -113,5 +113,23 @@ var dateConverter = Class.create({
 		d.setTime(date);
 		
 		return Mojo.Format.formatDate(d, "medium");		
+	},
+	
+	formatTimeString: function(secs) {
+        if(secs > 0) {
+			var mins = Math.floor(secs / 60);
+			secs = Math.floor(secs % 60);
+			
+			// Pad with zeros if needed.
+			// ToDo: Replace this once a proper sprintf() replacement is found.
+			if (mins < 10) {
+				mins = "0" + mins;
+			}
+			if (secs < 10) {
+				secs = "0" + secs;
+			}
+			return mins + ":" + secs;
+		}
+		return "00:00";
 	}
 });

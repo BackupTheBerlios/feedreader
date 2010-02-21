@@ -14,6 +14,10 @@
     background: url(../images/header/icon-allitems.png) center center no-repeat;
 }
 
+.progress-widget-width {
+	width: 250px;
+}
+
 /* This should not be necessary, but ... */
 .textfield-group > .title > .label {
 	position: relative;
@@ -43,18 +47,56 @@ img {
 	width: 100%;
 }
 
-/* audio player */
-#audio-container {
-	text-align: center;
-}
-
+/* media player */
 #audio-container {
 	width: 0px;
 	height: 0px;
 }
 
+#media-controls-wrapper {
+	font-size: 14px;
+	margin-bottom: 15px;
+}
+
+#media-info {
+	margin-top: -14px;
+	width: 100%;
+	display: table;
+}
+
+#media-currentPos {
+	width: 10%;
+	display: table-cell;
+	text-align: left;
+	margin-left: 10px;
+}
+
+#media-playState {
+	display: table-cell;
+	text-align: center;
+}
+
+#media-duration {
+	width: 10%;
+	display: table-cell;
+	text-align: right;
+	margin-right: 10px;
+}
+
 .player-button {
-	width: 64px;
+	width: 56px;
+}
+
+.player-button.play {
+	background: url(../images/player/icon-play.png) center center no-repeat;
+}
+
+.player-button.pause {
+	background: url(../images/player/icon-pause.png) center center no-repeat;
+}
+
+.player-button.stop {
+	background: url(../images/player/icon-stop.png) center center no-repeat;
 }
 
 /* lists */

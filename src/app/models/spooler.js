@@ -22,20 +22,66 @@
 
 var spooler = new Class.create({
 	list: [],
+	actionRunning: false,
+	actionIdent: "",
 	
 	initialize: function() {
 	},
 	
-	addAction: function(action) {
-		this.list.push({ execute: action });
-		if(this.list.length == 1) {
-			this.nextAction();
+	addAction: function(action, identifier, unique) {
+		try {
+			if(!identifier) {
+				identifier = "anon-action";
+			}
+			
+			if(unique) {
+				var skip = false;
+				if(this.actionIdent == identifier) {
+					skip = true;
+				} else {
+					for(var i = 0; i < this.list.length; i++) {
+						if(this.list[i].ident == identifier) {
+							skip = true;
+							break;
+						}
+					}
+				}
+				
+				if(skip) {
+					Mojo.Log.info("SPOOLER> Skipped adding unique action", identifier);
+					return;
+				}
+			}
+			
+			this.list.push({
+				execute: action,
+				ident: identifier
+			});
+			
+			if((this.list.length == 1) && !this.actionRunning)  {
+				Mojo.Log.info("SPOOLER> queue was empty, direct start");
+				this.nextAction();
+			}
+		} catch(e) {
+			Mojo.Log.error("SPOOLER> error while adding action:", e);
 		}
 	},
 	
 	nextAction: function() {
-		if(this.list.length >= 1) {
-			this.list.shift().execute();			
+		try {
+			if(this.list.length >= 1) {
+				var action = this.list.shift();
+				this.actionRunning = true;
+				this.actionIdent = action.ident;
+				Mojo.Log.info("SPOOLER> processing next action", this.actionIdent);
+				action.execute();
+			} else {
+				this.actionRunning = false;
+				this.actionIdent = "";
+				Mojo.Log.info("SPOOLER> All spooled actions have been executed");
+			}
+		} catch(e) {
+			Mojo.Log.error("SPOOLER> Exception while processing:", e);
 		}
 	}
 });

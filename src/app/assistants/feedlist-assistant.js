@@ -141,7 +141,7 @@ FeedlistAssistant.prototype.cleanup = function(event) {
 FeedlistAssistant.prototype.updateFeedModel = function(who) {
 	if(this.setupComplete) {
 		this.feedListModel.items = this.feeds.list;
-		this.feedListWidget.mojo.noticeUpdatedItems(0, this.feedListModel.items);
+		this.controller.modelChanged(this.feedListModel);
 	}
 };
 
@@ -240,6 +240,9 @@ FeedlistAssistant.prototype.handleCommand = function(event) {
                 case "do-fullUpdate":
 					this.feeds.update();
                 	break;
+				
+				case "jslint-dummy":
+					break;
             }
         }
     }

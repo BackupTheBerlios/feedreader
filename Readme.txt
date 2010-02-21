@@ -31,6 +31,7 @@ Version 1.2 (Feature Release)
  * The date conversion routines have been extracted into a separate class
  * The dates are no longer stored as strings
  * Basic PodCast support has been added
+ * Overhauled the spooler class
 
 Version 1.1.1 (Maintenance Release)
 -----------------------------------

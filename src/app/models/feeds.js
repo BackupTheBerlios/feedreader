@@ -244,7 +244,7 @@ var feeds = Class.create ({
 	 * Save the feed list to a depot.
 	 */
 	save: function() {
-		this.spooler.addAction(this.doSaveHandler);
+		this.spooler.addAction(this.doSaveHandler, "feedmodel.save", true);
 	},
 	
 	/** @private
@@ -424,11 +424,12 @@ var feeds = Class.create ({
 	updateFeed: function(index) {
 		// Tell the current scene that we're about to update a feed.
 		if ((index >= 0) && (index < this.list.length)) {
-			if(this.list[index].type == "allItems") {
+			if((this.list[index].type == "allItems") || !this.list[index].enabled) {
+				this.list[index].spinning = false;
 				return;
 			}
 			
-			this.spooler.addAction(this.doUpdateFeed.bind(this, index));
+			this.spooler.addAction(this.doUpdateFeed.bind(this, index), "feedmodel.updateFeed");
 		}		
 	},
 	
@@ -452,11 +453,6 @@ var feeds = Class.create ({
 		if(result.isInternetConnectionAvailable) {
 			this.enterActivity(index);
 			this.updateInProgress = true;
-			if(!this.list[index].enabled) {
-				this.list[index].updated = true;
-				Mojo.Log.info("Feed", index, "will not be updated due being disabled");
-				return;
-			}
 			this.list[index].updated  = false;			
 			this.notifyOfFeedUpdate(index, true);
 			var request = new Ajax.Request(this.list[index].url, {
@@ -479,6 +475,7 @@ var feeds = Class.create ({
 	 */	
 	getConnStatusFailed: function(index, result) {
 		Mojo.Log.warn("Unable to determine connection status");
+		this.spooler.nextAction();
 	},
 	
 	/** @private
@@ -858,7 +855,9 @@ var feeds = Class.create ({
 				if((!FeedReader.isActive) && (FeedReader.prefs.notificationEnabled)) {
 					var n = 0;
 					for(i = 0; i < this.list.length; i++) {
-						n += this.list[i].numNew;
+						if(this.list[i].type != "allItems") {
+							n += this.list[i].numNew;
+						}
 					}
 					
 					if (n > 0) {

@@ -13,8 +13,16 @@
 				<div id="story-title" class="story-title bold-text multiline"></div>
 				<div id="img-container"><img id="story-picture"></div>
 				<div id="audio-container" autoplay="false"></div>
-				<div id="audio-controls">
-					<div id="audio-player" class="inline-progress-bar" x-mojo-element="Progress"></div>					
+				<div id="media-controls-wrapper">
+					<div id="media-progress">
+						<div id="media-progress" class="stream-buffer-bar" x-mojo-element="ProgressSlider"></div>
+						<div id="media-info">
+							<div id="media-currentPos">00:00</div>
+							<div id="media-playState">not connected</div>
+							<div id="media-duration">00:00</div>
+						</div>
+					</div>
+					<div id="media-connectionState"></div>
 				</div>
 				<div id="story-content" class="story-content normal-text condensed multiline"></div>
 			</div>

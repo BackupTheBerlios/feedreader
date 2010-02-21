@@ -143,7 +143,7 @@ StorylistAssistant.prototype.cleanup = function(event) {
 };
 
 StorylistAssistant.prototype.getDate = function(property, model) {
-	return { date: this.feeds.dateConverter.dateToLocalTime(model.intDate) }
+	return { date: this.feeds.dateConverter.dateToLocalTime(model.intDate) };
 };
 
 StorylistAssistant.prototype.getTitleStyle = function(property, model) {
@@ -323,6 +323,9 @@ StorylistAssistant.prototype.considerForNotification = function(params){
 					this.commandModel.items[1].disabled = this.feeds.updateInProgress;
 					this.controller.modelChanged(this.commandModel);
 				}
+				break;
+			
+			case "jslint-dummy":
 				break;
 		}
 	}

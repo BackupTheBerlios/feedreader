@@ -72,5 +72,11 @@
 	"Caption and summary": "Vollansicht",
 	"Caption only": "Überschriften",
 	"Summary only": "Zusammenfassungen",
-	"Use large fonts": "Große Schriften benutzen"
+	"Use large fonts": "Große Schriften benutzen",
+	"Playing": "Wiedergabe läuft",
+	"Paused": "Wiedergabe pausiert",
+	"Stopped": "Wiedergabe gestoppt",
+	"Not connected": "Nicht verbunden",
+	"Media error": "Medienfehler",
+	"Stalled": "Verbindung unterbrochen"
 }
