@@ -224,6 +224,8 @@ var feeds = Class.create ({
 		
 		for(var i = 0; i < data.length; i++) {
 			data[i].uid = Math.uuid(15);
+			data[i].showPicture = true;
+			data[i].showMedia = true;
 			for(j = 0; j < data[i].stories.length; j++) {
 				data[i].stories[j].picture = "";
 				data[i].stories[j].audio = "";
@@ -288,8 +290,10 @@ var feeds = Class.create ({
 	 * @param {String} url
 	 * @param {Boolean} enabled
 	 * @param {Int} viewMode
+	 * @param {Boolean} showPicture
+	 * @param {Boolean} showMedia
 	 */
-	addFeed: function(title, url, enabled, viewMode) {
+	addFeed: function(title, url, enabled, viewMode, showPicture, showMedia) {
 		this.interactiveUpdate = true;
 		if (title === "") {
 			title = "RSS Feed";
@@ -297,7 +301,7 @@ var feeds = Class.create ({
 			
 		for(var i; i < this.list.length; i++) {
 			if (this.list[i].url == url) {
-				this.editFeed(i, title, url, enabled, viewmode);
+				this.editFeed(i, title, url, enabled, viewmode, showPicture, showMedia);
 				return;
 			} 
 		}
@@ -311,6 +315,8 @@ var feeds = Class.create ({
 			numNew: 0,
 			enabled: enabled,
 			viewMode: viewMode,
+			showPicture: showPicture,
+			showMedia: showMedia,
 			preventDelete: false,
 			updated: true,
 			spinning: false,
@@ -329,14 +335,18 @@ var feeds = Class.create ({
 	 * @param {String} url
 	 * @param {Boolean} enabled
 	 * @param {Int} viewMode
+	 * @param {Boolean} showPicture
+	 * @param {Boolean} showMedia
 	 */
-	editFeed: function(index, title, url, enabled, viewMode) {
+	editFeed: function(index, title, url, enabled, viewMode, showPicture, showMedia) {
 		if((index >= 0) && (index < this.list.length)) {
 			this.interactiveUpdate = true;
 			this.list[index].title = title;
 			this.list[index].url = url;
 			this.list[index].enabled = enabled;
 			this.list[index].viewMode = viewMode;
+			this.list[index].showPicture = showPicture;
+			this.list[index].showMedia = showMedia;			
 			Mojo.Controller.getAppController().sendToNotificationChain({
 				type: "feedlist-editedfeed",
 				feedIndex: index
@@ -391,6 +401,7 @@ var feeds = Class.create ({
 
 	/** @private
 	 *
+	 * Gets called when setting the activity was successful.
 	 */
 	setActivitySuccess: function(response) {
 		Mojo.Log.info("Successfully set activity");
@@ -398,6 +409,7 @@ var feeds = Class.create ({
 	
 	/** @private
 	 *
+	 * Gets called when setting the acitivity failed.
 	 */
 	setActivityFailed: function(response) {
 		Mojo.Log.warn("Unable to set activity", response);
@@ -436,6 +448,10 @@ var feeds = Class.create ({
 		}		
 	},
 	
+	/** @private
+	 *
+	 * Called by the spooler to update a feed.
+	 */
 	doUpdateFeed: function(index) {
 		this.connStatus = new Mojo.Service.Request('palm://com.palm.connectionmanager', {
 			method: 'getstatus',
@@ -497,7 +513,6 @@ var feeds = Class.create ({
         summary = unescape(summary);
 		return summary;	
 	},
-	
 	
 	/** @private
 	 * 
@@ -1144,5 +1159,29 @@ var feeds = Class.create ({
 			default:
 				return "rss";
 		}
+	},
+	
+	/**
+	 * Determine if the story captions should be shown.
+	 * 
+	 * @param {Object}		The feed to inspect
+	 * @param {Boolean}		True if called from fullStoryView
+	 */
+	showCaption: function(feed, isDetailView) {
+		var viewMode = parseInt(feed.viewMode, 10);
+		var mode = isDetailView ? (viewMode >> 24) : (viewMode >> 16);		
+		return (mode < 2);
+	},
+	
+	/**
+	 * Determine if the story summarys should be shown.
+	 * 
+	 * @param {Object}		The feed to inspect
+	 * @param {Boolean}		True if called from fullStoryView
+	 */
+	showSummary: function(feed, isDetailView) {
+		var viewMode = parseInt(feed.viewMode, 10);
+		var mode = isDetailView ? (viewMode >> 24) : (viewMode >> 16);
+		return (mode == 2) || (mode == 0);
 	}
 });

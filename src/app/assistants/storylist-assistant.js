@@ -77,6 +77,7 @@ StorylistAssistant.prototype.setup = function() {
 			"isRead": 			this.getTitleStyle.bind(this),
 			"titleColor":		this.getTitleColor.bind(this),
 			"contentStyle": 	this.getContentStyle.bind(this),
+			"title":			this.getTitle.bind(this),
 			"summary":			this.getSummary.bind(this),
 			"originFeed":		this.getOrigin.bind(this),
 			"large":			this.getLargeFont.bind(this)
@@ -163,18 +164,44 @@ StorylistAssistant.prototype.getOrigin = function(property, model) {
 		return undefined;
 	}
 	
-	return { origin: "(" + this.feeds.list[property].title + 
-	//' #' + this.feed.stories.indexOf(model) +
-	")" };
+	return { origin: "(" + this.feeds.list[property].title + ")" };
 };
 
 StorylistAssistant.prototype.getSummary = function(property, model) {
 	if(!property) {
 		return undefined;
-	} else if(property.length > (parseInt(FeedReader.prefs.summaryLength, 10) + 10)) {
-		return { shortSummary: property.slice(0, parseInt(FeedReader.prefs.summaryLength, 10) - 1) + '...' };
 	} else {
-		return { shortSummary: property };
+		if(model.originFeed) {
+			if(!this.feeds.showSummary(this.feeds.list[model.originFeed], false)) {
+				return { shortSummary: "" };				
+			}
+		} else {
+			if(!this.feeds.showSummary(this.feed, false)) {
+				return { shortSummary: "" };
+			}
+		}
+		if(property.length > (parseInt(FeedReader.prefs.summaryLength, 10) + 10)) {
+			return { shortSummary: property.slice(0, parseInt(FeedReader.prefs.summaryLength, 10) - 1) + '...' };
+		} else {
+			return { shortSummary: property };
+		}
+	}	
+};
+
+StorylistAssistant.prototype.getTitle = function(property, model) {
+	if(!property) {
+		return undefined;
+	} else {
+		if(model.originFeed) {
+			if(!this.feeds.showCaption(this.feeds.list[model.originFeed], false)) {
+				return { title: "" };				
+			}
+		} else {
+			if(!this.feeds.showCaption(this.feed, false)) {
+				return { title : "" };
+			}
+		}
+		return { title: model.title };
 	}	
 };
 
@@ -207,9 +234,12 @@ StorylistAssistant.prototype.prepareFeed = function() {
 					title:			this.feeds.list[i].stories[j].title,
 					url:			this.feeds.list[i].stories[j].url,
 					summary:		this.feeds.list[i].stories[j].summary,
-					date:			this.feeds.list[i].stories[j].date,
+					intDate:		this.feeds.list[i].stories[j].intDate,
 					isNew:			this.feeds.list[i].stories[j].isNew,
 					isRead:			this.feeds.list[i].stories[j].isRead,
+					picture:		this.feeds.list[i].stories[j].picture,
+					audio:			this.feeds.list[i].stories[j].audio,
+					video:			this.feeds.list[i].stories[j].video,
 					originFeed:		i,
 					originStory:	j
 				});
@@ -255,14 +285,14 @@ StorylistAssistant.prototype.showStory = function(event) {
 		this.updateModel();
 	}
 	
-	var viewMode = this.feed.viewMode;
+	var viewMode = parseInt(this.feed.viewMode, 10) & 0xFFFF;
 	var feedIndex = this.feedIndex;
 	if(story.originFeed)  {
-		viewMode = this.feeds.list[story.originFeed].viewMode;
+		viewMode = parseInt(this.feeds.list[story.originFeed].viewMode, 10) & 0xFFFF;
 		feedIndex = story.originFeed;
 	}
 	
-	switch(parseInt(viewMode, 10)) {
+	switch(viewMode) {
 		case 0:
 			this.controller.serviceRequest("palm://com.palm.applicationManager", {
 				method: "open",
@@ -276,6 +306,7 @@ StorylistAssistant.prototype.showStory = function(event) {
 			break;
 			
 		case 1:
+			Mojo.Log.info("Pushing storyview");
 			this.controller.stageController.pushScene("fullStory", this.feeds, this.feed, feedIndex, storyIndex);
 			break;
 	}

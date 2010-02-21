@@ -204,7 +204,7 @@ FeedlistAssistant.prototype.reOrderFeed =  function(event) {
 };
 
 FeedlistAssistant.prototype.addNewFeed = function(event) {
-	this.controller.stageController.pushScene("addfeed", this.feeds, this.popupIndex);
+	this.controller.stageController.pushScene("addfeed", this.feeds, undefined);
 };
 
 FeedlistAssistant.prototype.popupHandler = function(command) {

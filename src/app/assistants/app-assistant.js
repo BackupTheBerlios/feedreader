@@ -53,8 +53,8 @@ FeedReader = {
 	/**
 	 * Show an alert.
 	 * 
-	 * @param {Template} message
-	 * @param {Hash} values
+	 * @param {Template} 	message
+	 * @param {Hash} 		values
 	 */
 	showError: function(message, values) {
 	    var cardStageController = this.controller.getStageController(this.mainStageName);

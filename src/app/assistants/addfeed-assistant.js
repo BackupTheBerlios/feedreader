@@ -22,14 +22,16 @@
 
 function AddfeedAssistant(feeds, index) {
 	this.feeds = feeds;
-	
-	if (index === undefined) {
+
+	if (!index) {
 		this.feed = null;
 		this.index = -1;
 		this.url = "";
 		this.title = "";
 		this.enabled = true;
 		this.viewMode = 1;
+		this.showMedia = true;
+		this.showPicture = true;
 	} else {
 		this.feed = feeds.list[index];
 		this.index = index;
@@ -37,6 +39,8 @@ function AddfeedAssistant(feeds, index) {
 		this.title = this.feed.title;
 		this.enabled = this.feed.enabled;
 		this.viewMode = this.feed.viewMode;
+		this.showMedia = this.feed.showMedia;
+		this.showPicture = this.feed.showPicture;
 	}
 }
 
@@ -51,16 +55,29 @@ AddfeedAssistant.prototype.setup = function() {
 								this.titleModel = { value: this.title });
     
 	this.controller.setupWidget("listMode", {
-		label: $L("Overview"),
+		label: $L("Show"),
         choices: [
             { label: $L("Caption and summary"),	value: 0 },
             { label: $L("Caption only"),		value: 1 },
-			{ label: $L("Summary only"),		value: 2}
+			{ label: $L("Summary only"),		value: 2 }
         ]},
 		this.listModeModel = {
 			value: (this.viewMode >> 16) & 0xFF,
 			disabled: false
+		});
+	
+	this.controller.setupWidget("detailMode", {
+		label: $L("Show"),
+        choices: [
+            { label: $L("Caption and summary"),	value: 0 },
+            { label: $L("Caption only"),		value: 1 },
+			{ label: $L("Summary only"),		value: 2 }
+        ]},
+		this.detailModeModel = {
+			value: (this.viewMode >> 24) & 0xFF,
+			disabled: false
 		});	
+
 
 	this.controller.setupWidget("fullStory", {
 		property: "value",
@@ -69,7 +86,7 @@ AddfeedAssistant.prototype.setup = function() {
 		trueValue: 1,
 		falseValue: 0
 	}, this.fullStoryModel = {
-		value: this.viewMode & 0xFF
+		value: this.viewMode & 0xFFFF
 	});
 	
 	this.controller.setupWidget("feedEnabled", {
@@ -78,6 +95,24 @@ AddfeedAssistant.prototype.setup = function() {
 		falseLabel: $L("No")
 	}, this.enabledModel = {
 		value: this.enabled,
+		disabled: false
+	});
+
+	this.controller.setupWidget("showPicture", {
+		property: "value",
+		trueLabel: $L("Yes"),
+		falseLabel: $L("No")
+	}, this.showPictureModel = {
+		value: this.showPicture,
+		disabled: false
+	});
+
+	this.controller.setupWidget("showMedia", {
+		property: "value",
+		trueLabel: $L("Yes"),
+		falseLabel: $L("No")
+	}, this.showMediaModel = {
+		value: this.showMedia,
 		disabled: false
 	});
     
@@ -109,7 +144,11 @@ AddfeedAssistant.prototype.setup = function() {
 	this.controller.get("feedTitle-title").update($L("Title"));
 
 	this.controller.get("feed-group-title").update($L("Basic settings"));
-	this.controller.get("storylist-group-title").update($L("View settings"));
+	this.controller.get("storylist-group-title").update($L("Story list"));
+	this.controller.get("detail-group-title").update($L("Story details"));
+	
+	this.controller.get("showMedia-title").update($L("Show media"));
+	this.controller.get("showPicture-title").update($L("Show picture"));
 	
 	this.controller.get("fullStory-title").update($L("Show full stories"));
 };
@@ -126,8 +165,11 @@ AddfeedAssistant.prototype.updateFeed = function() {
 	var title = this.titleModel.value;
 	var enabled = this.enabledModel.value;
 	var listMode = this.listModeModel.value;
+	var detailMode = this.detailModeModel.value;
 	var fullStoryMode = this.fullStoryModel.value;
-	var viewMode = (listMode << 16) | fullStoryMode;
+	var viewMode = (detailMode << 24) | (listMode << 16) | fullStoryMode;
+	var showPicture = this.showPictureModel.value;
+	var showMedia = this.showMediaModel.value;
 	
     if(/^[a-z]{1,5}:/.test(url) === false) {
         url = url.replace(/^\/{1,2}/, "");                                
@@ -144,11 +186,13 @@ AddfeedAssistant.prototype.updateFeed = function() {
 	this.controller.modelChanged(this.okButtonModel);
 
 	if(this.feed !== null) {
-		FeedReader.feeds.editFeed(this.index, title, url, enabled, viewMode);
+		FeedReader.feeds.editFeed(this.index, title, url, enabled, viewMode,
+								  showPicture, showMedia);
 		this.okButton.mojo.deactivate();
 		this.controller.stageController.popScene();
 	} else {
-		FeedReader.feeds.addFeed(title, url, enabled, viewMode);
+		FeedReader.feeds.addFeed(title, url, enabled, viewMode,
+								 showPicture, showMedia);
 		this.okButton.mojo.deactivate();
 		this.controller.stageController.popScene();
 	}

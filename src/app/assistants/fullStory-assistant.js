@@ -30,9 +30,15 @@ function FullStoryAssistant(feeds, feed, feedIndex, storyIndex) {
 	if(this.story.originFeed) {
 		this.originFeed = this.story.originFeed;
 		this.originStory = this.story.originStory;
+		
+		this.doShowMedia = this.feeds.list[this.originFeed].showMedia;
+		this.doShowPicture = this.feeds.list[this.originFeed].showPicture;		
 	} else {
 		this.originFeed = this.feedIndex;
 		this.originStory = this.storyIndex;
+		
+		this.doShowMedia = this.feed.showMedia;
+		this.doShowPicture = this.feed.showPicture;		
 	}
 	
 	this.commandModel = {
@@ -56,7 +62,7 @@ function FullStoryAssistant(feeds, feed, feedIndex, storyIndex) {
 	this.playState = 0;
 	this.seeking = false;
 	
-	if(this.story.audio.length > 0) {
+	if(this.doShowMedia && (this.story.audio.length > 0)) {
 		this.mediaConnectedHandler = this.mediaConnected.bindAsEventListener(this);
 		this.mediaDisConnectedHandler = this.mediaDisConnected.bindAsEventListener(this);
 		this.mediaPlayingHandler = this.mediaPlaying.bindAsEventListener(this);
@@ -67,7 +73,6 @@ function FullStoryAssistant(feeds, feed, feedIndex, storyIndex) {
 	this.startSeekingHandler = this.startSeeking.bindAsEventListener(this);
 	this.doSeekHandler = this.doSeek.bindAsEventListener(this);
 	this.stopSeekingHandler = this.stopSeeking.bindAsEventListener(this);
-
 	
 	this.storyTapHandler = this.storyTap.bindAsEventListener(this);
 }
@@ -81,11 +86,17 @@ FullStoryAssistant.prototype.setup = function() {
 	this.controller.get("appIcon").className += " " + this.feeds.getFeedHeaderIcon(this.feed);
 	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feeds.list[this.originFeed]));
 	this.controller.get("story-date").update(this.feeds.dateConverter.dateToLocalTime(this.story.intDate));
-	this.controller.get("story-title").update(this.story.title);
-	this.controller.get("story-content").update(this.story.summary);
+
+	if(this.feeds.showCaption(this.feeds.list[this.originFeed], true)) {
+		this.controller.get("story-title").update(this.story.title);
+	}
+	
+	if(this.feeds.showSummary(this.feeds.list[this.originFeed], true)) {
+		this.controller.get("story-content").update(this.story.summary);
+	}
 	
 	// Setup the story's picture.
-	if(this.story.picture.length > 0) {
+	if(this.doShowPicture && (this.story.picture.length > 0)) {
 		this.controller.get("story-picture").src = this.story.picture;
 	} else {
 		this.controller.get("img-container").className = "hidden";		
@@ -109,7 +120,7 @@ FullStoryAssistant.prototype.setup = function() {
 	this.controller.listen("media-progress", Mojo.Event.sliderDragStart, this.startSeekingHandler);
 	this.controller.listen("media-progress", Mojo.Event.sliderDragEnd, this.stopSeekingHandler);
 
-	if(this.story.audio.length <= 0) {
+	if(!this.doShowMedia || (this.story.audio.length <= 0)) {
 		// Hide the player.
 		this.controller.get("media-controls-wrapper").className = "hidden";
 	} else {
@@ -147,6 +158,7 @@ FullStoryAssistant.prototype.setup = function() {
 	
 	// Handle a story click.
     this.controller.listen("story-content", Mojo.Event.tap, this.storyTapHandler);
+	this.controller.listen("story-title", Mojo.Event.tap, this.storyTapHandler);
 };
 
 FullStoryAssistant.prototype.activate = function(event) {

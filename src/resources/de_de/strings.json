@@ -67,9 +67,9 @@
 	"Aggregation of all new items": "Zusammenfassung aller neuen Nachrichten",
 	"Basic settings": "Grundeinstellungen",
 	"View settings": "Anzeigeeinstellungen",
-	"Show full stories": "Ganze Nachrichten anzeigen",
+	"Show full stories": "Vollansicht",
 	"Overview": "Übersicht",
-	"Caption and summary": "Vollansicht",
+	"Caption and summary": "Alles",
 	"Caption only": "Überschriften",
 	"Summary only": "Zusammenfassungen",
 	"Use large fonts": "Große Schriften benutzen",
@@ -78,5 +78,10 @@
 	"Stopped": "Wiedergabe gestoppt",
 	"Not connected": "Nicht verbunden",
 	"Media error": "Medienfehler",
-	"Stalled": "Verbindung unterbrochen"
+	"Stalled": "Verbindung unterbrochen",
+	"Story list": "Übersicht",
+	"Story detail": "Vollansicht",
+	"Show": "Anzeige",
+	"Show picture": "Bild anzeigen",
+	"Show media": "Medien anzeigen"
 }
