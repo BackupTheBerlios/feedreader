@@ -9,5 +9,16 @@
 	"icon": "../../icon.png",
     "noWindow" : "true",
     "noDeprecatedStyles": "true",
-    "theme": "light"
+    "theme": "light",
+	"support": {
+		"email": {
+			"address": "general@tegi-stuff.de",
+			"subject": "FeedReader"
+		},
+		"resources": [{
+			"type": "web",
+			"label": "Homepage",
+			"url": "http://www.tegi-stuff.de/doku.php?id=feedreader"
+		}]
+	}
 }
