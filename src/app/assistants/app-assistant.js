@@ -41,6 +41,7 @@ FeedReader = {
     	visible: true,
     	items: [ 
         	{ label: $L("About FeedReader"), command: "do-about" },
+			{ label: $L("Import feeds"), command: "do-import" },
 			{ label: $L("License"), command: "do-license" }
     	]
 	},
@@ -168,6 +169,10 @@ AppAssistant.prototype.handleCommand = function(event) {
     } else {
         if(event.type == Mojo.Event.command) {
             switch(event.command) {
+				case "do-import":
+					stageController.pushScene("import");
+					break;
+				
                 case "do-about":
 					var t = new Template($L("#{appName} — v#{version}"));
 					var m = new Template($L("Copyright #{years} #{author}, published under the terms of the GNU GPL v3. See License for details."));

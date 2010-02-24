@@ -11,7 +11,10 @@
 			<div id="fullStory" class="palm-row-wrapper textfield-group" x-mojo-tap-highlight="momentary">
 				<div id="story-date" class="story-date truncating-text"></div>
 				<div id="story-title" class="story-title bold-text multiline"></div>
-				<div id="img-container"><img id="story-picture"></div>
+				<div id="img-container">
+					<div x-mojo-element="Spinner" id="picture-spinner" class="picture-spinnner"></div>
+					<img id="story-picture">
+				</div>
 				<div id="audio-container" autoplay="false"></div>
 				<div id="media-controls-wrapper">
 					<div id="media-progress">
