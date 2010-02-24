@@ -56,6 +56,10 @@ function FullStoryAssistant(feeds, feed, feedIndex, storyIndex) {
 		}]
 	};
 	
+	this.pictureSpinnerModel = {
+		spinning: false
+	};
+	
 	this.feeds.markStoryRead(this.originFeed, this.originStory);
 	this.media = undefined;
 	this.mediaReady = false;
@@ -75,6 +79,7 @@ function FullStoryAssistant(feeds, feed, feedIndex, storyIndex) {
 	this.stopSeekingHandler = this.stopSeeking.bindAsEventListener(this);
 	
 	this.storyTapHandler = this.storyTap.bindAsEventListener(this);
+	this.pictureLoadedHandler = this.pictureLoaded.bind(this);
 }
 
 FullStoryAssistant.prototype.setup = function() {
@@ -96,8 +101,12 @@ FullStoryAssistant.prototype.setup = function() {
 	}
 	
 	// Setup the story's picture.
+	this.controller.setupWidget("picture-spinner", { spinnerSize: "small" },
+								this.pictureSpinnerModel);
 	if(this.doShowPicture && (this.story.picture.length > 0)) {
 		this.controller.get("story-picture").src = this.story.picture;
+		this.pictureSpinnerModel.spinning = true;
+		this.controller.get("story-picture").onload = this.pictureLoadedHandler;
 	} else {
 		this.controller.get("img-container").className = "hidden";		
 	}
@@ -145,7 +154,6 @@ FullStoryAssistant.prototype.setup = function() {
 				disabled: true
 			}]
 		});
-
 		this.controller.get("media-playState").update($L("Not connected"));
 	}
 
@@ -162,6 +170,7 @@ FullStoryAssistant.prototype.setup = function() {
 };
 
 FullStoryAssistant.prototype.activate = function(event) {
+	this.controller.modelChanged(this.pictureSpinnerModel);
 };
 
 FullStoryAssistant.prototype.deactivate = function(event) {
@@ -180,6 +189,11 @@ FullStoryAssistant.prototype.cleanup = function(event) {
 		this.setMediaTimer(false);
 		this.media = null;
 	}
+};
+
+FullStoryAssistant.prototype.pictureLoaded = function() {
+	this.pictureSpinnerModel.spinning = false;
+	this.controller.modelChanged(this.pictureSpinnerModel);	
 };
 
 FullStoryAssistant.prototype.mediaConnected = function(event) {
@@ -236,6 +250,13 @@ FullStoryAssistant.prototype.togglePlay = function() {
 	switch(this.playState) {
 		case 0:		// stopped
 			this.media.src = this.story.audio;
+			// Override the state and menu temporarely, so the
+			// user does not click on click twice.
+			// Once the media is playing, this will be changed automatically.
+			this.controller.get("media-playState").update($L("Starting playback"));
+			this.commandModel.items[1].items[0].disabled = true;
+			this.commandModel.items[1].items[1].disabled = true;
+			this.controller.modelChanged(this.commandModel);
 			break;
 		
 		case 1:		// playing
