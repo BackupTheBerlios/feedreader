@@ -1182,6 +1182,6 @@ var feeds = Class.create ({
 	showSummary: function(feed, isDetailView) {
 		var viewMode = parseInt(feed.viewMode, 10);
 		var mode = isDetailView ? (viewMode >> 24) : (viewMode >> 16);
-		return (mode == 2) || (mode == 0);
+		return (mode == 2) || (mode === 0);
 	}
 });

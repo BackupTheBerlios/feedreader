@@ -103,8 +103,8 @@ var dateConverter = Class.create({
 		} catch(e) {
 			
 			Mojo.Log.error("Exception during date processing:", e);
-			var d = new Date();
-			intDate = d.getTime();
+			var d2 = new Date();
+			intDate = d2.getTime();
 			
 		}
 		return intDate;
