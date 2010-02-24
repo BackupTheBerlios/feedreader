@@ -45,6 +45,12 @@ img {
 	text-align: center;
 	vertical-align: middle;
 	width: 100%;
+	float: none;
+}
+
+.picture-spinnner {
+	position: absolute;
+	left: 138px;
 }
 
 /* media player */
@@ -139,6 +145,7 @@ img {
 	height: 54px; 
 	width: 100%;
 	background: url(../images/fade-top.png) top center repeat-x;
+	-webkit-palm-mouse-target: ignore;
 }
 
 .list-fade-bottom {
@@ -148,6 +155,7 @@ img {
 	height: 54px; 
 	width: 100%;
 	background: url(../images/fade-bottom.png) bottom center repeat-x;
+	-webkit-palm-mouse-target: ignore;
 }
 
 /* feed icons */
