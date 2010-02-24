@@ -73,6 +73,7 @@
 	"Caption only": "Überschriften",
 	"Summary only": "Zusammenfassungen",
 	"Use large fonts": "Große Schriften benutzen",
+	"Starting playback": "Starte Wiedergabe",
 	"Playing": "Wiedergabe läuft",
 	"Paused": "Wiedergabe pausiert",
 	"Stopped": "Wiedergabe gestoppt",
@@ -83,5 +84,6 @@
 	"Story detail": "Vollansicht",
 	"Show": "Anzeige",
 	"Show picture": "Bild anzeigen",
-	"Show media": "Medien anzeigen"
+	"Show media": "Medien anzeigen",
+	"Import feeds": "Feeds importieren"
 }
