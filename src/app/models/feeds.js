@@ -440,6 +440,7 @@ var feeds = Class.create ({
 		// Tell the current scene that we're about to update a feed.
 		if ((index >= 0) && (index < this.list.length)) {
 			if((this.list[index].type == "allItems") || !this.list[index].enabled) {
+				this.list[index].updated = true;
 				this.list[index].spinning = false;
 				return;
 			}
