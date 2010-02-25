@@ -31,10 +31,6 @@
         "source": "app/assistants/preferences-assistant.js"
     },
     {
-        "scenes": "help",
-        "source": "app/assistants/help-assistant.js"
-    },
-    {
         "scenes": "license",
         "source": "app/assistants/license-assistant.js"
     },

@@ -170,7 +170,7 @@ AppAssistant.prototype.handleCommand = function(event) {
         if(event.type == Mojo.Event.command) {
             switch(event.command) {
 				case "do-import":
-					stageController.pushScene("import");
+					stageController.pushScene("import", FeedReader.feeds);
 					break;
 				
                 case "do-about":

@@ -1,9 +1,45 @@
 <div id="fullStoryScene">
 	<div class="list-fade-top" x-mojo-scroll-fade="top"></div>
+	<div id="load-scrim" class="palm-scrim hidden">
+		<div id="loading-spinner" x-mojo-element="Spinner"></div>
+	</div>
 	<div class="palm-page-header">
 		<div class="palm-page-header-wrapper">
 		    <div class="header-icon icon rss"></div>                        
 			<div id="import-title" class="title"></div>
+		</div>
+	</div>
+	<div class="palm-group">
+		<div id="import-group-title" class="palm-group-title"></div>
+		<div class="palm-list">
+			<div class="palm-row first">
+	    		<div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight="true">
+	        		<div class="title">
+	        			<div id="importURL-title" class="label"></div>
+	        	   		<div x-mojo-element="TextField" id="importURL"></div>
+					</div>
+	    		</div>
+			</div>
+			<div class="palm-row last">
+				<div class="palm-row-wrapper"> 
+					<div id="importMode" x-mojo-element="ListSelector"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="conn-status"></div>
+	<div x-mojo-element="Button" id="searchButton"></div>
+
+	<div id="feedList-container" class="hidden">
+		<table class="palm-divider labeled">
+			<tr>
+				<td class="left"></td>
+				<td class="label">Feeds</td>
+				<td class="right"></td>
+			</tr>
+		</table>
+		<div class="palm-list">
+			<div id="importList" x-mojo-element="List"></div>
 		</div>
 	</div>
     <div class="list-fade-bottom" x-mojo-scroll-fade="bottom"></div>

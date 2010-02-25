@@ -33,7 +33,9 @@ Version 1.2 (Feature Release)
  * The dates are no longer stored as strings
  * Basic PodCast support has been added
  * Overhauled the spooler class
- * Changed the license to GNU GPL v3.
+ * Changed the license to GNU GPL v3
+ * Feeds can be imported from websites
+ * The standard support scene is now used
 
 Version 1.1.1 (Maintenance Release)
 -----------------------------------

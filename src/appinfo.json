@@ -7,6 +7,7 @@
   "main":"index.html",
   "icon":"icon.png",
   "miniicon":"miniicon.png",
+  "smallicon":"miniicon.png",
   "type":"web",
   "theme":"light",
   "noWindow":true,

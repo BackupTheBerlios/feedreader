@@ -925,6 +925,11 @@ var feeds = Class.create ({
 		this.updateInProgress = true;
 		this.enterActivity();
 		
+		for(i = 0; i < this.list.length; i++) { 	// Reset update flag first.
+			if(this.list[i].type != "allItems") {
+				this.list[i].updated = false;
+			}
+		}
 		for(i = 0; i < this.list.length; i++) {
 			this.updateFeed(i);
 		}
