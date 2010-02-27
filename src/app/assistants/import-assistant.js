@@ -56,7 +56,7 @@ function ImportAssistant(feeds) {
 	this.ajaxRequestFailedHandler = this.ajaxRequestFailed.bind(this);
 	
 	this.addFeedHandler = this.addFeed.bindAsEventListener(this);
-};
+}
 
 ImportAssistant.prototype.setup = function() {
 	this.controller.setupWidget("loading-spinner", this.loadingSpinnerAttribs,
@@ -226,7 +226,7 @@ ImportAssistant.prototype.parseStartTag = function(tag, attr) {
 
 ImportAssistant.prototype.parseEndTag = function(tag) {
 	if(tag.toLowerCase().match(/head/)) {
-		this.inHeader = false;
+		this.htmlparser.finished = true;
 	}
 };
 

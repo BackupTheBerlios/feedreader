@@ -27,8 +27,7 @@ function FeedlistAssistant(feeds) {
 }
 
 FeedlistAssistant.prototype.setup = function() {
-	// Setup application menu.
-	this.controller.setupWidget(Mojo.Menu.appMenu, FeedReader.menuAttr, FeedReader.menuModel);
+	FeedReader.beginSceneSetup(this, true);
 	
 	// Setup activation/de-activation handlers.
 	var stageDocument = this.controller.stageController.document;
@@ -88,6 +87,8 @@ FeedlistAssistant.prototype.setup = function() {
 		this.controller.showDialog({template: "changelog/changelog-scene",
 									assistant: new ChangelogAssistant(this.controller)});
 	}
+	
+	FeedReader.endSceneSetup(this);
 };
 
 FeedlistAssistant.prototype.getFeedIcon = function(property, model) {

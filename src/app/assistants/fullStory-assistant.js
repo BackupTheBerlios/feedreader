@@ -83,8 +83,7 @@ function FullStoryAssistant(feeds, feed, feedIndex, storyIndex) {
 }
 
 FullStoryAssistant.prototype.setup = function() {
-	// Setup application menu.
-	this.controller.setupWidget(Mojo.Menu.appMenu, FeedReader.menuAttr, FeedReader.menuModel);
+	FeedReader.beginSceneSetup(this, true);
 
 	this.controller.setDefaultTransition(Mojo.Transition.defaultTransition);
 
@@ -167,6 +166,8 @@ FullStoryAssistant.prototype.setup = function() {
 	// Handle a story click.
     this.controller.listen("story-content", Mojo.Event.tap, this.storyTapHandler);
 	this.controller.listen("story-title", Mojo.Event.tap, this.storyTapHandler);
+
+	FeedReader.endSceneSetup(this, true);
 };
 
 FullStoryAssistant.prototype.activate = function(event) {

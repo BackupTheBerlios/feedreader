@@ -1,13 +1,16 @@
 <div id="feedlistScene">
-	<div class="list-fade-top" x-mojo-scroll-fade="top"></div>
-	<div class="palm-page-header">
-		<div class="palm-page-header-wrapper">
-		    <div class="header-icon icon rss"></div>                        
-			<div class="title">FeedReader</div>      
+	<div id="scene-scrim" class="palm-scrim"></div>
+    <div id="scene-main" class="hidden">
+		<div class="list-fade-top" x-mojo-scroll-fade="top"></div>
+		<div class="palm-page-header">
+			<div class="palm-page-header-wrapper">
+			    <div class="header-icon icon rss"></div>                        
+				<div class="title">FeedReader</div>      
+			</div>
 		</div>
+			<div class="palm-list">
+		        <div id="feedList" x-mojo-element="FilterList"></div>
+		    </div>		
+		<div class="list-fade-bottom" x-mojo-scroll-fade="bottom"></div>
 	</div>
-	<div class="palm-list">
-        <div id="feedList" x-mojo-element="FilterList"></div>
-    </div>		
-    <div class="list-fade-bottom" x-mojo-scroll-fade="bottom"></div>
 </div>

@@ -76,6 +76,39 @@ FeedReader = {
 				label: $LL("OK")
 			}]
 		});
+	},
+	
+	/**
+	 */
+	beginSceneSetup: function(caller, initAppMenu) {
+		if(caller.controller) {
+			var sceneDiv = caller.controller.get("scene-main");
+			
+			if(sceneDiv) {
+				sceneDiv.className = "hidden";
+			}
+			
+			// Setup application menu.
+			if(initAppMenu) {
+				caller.controller.setupWidget(Mojo.Menu.appMenu, FeedReader.menuAttr, FeedReader.menuModel);
+			}
+		}		
+	},
+	
+	/**
+	 */
+	endSceneSetup: function(caller) {
+		if(caller.controller) {
+			var scrimDiv = caller.controller.get("scene-scrim");
+			var sceneDiv = caller.controller.get("scene-main");
+			
+			if(sceneDiv) {
+				sceneDiv.className = "";
+			}
+			if(scrimDiv) {
+				scrimDiv.className = "hidden";
+			}
+		}
 	}
 };
 

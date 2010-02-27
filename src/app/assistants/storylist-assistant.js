@@ -59,8 +59,7 @@ function StorylistAssistant(feeds, index) {
 }
 
 StorylistAssistant.prototype.setup = function() {
-	// Setup application menu.
-	this.controller.setupWidget(Mojo.Menu.appMenu, FeedReader.menuAttr, FeedReader.menuModel);
+	FeedReader.beginSceneSetup(this, true);
 
 	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feed));
 	this.controller.get("appIcon").className += " " + this.feeds.getFeedHeaderIcon(this.feed);
@@ -121,6 +120,7 @@ StorylistAssistant.prototype.setup = function() {
         ]
 	});
 	
+	FeedReader.endSceneSetup(this);
 	this.setupComplete = true;
 };
 

@@ -32,6 +32,9 @@
 // Changes by Timo Tegtmeier, 21.02.2010
 // - Fixed JSLint warnings (also speeded things up a bit)
 //
+// Changes by Timo Tegtmeier, 27.02.2010
+// - Added possibility to cancel parsing run
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 /*
@@ -49,6 +52,8 @@ function SimpleHtmlParser()
 
 SimpleHtmlParser.prototype = {
 
+	finished:	false,
+
 	handler:	null,
 
 	// regexps
@@ -63,19 +68,21 @@ SimpleHtmlParser.prototype = {
 			this.contentHandler = oHandler;
 		}
 		
-		var parseStartTagCls = function () {
-			return oThis.parseStartTag.apply(oThis, arguments);
-		};
-
-		var parseEndTagCls = function () {
-			return oThis.parseEndTag.apply(oThis, arguments);
-		};
-
 		var i = 0;
 		var res, lc, lm, rc, index;
 		var treatAsChars = false;
 		var oThis = this;
-		while (s.length > 0)
+		
+		var parseStartTagCls = function () {
+			return oThis.parseStartTag.apply(oThis, arguments);
+		};
+		var parseEndTagCls = function () {
+			return oThis.parseEndTag.apply(oThis, arguments);
+		};
+		
+		this.finished = false;
+		
+		while ((s.length > 0) && !(this.finished))
 		{
 			// Comment
 			if (s.substring(0, 4) == "<!--")

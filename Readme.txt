@@ -36,6 +36,8 @@ Version 1.2 (Feature Release)
  * Changed the license to GNU GPL v3
  * Feeds can be imported from websites
  * The standard support scene is now used
+ * Added a scrim to every the main scenes, so user will see the scene once
+   it is fully setup
 
 Version 1.1.1 (Maintenance Release)
 -----------------------------------

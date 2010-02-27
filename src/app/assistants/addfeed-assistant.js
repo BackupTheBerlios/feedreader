@@ -167,7 +167,7 @@ AddfeedAssistant.prototype.updateFeed = function() {
 	var listMode = this.listModeModel.value;
 	var detailMode = this.detailModeModel.value;
 	var fullStoryMode = this.fullStoryModel.value;
-	var viewMode = (detailMode << 24) | (listMode << 16) | fullStoryMode;
+	var viewMode = (detailMode << 24) | (listMode << 16) | (fullStoryMode & 0xFF);
 	var showPicture = this.showPictureModel.value;
 	var showMedia = this.showMediaModel.value;
 	
