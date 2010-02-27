@@ -599,7 +599,7 @@ var feeds = Class.create ({
 				}
 				
 				// Analyse the enclosures.
-				enclosures = rssItems[i].getElementsByTagName("link");
+				enclosures = atomItems[i].getElementsByTagName("link");
 				if(enclosures && (enclosures.length > 0)) {
 					for(enc = 0; enc < enclosures.length; enc++) {
 						rel = enclosures.item(enc).getAttribute("rel");
@@ -641,9 +641,10 @@ var feeds = Class.create ({
 				else {
 					story.uid = story.url;
 				}
-								
+				
 				container.push(story);
 			} catch(e) {
+				Mojo.Log.logException(e);
 			}
 		}
 		return container;
@@ -661,11 +662,6 @@ var feeds = Class.create ({
 		var enclosures, url, testurl, enc;
 		
 		var rssItems = transport.responseXML.getElementsByTagName("item");
-		if(!rssItems) {
-			Mojo.Log.info("Feed", index, "is empty");
-			return container;
-		}
-		
 		for (var i = 0; i < rssItems.length; i++) {
 			try {
 				story = {
@@ -725,7 +721,7 @@ var feeds = Class.create ({
 				
 				container.push(story);
 			} catch(e) {
-				Mojo.Log.warn("Exception occurred during feed item processing", i);
+				Mojo.Log.logException(e);
 			}
 		}
 		return container;
@@ -803,7 +799,7 @@ var feeds = Class.create ({
 				
 			} 
 		} catch(e) {
-			Mojo.Log.warn("Exception during feed processing", e);
+			Mojo.Log.logException(e);
 		}
 		this.finishUpdate(index);	
 	},
@@ -853,6 +849,7 @@ var feeds = Class.create ({
 				FeedReader.showError(errorMsg, {title: this.list[index].url, err: error});
 			}
 		} catch(e) {
+			Mojo.Log.logException(e);
 		}
 		
 		this.list[index].enabled = false;

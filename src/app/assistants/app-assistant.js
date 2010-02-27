@@ -84,10 +84,6 @@ FeedReader = {
 		if(caller.controller) {
 			var sceneDiv = caller.controller.get("scene-main");
 			
-			if(sceneDiv) {
-				sceneDiv.className = "hidden";
-			}
-			
 			// Setup application menu.
 			if(initAppMenu) {
 				caller.controller.setupWidget(Mojo.Menu.appMenu, FeedReader.menuAttr, FeedReader.menuModel);
