@@ -20,47 +20,24 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-function FullStoryAssistant(feeds, feed, feedIndex, storyIndex) {
+function FullStoryAssistant(feeds, feedIndex, storyIndex) {
 	this.feeds = feeds;
-	this.feed = feed;
-	this.story = this.feed.stories[storyIndex];
 	this.storyIndex = storyIndex;
 	this.feedIndex = feedIndex;
+	this.origin = this.feeds.getStoryOrigin(this.feedIndex, this.storyIndex);
+
+	this.doShowMedia = this.feeds.list[this.origin.feedIndex].showMedia;
+	this.doShowPicture = this.feeds.list[this.origin.feedIndex].showPicture;
+	this.feed = this.feeds.list[this.origin.feedIndex];
+	this.story = this.feed.stories[this.origin.storyIndex];
 	
-	if(this.story.originFeed) {
-		this.originFeed = this.story.originFeed;
-		this.originStory = this.story.originStory;
-		
-		this.doShowMedia = this.feeds.list[this.originFeed].showMedia;
-		this.doShowPicture = this.feeds.list[this.originFeed].showPicture;		
-	} else {
-		this.originFeed = this.feedIndex;
-		this.originStory = this.storyIndex;
-		
-		this.doShowMedia = this.feed.showMedia;
-		this.doShowPicture = this.feed.showPicture;		
-	}
-	
-	this.commandModel = {
-		label: "",
-        items: [{
-			items: [{
-				icon: "back",
-				disabled: this.storyIndex === 0,
-				command: "do-previousStory"
-			}, {
-				icon: "forward",
-				disabled: this.storyIndex === (this.feed.stories.length - 1),
-				command: "do-nextStory"
-			}]
-		}]
-	};
+	this.commandModel = {};
+	this.setupComplete = false;
 	
 	this.pictureSpinnerModel = {
 		spinning: false
 	};
 	
-	this.feeds.markStoryRead(this.originFeed, this.originStory);
 	this.media = undefined;
 	this.mediaReady = false;
 	this.playState = 0;
@@ -87,15 +64,15 @@ FullStoryAssistant.prototype.setup = function() {
 
 	this.controller.setDefaultTransition(Mojo.Transition.defaultTransition);
 
-	this.controller.get("appIcon").className += " " + this.feeds.getFeedHeaderIcon(this.feed);
-	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feeds.list[this.originFeed]));
+	this.controller.get("appIcon").className += " " + this.feeds.getFeedHeaderIcon(this.feeds.list[this.feedIndex]);
+	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feeds.list[this.origin.feedIndex]));
 	this.controller.get("story-date").update(this.feeds.dateConverter.dateToLocalTime(this.story.intDate));
 
-	if(this.feeds.showCaption(this.feeds.list[this.originFeed], true)) {
+	if(this.feeds.showCaption(this.feeds.list[this.origin.feedIndex], true)) {
 		this.controller.get("story-title").update(this.story.title);
 	}
 	
-	if(this.feeds.showSummary(this.feeds.list[this.originFeed], true)) {
+	if(this.feeds.showSummary(this.feeds.list[this.origin.feedIndex], true)) {
 		this.controller.get("story-content").update(this.story.summary);
 	}
 	
@@ -141,18 +118,6 @@ FullStoryAssistant.prototype.setup = function() {
 		this.media.addEventListener(Media.Event.ABORT, this.mediaStoppedHandler, false);
 		this.media.addEventListener(Media.Event.ENDED, this.mediaStoppedHandler, false);
 		this.media.addEventListener(Media.Event.ERROR, this.mediaErrorHandler, false);
-		
-		this.commandModel.items.push({
-			items :[{
-				iconPath: "images/player/icon-play.png",
-				command: "do-togglePlay",
-				disabled: true
-			}, {
-				icon: "stop",
-				command: "do-stop",
-				disabled: true
-			}]
-		});
 		this.controller.get("media-playState").update($L("Not connected"));
 	}
 
@@ -161,6 +126,7 @@ FullStoryAssistant.prototype.setup = function() {
 	this.controller.get("story-content").className += (FeedReader.prefs.largeFont ? " large" : "");
 	
 	// Setup command menu.
+	this.initCommandModel();
     this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel);
 	
 	// Handle a story click.
@@ -171,7 +137,11 @@ FullStoryAssistant.prototype.setup = function() {
 };
 
 FullStoryAssistant.prototype.activate = function(event) {
-	this.controller.modelChanged(this.pictureSpinnerModel);
+	if(this.setupComplete) {
+		this.initCommandModel();
+		this.controller.modelChanged(this.commandModel);
+		this.controller.modelChanged(this.pictureSpinnerModel);
+	}
 };
 
 FullStoryAssistant.prototype.deactivate = function(event) {
@@ -185,10 +155,67 @@ FullStoryAssistant.prototype.cleanup = function(event) {
 		this.media.removeEventListener(Media.Event.ABORT, this.mediaStoppedHandler);
 		this.media.removeEventListener(Media.Event.ENDED, this.mediaStoppedHandler);
 		this.media.removeEventListener(Media.Event.ERROR, this.mediaErrorHandler);
-		this.media.src = "";
-		this.media.load();
-		this.setMediaTimer(false);
-		this.media = null;
+		try {
+			this.setMediaTimer(false);
+			this.media.src = "";
+			this.media.load();
+		} catch(e) {
+			// The emulator will land here...
+		}
+		delete this.media;
+	}
+	if(!this.story.isRead) {
+		this.feeds.markStoryRead(this.origin.feedIndex, this.origin.storyIndex);
+	}
+};
+
+FullStoryAssistant.prototype.initCommandModel = function() {
+	this.commandModel.label = "";
+    this.commandModel.items = [{
+		items: [{
+			icon: "back",
+			disabled: this.storyIndex === 0,
+			command: "do-previousStory"
+		}, {
+			icon: "forward",
+			disabled: this.storyIndex === (this.feeds.getFeedLength(this.feedIndex)),
+			command: "do-nextStory"
+		}]
+	}];
+	
+	if(this.doShowMedia && (this.story.audio.length > 0)) {
+		this.commandModel.items.push({
+			items :[{
+				iconPath: "images/player/icon-play.png",
+				command: "do-togglePlay",
+				disabled: !this.mediaReady
+			}, {
+				icon: "stop",
+				command: "do-stop",
+				disabled: !this.mediaReady
+			}]
+		});
+		
+		switch(this.playState) {
+			case 0:	// stopped
+				this.commandModel.items[1].items[0].iconPath = "images/player/icon-play.png";
+				this.commandModel.items[1].items[1].disabled = true;
+				break;
+				
+			case 1:	// playing
+				this.commandModel.items[1].items[0].iconPath = "images/player/icon-pause.png";
+				break;
+				
+			case 2:	// paused
+				this.commandModel.items[1].items[0].iconPath = "images/player/icon-play.png";
+				break;
+		}
+	} else {
+		this.commandModel.items.push({});
+	}
+	
+	if(!FeedReader.prefs.leftHanded) {
+		this.commandModel.items.reverse();
 	}
 };
 
@@ -212,6 +239,7 @@ FullStoryAssistant.prototype.mediaDisConnected = function(event) {
 };
 
 FullStoryAssistant.prototype.mediaPlaying = function(event) {
+	this.mediaReady = true;
 	this.playState = 1;
 	this.updateMediaUI();
 };
@@ -255,8 +283,8 @@ FullStoryAssistant.prototype.togglePlay = function() {
 			// user does not click on click twice.
 			// Once the media is playing, this will be changed automatically.
 			this.controller.get("media-playState").update($L("Starting playback"));
-			this.commandModel.items[1].items[0].disabled = true;
-			this.commandModel.items[1].items[1].disabled = true;
+			this.mediaReady = false;
+			this.initCommandModel();
 			this.controller.modelChanged(this.commandModel);
 			break;
 		
@@ -331,13 +359,9 @@ FullStoryAssistant.prototype.updateMediaUI = function() {
 		this.controller.modelChanged(this.mediaProgressModel);
 	}
 	
-	this.commandModel.items[1].items[0].disabled = !this.mediaReady;
-	this.commandModel.items[1].items[1].disabled = !this.mediaReady;
-	
 	switch(this.playState) {
 		case 0:	// stopped
 			this.controller.get("media-playState").update($L("Stopped"));
-			this.commandModel.items[1].items[0].iconPath = "images/player/icon-play.png";
 			this.controller.get("media-currentPos").update(this.feeds.dateConverter.formatTimeString(0));
 			this.controller.get("media-duration").update(this.feeds.dateConverter.formatTimeString(0));
 			this.mediaProgressModel.progressStart = 0;
@@ -347,15 +371,13 @@ FullStoryAssistant.prototype.updateMediaUI = function() {
 			
 		case 1:	// playing
 			this.controller.get("media-playState").update($L("Playing"));
-			this.commandModel.items[1].items[0].iconPath = "images/player/icon-pause.png";
 			break;
 			
 		case 2:	// paused
 			this.controller.get("media-playState").update($L("Paused"));
-			this.commandModel.items[1].items[0].iconPath = "images/player/icon-play.png";
 			break;
 	}
-	this.commandModel.items[1].items[1].disabled |= DisableStop;
+	this.initCommandModel();
 	this.controller.modelChanged(this.commandModel);
 
 	this.setMediaTimer(true);
@@ -377,17 +399,20 @@ FullStoryAssistant.prototype.handleCommand = function(event) {
 	if(event.type === Mojo.Event.command) {
 		switch(event.command) {
 			case "do-previousStory":
+				this.feeds.markStoryRead(this.origin.feedIndex, this.origin.storyIndex);
 				this.controller.stageController.swapScene({
 					name: "fullStory",
 					transition: Mojo.Transition.crossFade
-				}, this.feeds, this.feed, this.feedIndex, this.storyIndex - 1);
+				}, this.feeds, this.feedIndex, this.storyIndex - 1);
 				break;
 				
 			case "do-nextStory":
+				this.feeds.markStoryRead(this.origin.feedIndex, this.origin.storyIndex);
+				var next = this.storyIndex + (this.feeds.list[this.feedIndex].sortMode === 0 ? 1 : 0);
 				this.controller.stageController.swapScene({
 					name: "fullStory",
 					transition: Mojo.Transition.crossFade
-				}, this.feeds, this.feed, this.feedIndex, this.storyIndex + 1);
+				}, this.feeds, this.feedIndex, next);
 				break;
 			
 			case "do-togglePlay":

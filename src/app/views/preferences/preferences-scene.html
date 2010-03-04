@@ -5,7 +5,17 @@
 			<div id="prefs-title" class="title"></div>      
 		</div>
 	</div>
-
+	<div class="palm-group">
+		<div id="prefs-general-group-title" class="palm-group-title"></div>
+		<div class="palm-list">
+			<div class="palm-row first last">
+				<div class="palm-row-wrapper">
+					<div x-mojo-element="ToggleButton" id="leftHanded"></div>
+					<div id="left-handed-title" class="title left"></div>
+				</div>
+			</div>
+		</div>
+	</div>
 	<div class="palm-group">
 		<div id="prefs-updating-group-title" class="palm-group-title"></div>
 		<div class="palm-list">
@@ -20,15 +30,20 @@
 					<div id="notify-title" class="title left"></div>
 				</div>
 			</div>
-			<div class="palm-row last">
+			<div class="palm-row">
 				<div class="palm-row-wrapper">
 					<div x-mojo-element="ToggleButton" id="wakingEnabled"></div>
 					<div id="wake-device-title" class="title left"></div>
 				</div>
 			</div>
+			<div class="palm-row last">
+				<div class="palm-row-wrapper">
+					<div x-mojo-element="ToggleButton" id="playSound"></div>
+					<div id="play-sound-title" class="title left"></div>
+				</div>
+			</div>
 		</div>
 	</div>
-	
 	<div class="palm-group">
 		<div id="prefs-appearance-group-title" class="palm-group-title"></div>
 		<div class="palm-list">
@@ -50,5 +65,4 @@
 			</div>
 		</div>
 	</div>
-
 </div>

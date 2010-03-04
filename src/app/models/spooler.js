@@ -48,7 +48,6 @@ var spooler = new Class.create({
 				}
 				
 				if(skip) {
-					Mojo.Log.info("SPOOLER> Skipped adding unique action", identifier);
 					return;
 				}
 			}
@@ -59,11 +58,10 @@ var spooler = new Class.create({
 			});
 			
 			if((this.list.length == 1) && !this.actionRunning)  {
-				Mojo.Log.info("SPOOLER> queue was empty, direct start");
 				this.nextAction();
 			}
 		} catch(e) {
-			Mojo.Log.error("SPOOLER> error while adding action:", e);
+			Mojo.Log.logException(e);
 		}
 	},
 	
@@ -73,15 +71,13 @@ var spooler = new Class.create({
 				var action = this.list.shift();
 				this.actionRunning = true;
 				this.actionIdent = action.ident;
-				Mojo.Log.info("SPOOLER> processing next action", this.actionIdent);
 				action.execute();
 			} else {
 				this.actionRunning = false;
 				this.actionIdent = "";
-				Mojo.Log.info("SPOOLER> All spooled actions have been executed");
 			}
 		} catch(e) {
-			Mojo.Log.error("SPOOLER> Exception while processing:", e);
+			Mojo.Log.logException(e);
 		}
 	}
 });

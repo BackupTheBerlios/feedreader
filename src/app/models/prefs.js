@@ -21,13 +21,15 @@
  */
 
 var prefs = Class.create({
-	updateInterval:	15,
+	updateInterval:	30,
 	notificationEnabled: true,
+	playSound: true,
 	wakingEnabled: false,
 	titleColor: "red",
 	summaryLength: 120,
 	largeFont: false,
 	showChanges: false,
+	leftHanded: false,
 	
 	timer: {},
 	
@@ -51,6 +53,12 @@ var prefs = Class.create({
 			if(settings.version > 1) {
 				this.largeFont = settings.largeFont;
 			}
+			if(settings.version > 2) {
+				this.playSound = settings.playSound;
+			}
+			if(settings.version > 3) {
+				this.leftHanded = settings.leftHanded;
+			}
 			
 			if(settings.version < FeedReader.versionInt) {
 				this.showChanges = true;
@@ -67,7 +75,9 @@ var prefs = Class.create({
 			wakingEnabled: 			this.wakingEnabled,
 			summaryLength: 			this.summaryLength,
 			titleColor: 			this.titleColor,
-			largeFont:				this.largeFont
+			largeFont:				this.largeFont,
+			playSound:				this.playSound,
+			leftHanded:				this.leftHanded
 		});
 		this.setTimer();
 	},

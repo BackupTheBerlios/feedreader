@@ -27,8 +27,8 @@
 FeedReader = {
 	appName:			"FeedReader",
 	appAuthor:			"Timo Tegtmeier",
-	versionString:		"1.2",
-	versionInt:			3,
+	versionString:		"1.2.1",
+	versionInt:			4,
 	copyrightYears:		"2009, 2010",
 
 	mainStageName: 		"FeedReaderStage",
@@ -104,6 +104,10 @@ FeedReader = {
 			if(scrimDiv) {
 				scrimDiv.className = "hidden";
 			}
+		}
+		
+		if(caller.setupComplete !== undefined) {
+			caller.setupComplete = true;
 		}
 	}
 };

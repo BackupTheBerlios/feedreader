@@ -80,6 +80,26 @@ var dateConverter = Class.create({
 		}
 		return d.getTime();
 	},
+	
+	convertSimpleDate: function(dateString) {
+		var d = new Date();
+		var parts = dateString.split('.');
+		if(parts[0]) {
+			d.setDate(parseInt(parts[0], 10));
+		}
+		if(parts[1]) {
+			d.setMonth(parseInt(parts[1], 10) - 1);
+		}
+		if(parts[2]) {
+			d.setFullYear(parseInt(parts[2], 10));
+		}
+		
+		d.setHours(0);
+		d.setMinutes(0);
+		d.setSeconds(0);
+		
+		return d.getTime();
+	},
 
 	/**
 	 * Convert a date string to an integer; supports dc:date and RFC 822 format.
@@ -97,6 +117,8 @@ var dateConverter = Class.create({
 				intDate = this.convertRFC822(dateString);
 			} else if(dateString.match(/\D{3}\s\D{3}\s\d{2}\s\d{2}:\d{2}:\d{2}\s[a-zA-Z\+\-0-9]{1,5}\s\d{3}/)) {
 				intDate = this.convertRFC2822(dateString);
+			} else if(dateString.match(/\d{1,2}\.\d{1,2}.\d{4}/)) {
+				intDate = this.convertSimpleDate(dateString);
 			} else {
 				intDate = this.convertDCDate(dateString);
 			}
@@ -123,7 +145,7 @@ var dateConverter = Class.create({
 			secs = Math.floor(secs % 60);
 			
 			// Pad with zeros if needed.
-			// ToDo: Replace this once a proper sprintf() replacement is found.
+			// ToDo: Replace this, once a proper sprintf() replacement is found.
 			if (mins < 10) {
 				mins = "0" + mins;
 			}

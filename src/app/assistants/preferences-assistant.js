@@ -26,19 +26,29 @@ function PreferencesAssistant() {
 
 PreferencesAssistant.prototype.setup = function() {
 	this.controller.get("prefs-title").update($L("FeedReader Preferences"));
+	this.controller.get("prefs-general-group-title").update($L("General"));
 	this.controller.get("prefs-updating-group-title").update($L("Automatic updating"));
 	this.controller.get("prefs-appearance-group-title").update($L("Summary appearance"));
 	
 	this.controller.get("notify-title").update($L("Show notification"));
 	this.controller.get("wake-device-title").update($L("Wake device"));
+	this.controller.get("play-sound-title").update($L("Play sound"));
+	this.controller.get("left-handed-title").update($L("Navigation on left side"));
 	this.controller.get("largeFont-title").update($L("Use large fonts"));
-	
+
+	this.controller.setupWidget("leftHanded",
+    							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
+         						this.leftHandedModel = {value: this.prefs.leftHanded, disabled: false});	
+
 	this.controller.setupWidget("notificationEnabled",
     							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
          						this.notificationModel = {value: this.prefs.notificationEnabled, disabled: false});
 	this.controller.setupWidget("wakingEnabled",
     							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
          						this.wakingModel = {value: this.prefs.wakingEnabled, disabled: false});
+	this.controller.setupWidget("playSound",
+    							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
+         						this.playSoundModel = {value: this.prefs.playSound, disabled: false});
 	this.controller.setupWidget("updateInterval", {
 		label: $L("Interval"),
 		choices: [
@@ -92,6 +102,8 @@ PreferencesAssistant.prototype.cleanup = function(event) {
 	this.prefs.titleColor = this.titleColorModel.value;
 	this.prefs.summaryLength = this.summaryLengthModel.value;
 	this.prefs.largeFont = this.largeFontModel.value;
+	this.prefs.playSound = this.playSoundModel.value;
+	this.prefs.leftHanded = this.leftHandedModel.value;
 	
 	this.prefs.save();
 };

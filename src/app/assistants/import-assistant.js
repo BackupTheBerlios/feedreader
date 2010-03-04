@@ -163,7 +163,7 @@ ImportAssistant.prototype.ajaxRequestSuccess = function(transport) {
 	if(transport.responseText && transport.responseText.length > 0) {
 		Mojo.Log.info("Got response from web!");
 		try {
-			this.htmlparser.parse(transport.responseText, this.parserHandler);
+			this.htmlparser.parse(transport.responseText.replace("/<script.*<\/script>/ig"), this.parserHandler);
 		} catch(e) {
 			Mojo.Log.logException(e);
 		}
@@ -181,6 +181,8 @@ ImportAssistant.prototype.ajaxRequestFailed = function(transport) {
 };
 
 ImportAssistant.prototype.parseStartTag = function(tag, attr) {
+	Mojo.Log.info(tag);
+	
 	if(tag.toLowerCase().match(/head/)) {
 		this.inHeader = true;
 	} else if(!this.inHeader) {
@@ -190,7 +192,7 @@ ImportAssistant.prototype.parseStartTag = function(tag, attr) {
 		var type = "";
 		var href = "";
 		var title = "RSS Feed";
-		
+
 		for(var i = 0; i < attr.length; i++) {
 			if(attr[i]) {
 				if(attr[i].name.toLowerCase().match(/rel/) &&

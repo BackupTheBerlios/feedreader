@@ -3,6 +3,7 @@ Copyright (C) 2009, 2010 Timo Tegtmeier
 
 The icons icon-play.png, icon-pause.png, web-icon.png, email-icon.png are Copyright Palm, Inc.
 The script Math.uuid.js is Copyright 2009 Robert Kieffer.
+The script simplehtmlparser.hs is Copyright 2004 Erik Arvidsson.
 
 License
 =======
@@ -22,6 +23,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 Changelog
 =========
+
+Version 1.2.1 (Minor Feature Release)
+-------------------------------------
+ * The core navi button pulsates when new stories arrive (under webOS 1.4)
+ * Optimized some routines for speed
+ * The main list widgets in the are now filled dynamically
+ * The story list can now optionally show only unread items
+ * The feeds are now sorted by date
 
 Version 1.2 (Feature Release)
 -----------------------------

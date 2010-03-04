@@ -21,7 +21,7 @@
  */
 
 var feeds = Class.create ({
-	list: [],		// contains the individual feeds
+	list: [],			// contains the individual feeds
 
 	db: {},				// takes the depot object
 	activity: {},		// takes the activity service
@@ -102,7 +102,7 @@ var feeds = Class.create ({
 	 * Called when opening the depot fails.
 	 */
 	openDBFailed: function(transaction, result) {
-		Mojo.Log.warn("Can't open feed database: ", result.message);
+		Mojo.Log.warn("FEEDS> Can't open feed database: ", result.message);
 	},
 
 	/** @private
@@ -112,7 +112,7 @@ var feeds = Class.create ({
 	 * @param {Object} data
 	 */
 	loadFeedListSuccess: function(data) {
-        Mojo.Log.info("Database size: " , Object.values(data).size());
+        Mojo.Log.info("FEEDS> Database size: " , Object.values(data).size());
 	    
         if (Object.toJSON(data) == "{}" || data === null) { 
 			this.list = [ {
@@ -123,6 +123,7 @@ var feeds = Class.create ({
 				numUnRead: 		0,
 				numNew: 		0,
 				viewMode: 		0,
+				sortMode:		0,
 				updated: 		true,
 				spinning: 		false,
 				preventDelete: 	true,
@@ -133,6 +134,9 @@ var feeds = Class.create ({
 			}
 			if(this.properties.migratingFrom < 3) {
 				data = this.migrateV2(data);
+			}
+			if(this.properties.migratingFrom < 4) {
+				data = this.migrateV3(data);
 			}
             this.list = data;
 		}
@@ -162,7 +166,7 @@ var feeds = Class.create ({
 			// Update all feeds to new format.
 			// New properties:	viewMode		Show feeds in FeedReader or in Browser
 			//					sortMode		How the feed should be sorted
-			//					spnning			Wether the feed's spinner is spinning
+			//					spinning		Wether the feed's spinner is spinning
 			//					preventDelete	Prevent deletion (to avoid delete pseudo feeds)
 			newdata.push({
 				type: 			data[i].type,
@@ -235,13 +239,32 @@ var feeds = Class.create ({
 		
 		return data;
 	},
+	
+	/** @private
+	 *
+	 * Migrate a v3 database to a v4 database.
+	 */
+	migrateV3: function(data) {
+		var j;
+		
+		for(var i = 0; i < data.length; i++) {
+			// The sortMode was introduced in DBv2, but addFeed failed to
+			// add this to new feeds, so re-introduce it here.
+			data[i].sortMode = 0;
+			for(j = 0; j < data[i].stories.length; j++) {
+				data[i].stories[j].index = 0;
+			}
+		}
+		
+		return data;		
+	},
 
 	/** @private
 	 *
 	 * Called when the feed list cannot be retrieved.
 	 */
 	loadFeedListFailed: function() {
-		Mojo.Log.warn("unable to retrieve feedlist");
+		Mojo.Log.warn("FEEDS> unable to retrieve feedlist");
 	},
 
 	/**
@@ -267,7 +290,7 @@ var feeds = Class.create ({
 	 */
 	saveFeedListSuccess: function() {
 		this.saveInProgress = false;
-		Mojo.Log.info("feed list saved");
+		Mojo.Log.info("FEEDS> feed list saved");
 		
 		this.spooler.nextAction();
 	},
@@ -278,7 +301,7 @@ var feeds = Class.create ({
 	 */
 	saveFeedListFailed: function(transaction, result) {
 		this.saveInProgress = false;
-		Mojo.Log.warn("feed list could not be saved: ", result.message);
+		Mojo.Log.error("FEEDS> feed list could not be saved: ", result.message);
 
 		this.spooler.nextAction();
 	},
@@ -317,6 +340,7 @@ var feeds = Class.create ({
 			viewMode: viewMode,
 			showPicture: showPicture,
 			showMedia: showMedia,
+			sortMode: 0,
 			preventDelete: false,
 			updated: true,
 			spinning: false,
@@ -404,7 +428,7 @@ var feeds = Class.create ({
 	 * Gets called when setting the activity was successful.
 	 */
 	setActivitySuccess: function(response) {
-		Mojo.Log.info("Successfully set activity");
+		Mojo.Log.info("FEEDS> Successfully set activity");
 	},
 	
 	/** @private
@@ -412,7 +436,7 @@ var feeds = Class.create ({
 	 * Gets called when setting the acitivity failed.
 	 */
 	setActivityFailed: function(response) {
-		Mojo.Log.warn("Unable to set activity", response);
+		Mojo.Log.error("FEEDS> Unable to set activity", response);
 	},
 	
 	/** @private
@@ -482,7 +506,7 @@ var feeds = Class.create ({
 	            	onSuccess: this.updateFeedSuccess.bind(this, index),
 	            	onFailure: this.updateFeedFailed.bind(this, index)});
 		} else {
-			Mojo.Log.info("No internet connection available");
+			Mojo.Log.info("FEEDS> No internet connection available");
 		}
 	},
 	
@@ -494,7 +518,7 @@ var feeds = Class.create ({
 	 * @param {Object} result	Information about the connection status
 	 */	
 	getConnStatusFailed: function(index, result) {
-		Mojo.Log.warn("Unable to determine connection status");
+		Mojo.Log.warn("FEEDS> Unable to determine connection status");
 		this.spooler.nextAction();
 	},
 	
@@ -507,7 +531,6 @@ var feeds = Class.create ({
 	 */
 	reformatSummary: function(summary) {
         summary = summary.replace(/(<([^>]+)>)/ig, "");
-        summary = summary.replace(/http:\S+/ig, "");
         summary = summary.replace(/#[a-z]+/ig, "{");
         summary = summary.replace(/(\{([^\}]+)\})/ig, "");
         summary = summary.replace(/digg_url .../, "");
@@ -532,7 +555,7 @@ var feeds = Class.create ({
 				errorMsg = new Template($L("The Feed '#{title}' does not return data."));
 				FeedReader.showError(errorMsg, { title: this.list[index].url });
 			}
-			Mojo.Log.warn("Empty responseText in", this.list[index].url);
+			Mojo.Log.info("FEEDS> Empty responseText in", this.list[index].url);
 			this.list[index].type = "unknown";
 			return false;			
 		}
@@ -552,7 +575,7 @@ var feeds = Class.create ({
 						errorMsg = new Template($L("The format of Feed '#{title}' is unsupported."));
 						FeedReader.showError(errorMsg, {title: this.list[index].url});
 					}
-					Mojo.Log.warn("Unsupported feed format in", this.list[index].url);
+					Mojo.Log.info("FEEDS> Unsupported feed format in", this.list[index].url);
 					this.list[index].type = "unknown";
 					return false;
 				}
@@ -570,38 +593,39 @@ var feeds = Class.create ({
 	 */
 	parseAtom: function(index, transport) {
 		var container = [];
-		var enclosures, enc, url, testurl, rel;
+		var enclosures = {};
+		var url = "", testurl = "", enc = 0;
+		var el = 0;
 		
 		var atomItems = transport.responseXML.getElementsByTagName("entry");
-		for (var i = 0; i < atomItems.length; i++) {
+		var l = atomItems.length;
+		for (var i = 0; i < l; i++) {
 			try {
 				story = {
-					title: unescape(atomItems[i].getElementsByTagName("title").item(0).textContent),
-					summary: "",
-					url: atomItems[i].getElementsByTagName("link").item(0).getAttribute("href"),
-					picture: "",
-					audio: "",
-					video: "",
-					intDate: 0,
-					uid: "",
-					isRead: false,
-					isNew: true
+					index:		0,
+					title:		unescape(atomItems[i].getElementsByTagName("title").item(0).textContent),
+					summary:	"",
+					url:		atomItems[i].getElementsByTagName("link").item(0).getAttribute("href"),
+					picture:	"",
+					audio:		"",
+					video:		"",
+					intDate:	0,
+					uid:		"",
+					isRead:		false,
+					isNew:		true
 				};
 				
 				// Set the summary. Normally this will be pulled out of the summary element,
 				// but sometimes this element does not exist.
 				if (atomItems[i].getElementsByTagName("summary") && atomItems[i].getElementsByTagName("summary").item(0)) {
 					story.summary = this.reformatSummary(atomItems[i].getElementsByTagName("summary").item(0).textContent);
-				} else if (atomItems[i].getElementsByTagName("content") && atomItems[i].getElementsByTagName("content").item(0)) {
-					story.summary = this.reformatSummary(atomItems[i].getElementsByTagName("content").item(0).textContent);
-				} else {
-					story.summary = "";
 				}
 				
 				// Analyse the enclosures.
 				enclosures = atomItems[i].getElementsByTagName("link");
 				if(enclosures && (enclosures.length > 0)) {
-					for(enc = 0; enc < enclosures.length; enc++) {
+					el = enclosures.length;
+					for(enc = 0; enc < el; enc++) {
 						rel = enclosures.item(enc).getAttribute("rel");
 						if(!rel || !rel.match(/enclosure/)) {
 							continue;
@@ -659,28 +683,33 @@ var feeds = Class.create ({
 	 */
 	parseRSS: function(index, transport) {
 		var container = [];
-		var enclosures, url, testurl, enc;
+		var enclosures = {};
+		var url = "", testurl = "", enc = 0;
+		var el = 0;
 		
 		var rssItems = transport.responseXML.getElementsByTagName("item");
-		for (var i = 0; i < rssItems.length; i++) {
+		var l = rssItems.length;
+		for (var i = 0; i < l; i++) {
 			try {
 				story = {
-					title: unescape(rssItems[i].getElementsByTagName("title").item(0).textContent),
-					summary: this.reformatSummary(rssItems[i].getElementsByTagName("description").item(0).textContent),
-					url: rssItems[i].getElementsByTagName("link").item(0).textContent,
-					picture: "",
-					audio: "",
-					video: "",
-					intDate: 0,
-					uid: "",
-					isRead: false,
-					isNew: true
+					index: 		0,
+					title: 		unescape(rssItems[i].getElementsByTagName("title").item(0).textContent),
+					summary:	this.reformatSummary(rssItems[i].getElementsByTagName("description").item(0).textContent),
+					url:		rssItems[i].getElementsByTagName("link").item(0).textContent,
+					picture:	"",
+					audio:		"",
+					video:		"",
+					intDate:	0,
+					uid:		"",
+					isRead:		false,
+					isNew:		true
 				};
 				
 				// Analyse the enclosures.
 				enclosures = rssItems[i].getElementsByTagName("enclosure");
 				if(enclosures && (enclosures.length > 0)) {
-					for(enc = 0; enc < enclosures.length; enc++) {
+					el = enclosures.length;
+					for(enc = 0; enc < el; enc++) {
 						url = enclosures.item(enc).getAttribute("url");
 						if(url && (url.length > 0)) {
 							testurl = url.toLowerCase();
@@ -714,8 +743,7 @@ var feeds = Class.create ({
 				// Set the unique id.
 				if (rssItems[i].getElementsByTagName("guid") && rssItems[i].getElementsByTagName("guid").item(0)) {
 					story.uid = rssItems[i].getElementsByTagName("guid").item(0).textContent;
-				}
-				else {
+				} else {
 					story.uid = story.url;
 				}
 				
@@ -737,7 +765,18 @@ var feeds = Class.create ({
 	parseRDF: function(index, transport) {
 		// Currently we do the same as for RSS.
 		return this.parseRSS(index, transport);
-	},	
+	},
+	
+	/** @private
+	 *
+	 * Sort function to sort stories by date.
+	 *
+	 * @param {Object}		Feed a
+	 * @param {Object}		Feed b
+	 */
+	dateSort: function(a, b) {
+		return b.intDate - a.intDate;
+	},
 	
 	/** @private
 	 * 
@@ -749,16 +788,17 @@ var feeds = Class.create ({
 	updateFeedSuccess: function(index, transport) {
 		try {
 			if((transport.responseXML === null) && (transport.responseText !== null)) {
-				Mojo.Log.info("Manually converting feed info to xml", transport.responseText);
+				Mojo.Log.info("FEEDS> Manually converting feed info to xml", transport.responseText);
 				transport.responseXML = new DOMParser().parseFromString(transport.responseText, "text/xml");
 			}
 			
-			var contentType = transport.getHeader("Content-Type");
 			if(this.determineFeedType(index, transport)) {
-				Mojo.Log.info("Feed", index, "is of type", this.list[index].type);
+				var contentType = transport.getHeader("Content-Type");
+				var feed = this.list[index];
+				var stories = feed.stories;
 				var newStories = [];
 				
-				switch(this.list[index].type) {
+				switch(feed.type) {
 					case "RDF":
 						newStories = this.parseRDF(index, transport);
 						break;
@@ -772,31 +812,34 @@ var feeds = Class.create ({
 						break;
 				}
 				
-				Mojo.Log.info("Feed", index, "retrieved;", newStories.length, "stories");
-				var isNew;										
-				this.list[index].numUnRead = newStories.length;
-				this.list[index].numNew = 0;
+				var isNew = false;
+				var nl = newStories.length;
+				var ol = stories.length;
 				
-				for (var i = 0; i < newStories.length; i++) {
-					for (var j = 0; j < this.list[index].stories.length; j++) {
+				feed.numUnRead = newStories.length;
+				feed.numNew = 0;
+				
+				for (var i = 0; i < nl; i++) {
+					for (var j = 0; j < ol; j++) {
 						newStories[i].title = this.converter.convert(contentType, newStories[i].title);
 						newStories[i].summary = this.converter.convert(contentType, newStories[i].summary);
 						
-						if(newStories[i].uid == this.list[index].stories[j].uid) {
-							newStories[i].isRead = this.list[index].stories[j].isRead;
-							newStories[i].isNew = this.list[index].stories[j].isNew;
+						if(newStories[i].uid == stories[j].uid) {
+							newStories[i].isRead = stories[j].isRead;
+							newStories[i].isNew = stories[j].isNew;
 							break;
 						}            
 					}
 					if(newStories[i].isNew) {
-						this.list[index].numNew++;
+						feed.numNew++;
 					}
 					if(newStories[i].isRead) {
-						this.list[index].numUnRead--;
+						feed.numUnRead--;
 					}
 				}
-				this.list[index].stories = newStories;
+				newStories.sort(this.dateSort);
 				
+				feed.stories = newStories;
 			} 
 		} catch(e) {
 			Mojo.Log.logException(e);
@@ -843,7 +886,7 @@ var feeds = Class.create ({
 					break;
 			}
 	
-			Mojo.Log.info("Feed", index, "is defect; disabling feed; error:", error);
+			Mojo.Log.warn("FEEDS> Feed", index, "is defect; disabling feed; error:", error);
 			if (this.interactiveUpdate) {
 				var errorMsg = new Template($L("The Feed '#{title}' could not be retrieved. The server responded: #{err}. The Feed was automatically disabled."));
 				FeedReader.showError(errorMsg, {title: this.list[index].url, err: error});
@@ -870,7 +913,7 @@ var feeds = Class.create ({
 			}
 			
 			if(updateComplete) {
-				Mojo.Log.info("Full Update completed.");
+				Mojo.Log.info("FEEDS> Full Update completed.");
 				this.fullUpdateInProgress = false;
 				
 				// Post a banner notification if applicable.
@@ -888,8 +931,16 @@ var feeds = Class.create ({
 							messageText: t.evaluate({
 								num: n
 							}),
-							soundClass: "alerts"
+							soundClass: FeedReader.prefs.playSound ? "alerts" : "none"
 						}, "bannerPressed");
+					}
+					
+					// Make the core navi button pulsate.
+					if(FeedReader.controller) {
+					    var cardStageController = FeedReader.controller.getStageController(FeedReader.mainStageName);
+						if(cardStageController) {
+							cardStageController.indicateNewContent(true);
+						}
 					}
 				}
 				
@@ -912,23 +963,23 @@ var feeds = Class.create ({
 	 * Updates all feeds.
 	 */
 	update: function() {
-		var i;
+		var i, l = this.list.length;
 		
-		if(this.list.length < 2) {
+		if(l < 2) {
 			return;
 		}
 		
-		Mojo.Log.info("Full update requested");
+		Mojo.Log.info("FEEDS> Full update requested");
 		this.fullUpdateInProgress = true;
 		this.updateInProgress = true;
 		this.enterActivity();
 		
-		for(i = 0; i < this.list.length; i++) { 	// Reset update flag first.
+		for(i = 0; i < l; i++) { 	// Reset update flag first.
 			if(this.list[i].type != "allItems") {
 				this.list[i].updated = false;
 			}
 		}
-		for(i = 0; i < this.list.length; i++) {
+		for(i = 0; i < l; i++) {
 			this.updateFeed(i);
 		}
 	},
@@ -945,24 +996,26 @@ var feeds = Class.create ({
 		
 		var allItemsIndex = -1;
 		var numUnRead = 0, numNew = 0;
+		var l = this.list.length;
+		var list = this.list;
 		
-		for(var i = 0; i < this.list.length; i++) {
-			if(this.list[i].type != "allItems") {
-				numUnRead += this.list[i].numUnRead;
-				numNew += this.list[i].numNew;
+		for(var i = 0; i < l; i++) {
+			if(list[i].type != "allItems") {
+				numUnRead += list[i].numUnRead;
+				numNew += list[i].numNew;
 			} else {
 				allItemsIndex = i;
 			}
 		}
 		
 		if(allItemsIndex >= 0) {
-			this.list[allItemsIndex].numNew = numNew;
-			this.list[allItemsIndex].numUnRead = numUnRead;
+			list[allItemsIndex].numNew = numNew;
+			list[allItemsIndex].numUnRead = numUnRead;
 			if(!disableNotification) {
 				this.notifyOfFeedUpdate(allItemsIndex, false);
 			}
 		} else {
-			Mojo.Log.warn("Something went wrong: no allItems feed found!");
+			Mojo.Log.error("FEEDS> Something went wrong: no allItems feed found!");
 		}
 	},
 	
@@ -973,17 +1026,22 @@ var feeds = Class.create ({
 	 */
 	markAllRead: function(index) {
 		if((index >= 0) && (index < this.list.length)) {
+			var i, j;
 			if(this.list[index].type == "allItems") {
-				for(var j = 0; j < this.list.length; j++) {
-					this.list[j].numUnRead = 0;
-					for(var k = 0; k < this.list[j].stories.length; j++) {
-						this.list[j].stories[k].isRead = true;
+				for(i = 0; i < this.list.length; i++) {
+					if(i == index) {
+						continue;
 					}
-					this.notifyOfFeedUpdate(j, false);
+					this.list[i].numUnRead = 0;
+					for(j = 0; j < this.list[i].stories.length; j++) {
+						this.list[i].stories[j].isRead = true;
+					}
+					this.notifyOfFeedUpdate(i, false);
 				}
+				this.updatePseudoFeeds();
 			} else {
 				this.list[index].numUnRead = 0;
-				for(var i = 0; i < this.list[index].stories.length; i++) {
+				for(i = 0; i < this.list[index].stories.length; i++) {
 					this.list[index].stories[i].isRead = true;
 				}
 				this.updatePseudoFeeds();
@@ -1002,7 +1060,7 @@ var feeds = Class.create ({
 	markStoryRead: function(index, story) {
 		if((index >= 0) && (index < this.list.length)) {
 			if((story >= 0) && (story < this.list[index].stories.length)) {
-				if(! this.list[index].stories[story].isRead) {
+				if(!this.list[index].stories[story].isRead) {
 					this.list[index].stories[story].isRead = true;
 					this.list[index].numUnRead--;
 					this.updatePseudoFeeds();
@@ -1019,18 +1077,22 @@ var feeds = Class.create ({
 	 */
 	markAllUnRead: function(index) {
 		if((index >= 0) && (index < this.list.length)) {
+			var i, j;
 			if(this.list[index].type == "allItems") {
-				for(var j = 0; j < this.list.length; j++) {
-					this.list[j].numUnRead = this.list[j].stories.length;
-					for(var k = 0; k < this.list[j].stories.length; j++) {
-						this.list[j].stories[k].isRead = false;
+				for(i = 0; i < this.list.length; i++) {
+					if(i == index) {
+						continue;
 					}
-					this.notifyOfFeedUpdate(j, false);
+					this.list[i].numUnRead = this.list[i].stories.length;
+					for(j = 0; j < this.list[i].stories.length; j++) {
+						this.list[i].stories[j].isRead = false;
+					}
+					this.notifyOfFeedUpdate(i, false);
 				}
-				this.save();
+				this.updatePseudoFeeds();
 			} else {
 				this.list[index].numUnRead = this.list[index].stories.length;
-				for(var i = 0; i < this.list[index].stories.length; i++) {
+				for(i = 0; i < this.list[index].stories.length; i++) {
 					this.list[index].stories[i].isRead = false;
 				}
 				this.updatePseudoFeeds();
@@ -1112,13 +1174,10 @@ var feeds = Class.create ({
 	 * @return {String}			the feed's title
 	 */
 	getFeedTitle: function(feed) {
-		switch(feed.type) {
-			case "allItems":	return $L("All items");
-			case "allUnRead":	return $L("All unread items");
-			case "allNew":		return $L("All new items");
-			
-			default:
-				return feed.title;
+		if(feed.type == "allItems") {
+			return $L("All items");
+		} else {
+			return feed.title;
 		}
 	},
 	
@@ -1129,13 +1188,10 @@ var feeds = Class.create ({
 	 * @return {String}			the feed's url
 	 */
 	getFeedURL: function(feed) {
-		switch(feed.type) {
-			case "allItems":	return $L("Aggregation of all feeds");
-			case "allUnRead":	return $L("Aggregation of all unread items");
-			case "allNew":		return $L("Aggregation of all new items");
-			
-			default:
-				return feed.url;
+		if(feed.type == "allItems") {
+			return $L("Aggregation of all feeds");
+		} else {
+			return feed.url;
 		}		
 	},
 	
@@ -1148,8 +1204,6 @@ var feeds = Class.create ({
 	getFeedHeaderIcon: function(feed) {
 		switch(feed.type) {
 			case "allItems":
-			case "allUnRead":
-			case "allNew":
 				return "allitems";
 			
 			case "RDF":
@@ -1172,7 +1226,7 @@ var feeds = Class.create ({
 	 */
 	showCaption: function(feed, isDetailView) {
 		var viewMode = parseInt(feed.viewMode, 10);
-		var mode = isDetailView ? (viewMode >> 24) : (viewMode >> 16);		
+		var mode = (isDetailView ? (viewMode >> 24) : (viewMode >> 16)) & 0xFF;
 		return (mode < 2);
 	},
 	
@@ -1184,7 +1238,111 @@ var feeds = Class.create ({
 	 */
 	showSummary: function(feed, isDetailView) {
 		var viewMode = parseInt(feed.viewMode, 10);
-		var mode = isDetailView ? (viewMode >> 24) : (viewMode >> 16);
+		var mode = (isDetailView ? (viewMode >> 24) : (viewMode >> 16)) & 0xFF;
 		return (mode == 2) || (mode === 0);
+	},
+	
+	/**
+	 * Get the dynamic length of a feed.
+	 *
+	 * @param {int}			Index of the feed
+	 */
+	getFeedLength: function(index, sortMode) {
+		if(sortMode === undefined) {
+			sortMode = this.list[index].sortMode;
+		}
+		switch(sortMode) {
+			case 2:		// Only new items.
+				return this.list[index].numNew;
+			
+			case 1:		// Only unread items.
+				return this.list[index].numUnRead;
+			
+			case 0:		// All items.
+				if(this.list[index].type != "allItems") {
+					return this.list[index].stories.length;
+				} else {
+					var c = 0;
+					for(var i = 0; i < this.list.length; i++) {
+						if(i != index) {
+							c += this.list[i].stories.length;
+						}
+					}
+					return c;
+				}
+		}
+		return -1;
+	},
+	
+	/** @private
+	 *
+	 * Calculate the real story index for storyIndex.
+	 */
+	getRealStoryIndex: function(sortMode, feedIndex, storyIndex) {
+		if(sortMode === 0) {
+			return storyIndex;
+		}
+		
+		var stories = this.list[feedIndex].stories;
+		var storyCount = stories.length;
+		var c = 0;
+		for(var i = 0; i < storyCount; i++) {
+			if(sortMode == 1) {
+				if(stories[i].isRead) {
+					continue;
+				}
+			} else if(sortMode == 2) {
+				if(!stories[i].isNew) {
+					continue;
+				}
+			}
+			if(c == storyIndex) {
+				return i;
+			}
+			c++;
+		}
+		
+		return i;
+	},
+	
+	/**
+	 * Get the origin of a story.
+	 *
+	 * @param {int}			Index of the feed
+	 * @param {int}			Index of the story
+	 */
+	getStoryOrigin: function(feedIndex, storyIndex) {
+		var sortMode = this.list[feedIndex].sortMode;
+		
+		if(this.list[feedIndex].type != "allItems") {
+			return {
+				feedIndex: 	feedIndex,
+				storyIndex:	this.getRealStoryIndex(sortMode, feedIndex, storyIndex)
+			};
+		}
+		
+		var feedCount = this.list.length;
+		var storyCount = 0;
+		var f = 0;
+		do {
+			if(this.list[f].type != "allItems")  {
+				storyCount = this.getFeedLength(f, sortMode);
+				if(storyIndex < storyCount) {
+					return {
+						feedIndex:	f,
+						storyIndex:	this.getRealStoryIndex(sortMode, f, storyIndex)
+					};
+				} else {
+					storyIndex -= storyCount;
+				}
+			}
+			f++;
+		} while(f < feedCount);
+		
+		// This should not happen...
+		return {
+			feedIndex:	-1,
+			storyIndex:	-1
+		};
 	}
 });

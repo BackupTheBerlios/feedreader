@@ -20,42 +20,25 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-/*
- * The sort function are currently not in use. Just as the feed.sortMode
- * property these functions are dedicated to a future version of FeedReader.
- */
- 
-/** @private
- *
- * Sort stories, so that unread ones come in front. 
- */
-function SortRead(a, b) {
-	if(a.isRead == b.isRead) {
-		return 0;
-	} else if(a.isRead) {
-		return 1;
-	} else {
-		return -1;
-	}
-}
-
-/** @private
- *
- * Sort stories by date.
- */
-function SortDate(a, b) {
-	return a.intDate - b.intDate;
-}
-
 function StorylistAssistant(feeds, index) {
 	this.feeds = feeds;
 	this.feedIndex = index;
-	
 	this.feed = this.feeds.list[index];
-	this.filter = "";
+	
+	this.dateConverter = this.feeds.dateConverter;
+	
+	this.isAllItems = (this.feed.type == "allItems");
+	this.filter = "";	// No filter.
+	this.viewMode = 0;	// Show all items.
+	this.commandModel = {};
 	
 	this.listFindHandler = this.listFind.bind(this);
+	this.sortModeTapHandler = this.sortModeTap.bindAsEventListener(this);
+	this.sortModeChooseHandler = this.sortModeChoose.bind(this);
+	
 	this.setupComplete = false;
+	this.wasActiveBefore = false;
+	this.listRefreshNeeded = true;	
 }
 
 StorylistAssistant.prototype.setup = function() {
@@ -78,7 +61,7 @@ StorylistAssistant.prototype.setup = function() {
 			"contentStyle": 	this.getContentStyle.bind(this),
 			"title":			this.getTitle.bind(this),
 			"summary":			this.getSummary.bind(this),
-			"originFeed":		this.getOrigin.bind(this),
+			"origin":			this.getOrigin.bind(this),
 			"large":			this.getLargeFont.bind(this)
 		},
 		swipeToDelete:	false, 
@@ -86,65 +69,69 @@ StorylistAssistant.prototype.setup = function() {
 		reorderable:	false,
 		delay:			700,
 		filterFunction: this.listFindHandler
-	},
-	this.storyListModel = {
-		items: this.feed.stories
-	});
+	}, {});
 	
 	this.controller.listen("storyList", Mojo.Event.listTap,
-					   this.showStory.bindAsEventListener(this));
+					       this.showStory.bindAsEventListener(this));
+    this.controller.listen("sortIcon", Mojo.Event.tap, this.sortModeTapHandler);
 
 	// Setup command menu.
-    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel = {
-		label: "",
-        items: [
-			{
-				items: [
-					{
-						icon: "back",
-						disabled: this.feedIndex === 0,
-						command: "do-previousFeed"
-					},
-					{
-						icon: "forward",
-						disabled: this.feedIndex === (this.feeds.list.length - 1),
-						command: "do-nextFeed"
-					}
-				]
-			},
-            {
-				icon: "refresh",
-				disabled: this.feeds.updateInProgress,
-				command: "do-feedUpdate"
-			}
-        ]
-	});
+	this.initCommandModel();
+    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel);
 	
-	FeedReader.endSceneSetup(this);
 	this.setupComplete = true;
+	FeedReader.endSceneSetup(this);
 };
 
-StorylistAssistant.prototype.updateModel = function() {
-	if(this.setupComplete) {
-		this.prepareFeed();
-		this.storyListModel.items = this.feed.stories;
-		this.storyListWidget.mojo.noticeUpdatedItems(0, this.storyListModel.items);
+StorylistAssistant.prototype.initCommandModel = function() {
+	this.commandModel.label = "";
+	this.commandModel.items = [
+		{
+			items: [
+				{
+					icon: "back",
+					disabled: this.feedIndex === 0,
+					command: "do-previousFeed"
+				},
+				{
+					icon: "forward",
+					disabled: this.feedIndex === (this.feeds.list.length - 1),
+					command: "do-nextFeed"
+				}
+			]
+		},
+		{
+			icon: "refresh",
+			disabled: this.feeds.updateInProgress,
+			command: "do-feedUpdate"
+		}
+	];
+	
+	if(!FeedReader.prefs.leftHanded) {
+		this.commandModel.items.reverse();
 	}
 };
 
 StorylistAssistant.prototype.activate = function(event) {
-	this.updateModel();
+	if(this.wasActiveBefore) {
+		this.listRefreshNeeded = this.listRefreshNeeded || (this.feed.sortMode !== 0);
+		this.storyListWidget.mojo.setLengthAndInvalidate(this.feeds.getFeedLength(this.feedIndex));
+		this.initCommandModel();
+		this.controller.modelChanged(this.commandModel);
+	}
+	this.wasActiveBefore = true;
 };
 
 StorylistAssistant.prototype.deactivate = function(event) {
-	this.feeds.markSeen(this.feedIndex);
 };
 
 StorylistAssistant.prototype.cleanup = function(event) {
+	this.feeds.markSeen(this.feedIndex);
 };
 
+/* List formatters */
 StorylistAssistant.prototype.getDate = function(property, model) {
-	return { date: this.feeds.dateConverter.dateToLocalTime(model.intDate) };
+	return { date: this.dateConverter.dateToLocalTime(model.intDate) };
 };
 
 StorylistAssistant.prototype.getTitleStyle = function(property, model) {
@@ -160,19 +147,22 @@ StorylistAssistant.prototype.getContentStyle = function(property, model) {
 };
 
 StorylistAssistant.prototype.getOrigin = function(property, model) {
-	if(!property) {
+	if((!this.isAllItems) || (model === undefined) || (model === null) ||
+	   (model.index === undefined) || (model.index === null)) {
 		return undefined;
 	}
-	
-	return { origin: "(" + this.feeds.list[property].title + ")" };
+
+	var origin = this.feeds.getStoryOrigin(this.feedIndex, model.index);
+	return { origin: "(" + this.feeds.list[origin.feedIndex].title + ")" };
 };
 
 StorylistAssistant.prototype.getSummary = function(property, model) {
 	if(!property) {
 		return undefined;
 	} else {
-		if(model.originFeed) {
-			if(!this.feeds.showSummary(this.feeds.list[model.originFeed], false)) {
+		if(this.isAllItems) {
+			var origin = this.feeds.getStoryOrigin(this.feedIndex, model.index);
+			if(!this.feeds.showSummary(this.feeds.list[origin.feedIndex], false)) {
 				return { shortSummary: "" };				
 			}
 		} else {
@@ -180,6 +170,7 @@ StorylistAssistant.prototype.getSummary = function(property, model) {
 				return { shortSummary: "" };
 			}
 		}
+		
 		if(property.length > (parseInt(FeedReader.prefs.summaryLength, 10) + 10)) {
 			return { shortSummary: property.slice(0, parseInt(FeedReader.prefs.summaryLength, 10) - 1) + '...' };
 		} else {
@@ -192,8 +183,9 @@ StorylistAssistant.prototype.getTitle = function(property, model) {
 	if(!property) {
 		return undefined;
 	} else {
-		if(model.originFeed) {
-			if(!this.feeds.showCaption(this.feeds.list[model.originFeed], false)) {
+		if(this.isAllItems) {
+			var origin = this.feeds.getStoryOrigin(this.feedIndex, model.index);
+			if(!this.feeds.showCaption(this.feeds.list[origin.feedIndex], false)) {
 				return { title: "" };				
 			}
 		} else {
@@ -209,91 +201,67 @@ StorylistAssistant.prototype.getLargeFont = function(property, model) {
 	return { large: FeedReader.prefs.largeFont ? "large": "" };
 };
 
-StorylistAssistant.prototype.prepareFeed = function() {
-	if(this.feed.type != "allItems") {
-		return;
-	}
+/* Other list related functions */
+StorylistAssistant.prototype.listFind = function(filterString, listWidget, offset, count) {
+	var subset = [];
+	var subsetSize = 0;
+	var totalSubsetSize = 0;
 	
-	var j, stories;
+	var lwrFilterString = filterString.toLowerCase();
+	var feedLength = this.feeds.getFeedLength(this.feedIndex);
+	this.listRefreshNeeded = this.listRefreshNeeded || (this.filter != filterString);
+	
+	var stories = [];	
+	var origin = {};
+	var feeds = this.feeds.list;
+	var matches = false;
 	
 	try {
-		this.feed = undefined;	// clear first.
-		this.feed = {
-			type: "allItems",
-			stories: []
-		};
-		for(var i = 0; i < this.feeds.list.length; i++) {
-			if((this.feeds.list[i].type == "allItems") ||
-			   (this.feeds.list[i].type == "allUnRead") ||
-			   (this.feeds.list[i].type == "allNew")) {
-				continue;
-			}
+		for(var i = 0; i < feedLength; i++) {
+			origin = this.feeds.getStoryOrigin(this.feedIndex, i);
+			stories = feeds[origin.feedIndex].stories;
 			
-			for(j = 0; j < this.feeds.list[i].stories.length; j++) {
-				this.feed.stories.push({
-					title:			this.feeds.list[i].stories[j].title,
-					url:			this.feeds.list[i].stories[j].url,
-					summary:		this.feeds.list[i].stories[j].summary,
-					intDate:		this.feeds.list[i].stories[j].intDate,
-					isNew:			this.feeds.list[i].stories[j].isNew,
-					isRead:			this.feeds.list[i].stories[j].isRead,
-					picture:		this.feeds.list[i].stories[j].picture,
-					audio:			this.feeds.list[i].stories[j].audio,
-					video:			this.feeds.list[i].stories[j].video,
-					originFeed:		i,
-					originStory:	j
-				});
+			matches = (lwrFilterString.length === 0) ||
+					  (stories[origin.storyIndex].title.toLowerCase().include(lwrFilterString));
+			
+			if(matches) {
+				stories[origin.storyIndex].index = totalSubsetSize;
+				if((subsetSize < count) && (totalSubsetSize >= offset)) {
+					subsetSize++;
+					subset.push(stories[origin.storyIndex]);
+				}
+				totalSubsetSize++;
+				if(!this.listRefreshNeeded && (subsetSize == count)) {
+					break;
+				}
 			}
 		}
 	} catch(e) {
-		Mojo.Log.error("error during while aggregating allItems feed", e);
+		Mojo.Log.logException(e);
+		Mojo.Log.logProperties(origin);
+		Mojo.Log.error("The index was", i);
 	}
-};
 
-StorylistAssistant.prototype.listFind = function(filterString, listWidget, offset, count) {
-	var subset = [];
-	var totalSubsetSize = 0;
-	var lwrFilterString = filterString.toLowerCase();
-	
-	for(var i = 0; i < this.feed.stories.length; i++) {
-		if (this.feed.stories[i].title.toLowerCase().include(lwrFilterString)) {
-			if ((subset.length < count) && (totalSubsetSize >= offset)) {
-				subset.push(this.feed.stories[i]);
-			}
-			totalSubsetSize++;
-		}
-	}
-	listWidget.mojo.noticeUpdatedItems(offset, subset);
-	
-	if (this.filter !== filterString) {
+	if(this.listRefreshNeeded) {
+		this.listRefreshNeeded = false;
+		Mojo.Log.info("Total subset length is", totalSubsetSize);
 		listWidget.mojo.setLength(totalSubsetSize);
-		listWidget.mojo.setCount(totalSubsetSize);
+		listWidget.mojo.noticeUpdatedItems(offset, subset);	
+		this.filter = filterString;
 	}
-	this.filter = filterString;
 };
 
+/* various event handlers */
 StorylistAssistant.prototype.showStory = function(event) {
-	var storyIndex = this.feed.stories.indexOf(event.item);
-	var story = this.feed.stories[storyIndex];
+	var storyIndex = event.item.index;
+	var origin = this.feeds.getStoryOrigin(this.feedIndex, storyIndex);
+	var story = this.feeds.list[origin.feedIndex].stories[origin.storyIndex];
 	
-	if (!story.isRead) {
-		if(story.originFeed) {
-			this.feeds.markStoryRead(story.originFeed, story.originStory);
-		} else {
-			this.feeds.markStoryRead(this.feedIndex, storyIndex);
-		}
-		this.updateModel();
-	}
-	
-	var viewMode = parseInt(this.feed.viewMode, 10) & 0xFFFF;
-	var feedIndex = this.feedIndex;
-	if(story.originFeed)  {
-		viewMode = parseInt(this.feeds.list[story.originFeed].viewMode, 10) & 0xFFFF;
-		feedIndex = story.originFeed;
-	}
-	
-	switch(viewMode) {
+	switch((parseInt(this.feeds.list[origin.feedIndex].viewMode, 10) & 0xFFFF)) {
 		case 0:
+			if (!story.isRead) {
+				this.feeds.markStoryRead(origin.feedIndex, origin.storyIndex);
+			}
 			this.controller.serviceRequest("palm://com.palm.applicationManager", {
 				method: "open",
 				parameters: {
@@ -306,10 +274,43 @@ StorylistAssistant.prototype.showStory = function(event) {
 			break;
 			
 		case 1:
-			Mojo.Log.info("Pushing storyview");
-			this.controller.stageController.pushScene("fullStory", this.feeds, this.feed, feedIndex, storyIndex);
+			this.controller.stageController.pushScene("fullStory", this.feeds,
+													  this.feedIndex, storyIndex);
 			break;
 	}
+};
+
+StorylistAssistant.prototype.sortModeTap = function(event) {
+	var findPlace = event.target;
+
+	this.controller.popupSubmenu({
+	  onChoose:  this.sortModeChooseHandler,
+	  placeNear: findPlace,
+	  items: [
+		{ label: $L("Show all items"),		command: "sort-all",	chosen: this.feed.sortMode === 0 },
+		{ label: $L("Show unread items"),	command: "sort-unread",	chosen: this.feed.sortMode === 1 }
+		]
+	  });
+};
+
+StorylistAssistant.prototype.sortModeChoose = function(command) {
+	switch(command) {
+		case "sort-all":
+			this.feed.sortMode = 0;
+			break;
+			
+		case "sort-unread":
+			this.feed.sortMode = 1;
+			break;
+			
+		case "sort-new":
+			this.feed.sortMode = 2;
+			break;
+	}
+	
+	this.listRefreshNeeded = true;
+	this.storyListWidget.mojo.setLengthAndInvalidate(this.feeds.getFeedLength(this.feedIndex));
+	this.feeds.save();
 };
 
 StorylistAssistant.prototype.handleCommand = function(event) {
@@ -331,9 +332,7 @@ StorylistAssistant.prototype.handleCommand = function(event) {
 			
 			case "do-feedUpdate":
 				event.stopPropagation();
-				if((this.feed.type == "allItems") ||
-				   (this.feed.type == "allUnRead") ||
-				   (this.feed.type == "allNew")) {
+				if(this.feed.type == "allItems") {
 					this.feeds.update();	
 				} else {
 					this.feeds.updateFeed(this.feedIndex);
@@ -348,12 +347,11 @@ StorylistAssistant.prototype.considerForNotification = function(params){
 		switch(params.type) {
 			case "feed-update":
 				if(this.feedIndex == params.feedIndex) {
-					this.updateModel();
+					this.listRefreshNeeded = true;
+					this.storyListWidget.mojo.setLengthAndInvalidate(this.feeds.getFeedLength(this.feedIndex));
 				}
-				if(this.commandModel.items[1].disabled != this.feeds.updateInProgress) {
-					this.commandModel.items[1].disabled = this.feeds.updateInProgress;
-					this.controller.modelChanged(this.commandModel);
-				}
+				this.initCommandModel();
+				this.controller.modelChanged(this.commandModel);
 				break;
 			
 			case "jslint-dummy":

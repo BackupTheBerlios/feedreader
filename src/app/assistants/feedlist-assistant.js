@@ -24,6 +24,8 @@ function FeedlistAssistant(feeds) {
 	this.feeds = feeds;
 	this.setupComplete = false;
 	this.filter = "";
+	this.feedListWidget = null;
+	this.commandModel = {};
 }
 
 FeedlistAssistant.prototype.setup = function() {
@@ -41,7 +43,6 @@ FeedlistAssistant.prototype.setup = function() {
         listTemplate:	"feedlist/feedlistListTemplate", 
 		formatters: 	{
 			feedIcon: 		this.getFeedIcon.bind(this),
-			showOptions: 	this.getShowOptions.bind(this),
 			title:			this.getTitle.bind(this),
 			url:			this.getURL.bind(this),
 			large:			this.getLargeFont.bind(this)
@@ -54,10 +55,8 @@ FeedlistAssistant.prototype.setup = function() {
         reorderable:	true,
 		delay:			700,
 		filterFunction: this.listFind.bind(this)
-    },
-    this.feedListModel = {
-		items: this.feeds.list
-	});
+    });
+	
 	this.controller.setupWidget("feedSpinner", {
 		spinnerSize: "small"
 	});
@@ -73,35 +72,39 @@ FeedlistAssistant.prototype.setup = function() {
 					       this.reOrderFeed.bindAsEventListener(this));
 	
 	// Setup command menu.
-    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.updateModel = {
-		label: "",
-        items: [
-			{},	// Dummy to move refresh button.
-            { icon: "refresh", disabled: this.feeds.updateInProgress, command: "do-fullUpdate" }
-        ]
-	});
-	
-	this.setupComplete = true;
-	if(FeedReader.prefs.showChanges) {
-		FeedReader.prefs.showChanges = false;
-		this.controller.showDialog({template: "changelog/changelog-scene",
-									assistant: new ChangelogAssistant(this.controller)});
-	}
+	this.initCommandModel();
+    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel);
 	
 	FeedReader.endSceneSetup(this);
 };
 
+FeedlistAssistant.prototype.initCommandModel = function() {
+	this.commandModel.label = "";
+	this.commandModel.items = [
+		{},	// Dummy to move refresh button.
+		{ icon: "refresh", disabled: this.feeds.updateInProgress, command: "do-fullUpdate" }
+	];
+	
+	if(!FeedReader.prefs.leftHanded) {
+		this.commandModel.items.reverse();
+	}
+};
+
 FeedlistAssistant.prototype.getFeedIcon = function(property, model) {
+	var feedIcon = "";
+	
 	switch(model.type) {
-		case "allItems":	return { feedIcon: "allitems" };
-		case "atom":		return { feedIcon: "atom" };
+		case "allItems":	feedIcon = "allitems";	break;
+		case "atom":		feedIcon = "atom";		break;
 		case "rss":
-		case "RDF":			return { feedIcon: "rss"};
-		default:			return { feedIcon: "unknown"};
+		case "RDF":			feedIcon = "rss";		break;
+		default:			feedIcon = "unknown";	break;
 	}
 	if(!model.enabled) {
 		feedIcon += " disabled";
 	}
+	
+	return { feedIcon: feedIcon };
 };
 
 FeedlistAssistant.prototype.getTitle = function(property, model) {
@@ -116,10 +119,6 @@ FeedlistAssistant.prototype.getLargeFont = function(property, model) {
 	return { large: FeedReader.prefs.largeFont ? "large" : "" };
 };
 
-FeedlistAssistant.prototype.getShowOptions = function(property, model) {
-	return { showOptions: model.type == "allItems" ? "none" : "block" };		
-};
-
 FeedlistAssistant.prototype.activateWindow = function(event) {
 	FeedReader.isActive = true;
 };
@@ -130,6 +129,8 @@ FeedlistAssistant.prototype.deactivateWindow = function(event) {
 
 FeedlistAssistant.prototype.activate = function(event) {
 	if(this.setupComplete) {
+		this.initCommandModel();
+		this.controller.modelChanged(this.commandModel);
 		this.updateFeedModel();
 	}
 };
@@ -140,10 +141,9 @@ FeedlistAssistant.prototype.deactivate = function(event) {
 FeedlistAssistant.prototype.cleanup = function(event) {
 };
 
-FeedlistAssistant.prototype.updateFeedModel = function(who) {
-	if(this.setupComplete) {
-		this.feedListModel.items = this.feeds.list;
-		this.controller.modelChanged(this.feedListModel);
+FeedlistAssistant.prototype.updateFeedModel = function() {
+	if(this.setupComplete && this.feedListWidget) {
+		this.feedListWidget.mojo.setLengthAndInvalidate(this.feeds.list.length);
 	}
 };
 
@@ -157,16 +157,21 @@ FeedlistAssistant.prototype.showFeed = function(event) {
 	    var myEvent = event;
 	    var findPlace = myEvent.originalEvent.target;
 	    this.popupIndex = itemIndex;
+		
+		var items = [
+	        {label: $L("Mark all unread"),	command: "feed-unread"},
+	        {label: $L("Mark all read"),	command: "feed-read"}
+		];
+		if(this.feeds.list[itemIndex].type != "allItems") {
+	        items.push({label: $L("Edit"),	command: "feed-edit"});
+		}
+		items.push({label: $L("Update"),	command: "feed-update"});
+	    items.push({label: $L("Show"),		command: "feed-show"});
+		
 	    this.controller.popupSubmenu({
 	      onChoose:  this.popupHandler,
 	      placeNear: findPlace,
-	      items: [
-	        {label: $L("Mark all unread"),	command: "feed-unread"},
-	        {label: $L("Mark all read"),	command: "feed-read"},
-	        {label: $L("Edit"),				command: "feed-edit"},
-			{label: $L("Update"),			command: "feed-update"},
-	        {label: $L("Show"),				command: "feed-show"}
-	        ]
+	      items: items
 	      });
 	}
 };
@@ -223,7 +228,11 @@ FeedlistAssistant.prototype.popupHandler = function(command) {
 			break;
 			
 		case "feed-update":
-			this.feeds.updateFeed(this.popupIndex);
+			if(this.feeds.list[this.popupIndex].type == "allItems") {
+				this.feeds.update();
+			} else {
+				this.feeds.updateFeed(this.popupIndex);
+			}
 			break;
 			
 		case "feed-show":
@@ -254,20 +263,35 @@ FeedlistAssistant.prototype.handleCommand = function(event) {
 FeedlistAssistant.prototype.considerForNotification = function(params){
 	if(params) {
 		switch(params.type) {
-			case "feedlist-newfeed":
 			case "feedlist-loaded":
+				this.feedListWidget.mojo.setLength(this.feeds.list.length);
+				this.setupComplete = true;
+				FeedReader.endSceneSetup(this);
+				if(FeedReader.prefs.showChanges) {
+					FeedReader.prefs.showChanges = false;
+					this.controller.showDialog({template: "changelog/changelog-scene",
+												assistant: new ChangelogAssistant(this.controller)});
+				}
+				break;
+				
+			case "feedlist-newfeed":
 			case "feedlist-editedfeed":
-				this.updateFeedModel();
-				params = undefined;
+				if(this.setupComplete) {
+					this.updateFeedModel();
+					params = undefined;
+				}
 				break;
 				
 			case "feed-update":
-				if(this.updateModel.items[1].disabled != this.feeds.updateInProgress) {
-					this.updateModel.items[1].disabled = this.feeds.updateInProgress;
-					this.controller.modelChanged(this.updateModel);
+				if(this.setupComplete) {
+					var updateIndex = FeedReader.prefs.leftHanded ? 1 : 0;
+					if(this.commandModel.items[updateIndex].disabled != this.feeds.updateInProgress) {
+						this.commandModel.items[updateIndex].disabled = this.feeds.updateInProgress;
+						this.controller.modelChanged(this.commandModel);
+					}
+					this.updateFeedModel();
+					params = undefined;
 				}
-				this.updateFeedModel();
-				params = undefined;
 				break;
 		}
 	}
