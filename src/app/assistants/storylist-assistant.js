@@ -53,8 +53,9 @@ StorylistAssistant.prototype.setup = function() {
     // Setup the story list.
 	this.storyListWidget = this.controller.get("storyList");
 	this.controller.setupWidget("storyList", {
-		itemTemplate:	"storylist/storylistRowTemplate", 
-		listTemplate:	"storylist/storylistListTemplate", 
+		itemTemplate:	"storylist/storylistRowTemplate",
+		listTemplate:	"storylist/storylistListTemplate",
+		emptyTemplate:	"storylist/storylistEmptyTemplate",
 		formatters:  {
 			"date":				this.getDate.bind(this),
 			"isRead": 			this.getTitleStyle.bind(this),
@@ -65,7 +66,7 @@ StorylistAssistant.prototype.setup = function() {
 			"origin":			this.getOrigin.bind(this),
 			"large":			this.getLargeFont.bind(this)
 		},
-		swipeToDelete:	false, 
+		swipeToDelete:	false,
 		renderLimit: 	100,
 		reorderable:	false,
 		delay:			700,
@@ -284,30 +285,41 @@ StorylistAssistant.prototype.showStory = function(event) {
 };
 
 StorylistAssistant.prototype.sortModeTap = function(event) {
-	var findPlace = event.target;
-
-	this.controller.popupSubmenu({
-	  onChoose:  this.sortModeChooseHandler,
-	  placeNear: findPlace,
-	  items: [
-		{ label: $L("Show all items"),		command: "sort-all",	chosen: this.feed.sortMode === 0 },
-		{ label: $L("Show unread items"),	command: "sort-unread",	chosen: this.feed.sortMode === 1 }
+	var subMenu = {
+		onChoose:  this.sortModeChooseHandler,
+		placeNear: event.target,
+		items: [
+			{ label: $L("Show all items"),		command: "sort-all",	chosen: (this.feed.sortMode & 0xFF) === 0 },
+			{ label: $L("Show unread items"),	command: "sort-unread",	chosen: (this.feed.sortMode & 0xFF) === 1 },
+			{ label: $L("Show new items"),		command: "sort-new", 	chosen: (this.feed.sortMode & 0xFF) === 2 }
 		]
-	  });
+	};
+	
+	if(this.isAllItems) {
+		subMenu.items.push({});
+		subMenu.items.push({
+			label: $L("Order by date"),			command: "sort-date",	chosen: (this.feed.sortMode & 0xFF00) == 0x0100
+		});
+	}
+	this.controller.popupSubmenu(subMenu);
 };
 
 StorylistAssistant.prototype.sortModeChoose = function(command) {
 	switch(command) {
 		case "sort-all":
-			this.feed.sortMode = 0;
+			this.feed.sortMode = (this.feed.sortMode & 0xFF00) | 0;
 			break;
 			
 		case "sort-unread":
-			this.feed.sortMode = 1;
+			this.feed.sortMode = (this.feed.sortMode & 0xFF00) | 1;
 			break;
 			
 		case "sort-new":
-			this.feed.sortMode = 2;
+			this.feed.sortMode = (this.feed.sortMode & 0xFF00) | 2;
+			break;
+		
+		case "sort-date":
+			this.feed.sortMode = this.feed.sortMode ^ 0x0100;
 			break;
 	}
 	

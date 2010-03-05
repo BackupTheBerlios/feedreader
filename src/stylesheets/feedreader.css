@@ -47,6 +47,18 @@ div.hidden {
 	display: none;
 }
 
+span.bold {
+	font-weight: bold;
+}
+
+span.underline {
+	text-decoration: underline;
+}
+
+span.italic {
+	font-style: italic;	
+}
+
 /* images */
 img {
 	max-width: 95%;

@@ -27,10 +27,13 @@ Changelog
 Version 1.2.1 (Minor Feature Release)
 -------------------------------------
  * The core navi button pulsates when new stories arrive (under webOS 1.4)
+ * Added custom a splashscreen (for webOS 1.4)
  * Optimized some routines for speed
  * The main list widgets in the are now filled dynamically
- * The story list can now optionally show only unread items
+ * The story list can now optionally show only unread/new items
  * The feeds are now sorted by date
+ * The all-items feed can be sorted by date
+ * Notifications are now displayed using a dasboard stage
 
 Version 1.2 (Feature Release)
 -----------------------------

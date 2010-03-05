@@ -531,9 +531,11 @@ var feeds = Class.create ({
 	 */
 	reformatSummary: function(summary) {
         summary = summary.replace(/(<([^>]+)>)/ig, "");
-        summary = summary.replace(/#[a-z]+/ig, "{");
         summary = summary.replace(/(\{([^\}]+)\})/ig, "");
         summary = summary.replace(/digg_url .../, "");
+		summary = summary.replace(/\[i\](.*)\[\/i\]/ig, '<span class="italic">$1</span>');
+		summary = summary.replace(/\[b\](.*)\[\/b\]/ig, '<span class="bold">$1</span>');
+		summary = summary.replace(/\[u\](.*)\[\/u\]/ig, '<span class="underline">$1</span>');
         summary = unescape(summary);
 		return summary;	
 	},
@@ -594,7 +596,7 @@ var feeds = Class.create ({
 	parseAtom: function(index, transport) {
 		var container = [];
 		var enclosures = {};
-		var url = "", testurl = "", enc = 0;
+		var url = "", enc = 0;
 		var el = 0;
 		
 		var atomItems = transport.responseXML.getElementsByTagName("entry");
@@ -632,21 +634,19 @@ var feeds = Class.create ({
 						}
 						
 						url = enclosures.item(enc).getAttribute("href");
-						if(url && (url.length > 0)) {
-							testurl = url.toLowerCase();
-							
-							if(testurl.match(/.*\.jpg/) ||
-							   testurl.match(/.*\.jpeg/) ||
-							   testurl.match(/.*\.gif/) ||
-							   testurl.match(/.*\.png/)) {
+						if(url && (url.length > 0)) {						
+							if(url.match(/.*\.jpg/i) ||
+							   url.match(/.*\.jpeg/i) ||
+							   url.match(/.*\.gif/i) ||
+							   url.match(/.*\.png/i)) {
 								story.picture = url;
-							} else if(testurl.match(/.*\.mp3/) ||
-									  testurl.match(/.*\.wav/) ||
-									  testurl.match(/.*\.aac/)) {
+							} else if(url.match(/.*\.mp3/i) ||
+									  url.match(/.*\.wav/i) ||
+									  url.match(/.*\.aac/i)) {
 								story.audio = url;
-							} else if(testurl.match(/.*\.mpg/) ||
-									  testurl.match(/.*\.mpeg/) ||
-									  testurl.match(/.*\.avi/)) {
+							} else if(url.match(/.*\.mpg/i) ||
+									  url.match(/.*\.mpeg/i) ||
+									  url.match(/.*\.avi/i)) {
 								story.video = url;
 							}
 						}
@@ -684,7 +684,7 @@ var feeds = Class.create ({
 	parseRSS: function(index, transport) {
 		var container = [];
 		var enclosures = {};
-		var url = "", testurl = "", enc = 0;
+		var url = "", enc = 0;
 		var el = 0;
 		
 		var rssItems = transport.responseXML.getElementsByTagName("item");
@@ -712,20 +712,18 @@ var feeds = Class.create ({
 					for(enc = 0; enc < el; enc++) {
 						url = enclosures.item(enc).getAttribute("url");
 						if(url && (url.length > 0)) {
-							testurl = url.toLowerCase();
-							
-							if(testurl.match(/.*\.jpg/) ||
-							   testurl.match(/.*\.jpeg/) ||
-							   testurl.match(/.*\.gif/) ||
-							   testurl.match(/.*\.png/)) {
+							if(url.match(/.*\.jpg/i) ||
+							   url.match(/.*\.jpeg/i) ||
+							   url.match(/.*\.gif/i) ||
+							   url.match(/.*\.png/i)) {
 								story.picture = url;
-							} else if(testurl.match(/.*\.mp3/) ||
-									  testurl.match(/.*\.wav/) ||
-									  testurl.match(/.*\.aac/)) {
+							} else if(url.match(/.*\.mp3/i) ||
+									  url.match(/.*\.wav/i) ||
+									  url.match(/.*\.aac/i)) {
 								story.audio = url;
-							} else if(testurl.match(/.*\.mpg/) ||
-									  testurl.match(/.*\.mpeg/) ||
-									  testurl.match(/.*\.avi/)) {
+							} else if(url.match(/.*\.mpg/i) ||
+									  url.match(/.*\.mpeg/i) ||
+									  url.match(/.*\.avi/i)) {
 								story.video = url;
 							}
 						}
