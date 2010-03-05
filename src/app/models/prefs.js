@@ -23,7 +23,6 @@
 var prefs = Class.create({
 	updateInterval:	30,
 	notificationEnabled: true,
-	playSound: true,
 	wakingEnabled: false,
 	titleColor: "red",
 	summaryLength: 120,
@@ -53,9 +52,6 @@ var prefs = Class.create({
 			if(settings.version > 1) {
 				this.largeFont = settings.largeFont;
 			}
-			if(settings.version > 2) {
-				this.playSound = settings.playSound;
-			}
 			if(settings.version > 3) {
 				this.leftHanded = settings.leftHanded;
 			}
@@ -76,7 +72,6 @@ var prefs = Class.create({
 			summaryLength: 			this.summaryLength,
 			titleColor: 			this.titleColor,
 			largeFont:				this.largeFont,
-			playSound:				this.playSound,
 			leftHanded:				this.leftHanded
 		});
 		this.setTimer();

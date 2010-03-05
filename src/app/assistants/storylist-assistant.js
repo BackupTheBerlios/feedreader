@@ -24,6 +24,7 @@ function StorylistAssistant(feeds, index) {
 	this.feeds = feeds;
 	this.feedIndex = index;
 	this.feed = this.feeds.list[index];
+	this.storyList = this.feeds.buildStoryList(this.feedIndex);
 	
 	this.dateConverter = this.feeds.dateConverter;
 	
@@ -38,7 +39,7 @@ function StorylistAssistant(feeds, index) {
 	
 	this.setupComplete = false;
 	this.wasActiveBefore = false;
-	this.listRefreshNeeded = true;	
+	this.listRefreshNeeded = true;
 }
 
 StorylistAssistant.prototype.setup = function() {
@@ -114,8 +115,7 @@ StorylistAssistant.prototype.initCommandModel = function() {
 
 StorylistAssistant.prototype.activate = function(event) {
 	if(this.wasActiveBefore) {
-		this.listRefreshNeeded = this.listRefreshNeeded || (this.feed.sortMode !== 0);
-		this.storyListWidget.mojo.setLengthAndInvalidate(this.feeds.getFeedLength(this.feedIndex));
+		this.refreshList();
 		this.initCommandModel();
 		this.controller.modelChanged(this.commandModel);
 	}
@@ -127,6 +127,14 @@ StorylistAssistant.prototype.deactivate = function(event) {
 
 StorylistAssistant.prototype.cleanup = function(event) {
 	this.feeds.markSeen(this.feedIndex);
+};
+
+StorylistAssistant.prototype.refreshList = function() {
+	this.storyList = this.feeds.buildStoryList(this.feedIndex);
+	this.listRefreshNeeded = true;
+	
+	// Set the maximal length of the story list.
+	this.storyListWidget.mojo.setLengthAndInvalidate(this.storyList.length);
 };
 
 /* List formatters */
@@ -152,8 +160,8 @@ StorylistAssistant.prototype.getOrigin = function(property, model) {
 		return undefined;
 	}
 
-	var origin = this.feeds.getStoryOrigin(this.feedIndex, model.index);
-	return { origin: "(" + this.feeds.list[origin.feedIndex].title + ")" };
+	var feedIndex = this.storyList[model.index].feedIndex;
+	return { origin: "(" + this.feeds.list[feedIndex].title + ")" };
 };
 
 StorylistAssistant.prototype.getSummary = function(property, model) {
@@ -161,8 +169,8 @@ StorylistAssistant.prototype.getSummary = function(property, model) {
 		return undefined;
 	} else {
 		if(this.isAllItems) {
-			var origin = this.feeds.getStoryOrigin(this.feedIndex, model.index);
-			if(!this.feeds.showSummary(this.feeds.list[origin.feedIndex], false)) {
+			var feedIndex = this.storyList[model.index].feedIndex;
+			if(!this.feeds.showSummary(this.feeds.list[feedIndex], false)) {
 				return { shortSummary: "" };				
 			}
 		} else {
@@ -184,8 +192,8 @@ StorylistAssistant.prototype.getTitle = function(property, model) {
 		return undefined;
 	} else {
 		if(this.isAllItems) {
-			var origin = this.feeds.getStoryOrigin(this.feedIndex, model.index);
-			if(!this.feeds.showCaption(this.feeds.list[origin.feedIndex], false)) {
+			var feedIndex = this.storyList[model.index].feedIndex;
+			if(!this.feeds.showCaption(this.feeds.list[feedIndex], false)) {
 				return { title: "" };				
 			}
 		} else {
@@ -208,27 +216,23 @@ StorylistAssistant.prototype.listFind = function(filterString, listWidget, offse
 	var totalSubsetSize = 0;
 	
 	var lwrFilterString = filterString.toLowerCase();
-	var feedLength = this.feeds.getFeedLength(this.feedIndex);
+	var feedLength = this.storyList.length;
 	this.listRefreshNeeded = this.listRefreshNeeded || (this.filter != filterString);
 	
-	var stories = [];	
-	var origin = {};
-	var feeds = this.feeds.list;
+	var story = {};
 	var matches = false;
 	
 	try {
 		for(var i = 0; i < feedLength; i++) {
-			origin = this.feeds.getStoryOrigin(this.feedIndex, i);
-			stories = feeds[origin.feedIndex].stories;
-			
+			story = this.feeds.getStory(this.storyList[i]);			
 			matches = (lwrFilterString.length === 0) ||
-					  (stories[origin.storyIndex].title.toLowerCase().include(lwrFilterString));
+					  (story.title.toLowerCase().include(lwrFilterString));
 			
 			if(matches) {
-				stories[origin.storyIndex].index = totalSubsetSize;
+				story.index = i;
 				if((subsetSize < count) && (totalSubsetSize >= offset)) {
 					subsetSize++;
-					subset.push(stories[origin.storyIndex]);
+					subset.push(story);
 				}
 				totalSubsetSize++;
 				if(!this.listRefreshNeeded && (subsetSize == count)) {
@@ -238,7 +242,6 @@ StorylistAssistant.prototype.listFind = function(filterString, listWidget, offse
 		}
 	} catch(e) {
 		Mojo.Log.logException(e);
-		Mojo.Log.logProperties(origin);
 		Mojo.Log.error("The index was", i);
 	}
 
@@ -254,8 +257,7 @@ StorylistAssistant.prototype.listFind = function(filterString, listWidget, offse
 /* various event handlers */
 StorylistAssistant.prototype.showStory = function(event) {
 	var storyIndex = event.item.index;
-	var origin = this.feeds.getStoryOrigin(this.feedIndex, storyIndex);
-	var story = this.feeds.list[origin.feedIndex].stories[origin.storyIndex];
+	var origin = this.storyList[storyIndex];
 	
 	switch((parseInt(this.feeds.list[origin.feedIndex].viewMode, 10) & 0xFFFF)) {
 		case 0:
@@ -274,8 +276,9 @@ StorylistAssistant.prototype.showStory = function(event) {
 			break;
 			
 		case 1:
-			this.controller.stageController.pushScene("fullStory", this.feeds,
-													  this.feedIndex, storyIndex);
+			this.controller.stageController.pushScene("fullStory", 
+													  this.feeds, this.feedIndex,
+													  this.storyList, storyIndex);
 			break;
 	}
 };
@@ -308,8 +311,7 @@ StorylistAssistant.prototype.sortModeChoose = function(command) {
 			break;
 	}
 	
-	this.listRefreshNeeded = true;
-	this.storyListWidget.mojo.setLengthAndInvalidate(this.feeds.getFeedLength(this.feedIndex));
+	this.refreshList();
 	this.feeds.save();
 };
 
@@ -347,8 +349,7 @@ StorylistAssistant.prototype.considerForNotification = function(params){
 		switch(params.type) {
 			case "feed-update":
 				if(this.feedIndex == params.feedIndex) {
-					this.listRefreshNeeded = true;
-					this.storyListWidget.mojo.setLengthAndInvalidate(this.feeds.getFeedLength(this.feedIndex));
+					this.refreshList();
 				}
 				this.initCommandModel();
 				this.controller.modelChanged(this.commandModel);

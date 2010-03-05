@@ -1225,107 +1225,77 @@ var feeds = Class.create ({
 		return (mode == 2) || (mode === 0);
 	},
 	
-	/**
-	 * Get the dynamic length of a feed.
-	 *
-	 * @param {int}			Index of the feed
-	 */
-	getFeedLength: function(index, sortMode) {
-		if(sortMode === undefined) {
-			sortMode = this.list[index].sortMode;
-		}
-		switch(sortMode) {
-			case 2:		// Only new items.
-				return this.list[index].numNew;
-			
-			case 1:		// Only unread items.
-				return this.list[index].numUnRead;
-			
-			case 0:		// All items.
-				if(this.list[index].type != "allItems") {
-					return this.list[index].stories.length;
-				} else {
-					var c = 0;
-					for(var i = 0; i < this.list.length; i++) {
-						if(i != index) {
-							c += this.list[i].stories.length;
-						}
-					}
-					return c;
-				}
-		}
-		return -1;
-	},
-	
 	/** @private
 	 *
-	 * Calculate the real story index for storyIndex.
+	 * Decide whether a story should be taken into a story list.
+	 *
+	 * @param {Int}			SortMode of the feed
+	 * @param {Object}		story object
 	 */
-	getRealStoryIndex: function(sortMode, feedIndex, storyIndex) {
-		if(sortMode === 0) {
-			return storyIndex;
+	takeStory: function(sortMode, story) {
+		switch(sortMode) {
+			case 0:		return true;
+			case 1:		return !story.isRead;
+			case 2:		return story.isNew;
 		}
-		
-		var stories = this.list[feedIndex].stories;
-		var storyCount = stories.length;
-		var c = 0;
-		for(var i = 0; i < storyCount; i++) {
-			if(sortMode == 1) {
-				if(stories[i].isRead) {
-					continue;
-				}
-			} else if(sortMode == 2) {
-				if(!stories[i].isNew) {
-					continue;
-				}
-			}
-			if(c == storyIndex) {
-				return i;
-			}
-			c++;
-		}
-		
-		return i;
+		return false;
 	},
 	
 	/**
-	 * Get the origin of a story.
+	 * Build a story list for the given feed.
 	 *
-	 * @param {int}			Index of the feed
-	 * @param {int}			Index of the story
 	 */
-	getStoryOrigin: function(feedIndex, storyIndex) {
-		var sortMode = this.list[feedIndex].sortMode;
+	buildStoryList: function(feedIndex) {
+		var feed = this.list[feedIndex];
+		var sortByDate = ((feed.sortMode >> 8) & 0xFF) == 1;
+		var sortMode = (feed.sortMode & 0xFF);
+		
+		var result = [];
+		var stories = [];
+		var takeStory = false;
+		var i = 0, j = 0, storyCount = 0;
 		
 		if(this.list[feedIndex].type != "allItems") {
-			return {
-				feedIndex: 	feedIndex,
-				storyIndex:	this.getRealStoryIndex(sortMode, feedIndex, storyIndex)
-			};
-		}
-		
-		var feedCount = this.list.length;
-		var storyCount = 0;
-		var f = 0;
-		do {
-			if(this.list[f].type != "allItems")  {
-				storyCount = this.getFeedLength(f, sortMode);
-				if(storyIndex < storyCount) {
-					return {
-						feedIndex:	f,
-						storyIndex:	this.getRealStoryIndex(sortMode, f, storyIndex)
-					};
-				} else {
-					storyIndex -= storyCount;
+			storyCount = feed.stories.length;
+			stories = feed.stories;
+			for(i = 0; i < storyCount; i++) {
+				if(this.takeStory(sortMode, stories[i])) {
+					result.push({
+						intDate:		stories[i].intDate,
+						feedIndex:		feedIndex,
+						storyIndex:		i
+					});
 				}
 			}
-			f++;
-		} while(f < feedCount);
+		} else {
+			var feedCount = this.list.length;
+			for(j = 0; j < feedCount; j++) {
+				if(j == feedIndex) {
+					continue;
+				}
+				feed = this.list[j];
+				storyCount = feed.stories.length;
+				stories = feed.stories;
+				for(i = 0; i < storyCount; i++) {
+					if(this.takeStory(sortMode, stories[i])) {
+						result.push({
+							intDate:		stories[i].intDate,
+							feedIndex:		j,
+							storyIndex:		i
+						});
+					}
+				}				
+			}
+		}
 		
-		// This should not happen...
-		return {
-			feedIndex:	-1,
-			storyIndex:	-1
-		};
+		if(sortByDate) {
+			result.sort(this.dateSort);
+		}
+		
+		return result;
+	},
+	
+	getStory: function(listItem) {
+		return this.list[listItem.feedIndex].stories[listItem.storyIndex];
 	}
 });

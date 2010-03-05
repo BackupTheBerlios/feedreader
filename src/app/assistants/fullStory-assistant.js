@@ -20,16 +20,18 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-function FullStoryAssistant(feeds, feedIndex, storyIndex) {
+function FullStoryAssistant(feeds, feedIndex, storyList, storyIndex) {
 	this.feeds = feeds;
+	this.storyList = storyList;
 	this.storyIndex = storyIndex;
 	this.feedIndex = feedIndex;
-	this.origin = this.feeds.getStoryOrigin(this.feedIndex, this.storyIndex);
+	
+	this.origin = this.storyList[storyIndex];
+	this.feed = this.feeds.list[this.origin.feedIndex];
+	this.story = this.feed.stories[this.origin.storyIndex];
 
 	this.doShowMedia = this.feeds.list[this.origin.feedIndex].showMedia;
 	this.doShowPicture = this.feeds.list[this.origin.feedIndex].showPicture;
-	this.feed = this.feeds.list[this.origin.feedIndex];
-	this.story = this.feed.stories[this.origin.storyIndex];
 	
 	this.commandModel = {};
 	this.setupComplete = false;
@@ -42,7 +44,8 @@ function FullStoryAssistant(feeds, feedIndex, storyIndex) {
 	this.mediaReady = false;
 	this.playState = 0;
 	this.seeking = false;
-	
+
+	/* pre bind handlers */	
 	if(this.doShowMedia && (this.story.audio.length > 0)) {
 		this.mediaConnectedHandler = this.mediaConnected.bindAsEventListener(this);
 		this.mediaDisConnectedHandler = this.mediaDisConnected.bindAsEventListener(this);
@@ -178,7 +181,7 @@ FullStoryAssistant.prototype.initCommandModel = function() {
 			command: "do-previousStory"
 		}, {
 			icon: "forward",
-			disabled: this.storyIndex === (this.feeds.getFeedLength(this.feedIndex)),
+			disabled: this.storyIndex === (this.storyList.length - 1),
 			command: "do-nextStory"
 		}]
 	}];
@@ -403,16 +406,15 @@ FullStoryAssistant.prototype.handleCommand = function(event) {
 				this.controller.stageController.swapScene({
 					name: "fullStory",
 					transition: Mojo.Transition.crossFade
-				}, this.feeds, this.feedIndex, this.storyIndex - 1);
+				}, this.feeds, this.feedIndex, this.storyList, this.storyIndex - 1);
 				break;
 				
 			case "do-nextStory":
 				this.feeds.markStoryRead(this.origin.feedIndex, this.origin.storyIndex);
-				var next = this.storyIndex + (this.feeds.list[this.feedIndex].sortMode === 0 ? 1 : 0);
 				this.controller.stageController.swapScene({
 					name: "fullStory",
 					transition: Mojo.Transition.crossFade
-				}, this.feeds, this.feedIndex, next);
+				}, this.feeds, this.feedIndex, this.storyList, this.storyIndex + 1);
 				break;
 			
 			case "do-togglePlay":
