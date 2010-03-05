@@ -2,6 +2,10 @@
  * Changes to Palm styles
  */
 
+.palm-dashboard-icon {
+    background: url(../midicon.png) center center no-repeat;	
+}
+
 .icon.rss {
     background: url(../images/header/rss-icon.png) center center no-repeat;
 }

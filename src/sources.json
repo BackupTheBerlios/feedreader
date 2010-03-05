@@ -37,5 +37,9 @@
     {
         "scenes": "import",
         "source": "app/assistants/import-assistant.js"
-    }
+    },
+	{
+		"scenes": "dashboard",
+		"source": "app/assistants/dashboard-assistant.js"
+	}
 ]

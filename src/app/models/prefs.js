@@ -29,7 +29,7 @@ var prefs = Class.create({
 	summaryLength: 120,
 	largeFont: false,
 	showChanges: false,
-	leftHanded: false,
+	leftHanded: true,
 	
 	timer: {},
 	

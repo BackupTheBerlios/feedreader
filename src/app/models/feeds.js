@@ -923,25 +923,8 @@ var feeds = Class.create ({
 						if(this.list[i].type != "allItems") {
 							n += this.list[i].numNew;
 						}
-					}
-					
-					if (n > 0) {
-						var t = new Template($L("#{num} new stories"));
-						Mojo.Controller.getAppController().showBanner({
-							messageText: t.evaluate({
-								num: n
-							}),
-							soundClass: FeedReader.prefs.playSound ? "alerts" : "none"
-						}, "bannerPressed");
-					}
-					
-					// Make the core navi button pulsate.
-					if(FeedReader.controller) {
-					    var cardStageController = FeedReader.controller.getStageController(FeedReader.mainStageName);
-						if(cardStageController) {
-							cardStageController.indicateNewContent(true);
-						}
-					}
+					}			
+					FeedReader.postNotification(n);
 				}
 				
 				this.leaveActivity();

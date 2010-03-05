@@ -32,6 +32,7 @@ FeedReader = {
 	copyrightYears:		"2009, 2010",
 
 	mainStageName: 		"FeedReaderStage",
+	dashboardStageName:	"FeedReaderDashboard",
 	
 	isActive: 			false,
 	showChangeLog:		false,
@@ -79,6 +80,11 @@ FeedReader = {
 	},
 	
 	/**
+	 * Called to indicate that a scene is beginning its setup.
+	 * This will initialize the App Menu if desired.
+	 * 
+	 * @param {Object}		Scene assistant
+	 * @parsm {Boolean}		Whether the app menu shall be initialized
 	 */
 	beginSceneSetup: function(caller, initAppMenu) {
 		if(caller.controller) {
@@ -89,9 +95,17 @@ FeedReader = {
 				caller.controller.setupWidget(Mojo.Menu.appMenu, FeedReader.menuAttr, FeedReader.menuModel);
 			}
 		}		
+
+		if(caller.setupComplete !== undefined) {
+			caller.setupComplete = false;
+		}
 	},
 	
 	/**
+	 * Called to indicate that a scene has finished its setup.
+	 * This will hide a potential scrim and show the scene itself.
+	 * 
+	 * @param {Object}		Scene assistant
 	 */
 	endSceneSetup: function(caller) {
 		if(caller.controller) {
@@ -108,6 +122,32 @@ FeedReader = {
 		
 		if(caller.setupComplete !== undefined) {
 			caller.setupComplete = true;
+		}
+	},
+	
+	/**
+	 *
+	 * Show a notification
+	 *
+	 * @param {Int}		Count of new stories
+	 */
+	postNotification: function(count) {
+		if(!count) {	// nothing new or undefined.
+			return;
+		}
+
+		var appController = Mojo.Controller.getAppController();
+		var dashboardStageController = appController.getStageProxy(this.dashboardStageName);
+		
+		if(!dashboardStageController) {
+			appController.createStageWithCallback({
+				name: this.dashboardStageName,
+				lightweight: true
+			}, function(stageController) {
+				stageController.pushScene("dashboard", count);			
+			}, "dashboard");
+		} else {
+			dashboardStageController.delegateToSceneAssistant("updateDashboard", count);
 		}
 	}
 };

@@ -181,8 +181,6 @@ ImportAssistant.prototype.ajaxRequestFailed = function(transport) {
 };
 
 ImportAssistant.prototype.parseStartTag = function(tag, attr) {
-	Mojo.Log.info(tag);
-	
 	if(tag.toLowerCase().match(/head/)) {
 		this.inHeader = true;
 	} else if(!this.inHeader) {
