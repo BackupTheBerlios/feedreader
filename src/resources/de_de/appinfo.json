@@ -6,7 +6,7 @@
 	"vendorurl": "http://www.tegi-stuff.de",
 	"main": "../../index.html",
 	"title": "FeedReader",
-	"icon":"icon.png",
+	"icon":"../../icon.png",
 	"miniicon":"smalliconbw.png",
 	"smallicon":"smallicon.png",
 	"splashicon": "splashicon.png",

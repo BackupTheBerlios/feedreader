@@ -810,7 +810,6 @@ var feeds = Class.create ({
 						break;
 				}
 				
-				var isNew = false;
 				var nl = newStories.length;
 				var ol = stories.length;
 				
@@ -818,16 +817,17 @@ var feeds = Class.create ({
 				feed.numNew = 0;
 				
 				for (var i = 0; i < nl; i++) {
-					for (var j = 0; j < ol; j++) {
-						newStories[i].title = this.converter.convert(contentType, newStories[i].title);
-						newStories[i].summary = this.converter.convert(contentType, newStories[i].summary);
-						
+					newStories[i].title = this.converter.convert(contentType, newStories[i].title);
+					newStories[i].summary = this.converter.convert(contentType, newStories[i].summary);
+					
+					for (var j = 0; j < ol; j++) {						
 						if(newStories[i].uid == stories[j].uid) {
 							newStories[i].isRead = stories[j].isRead;
 							newStories[i].isNew = stories[j].isNew;
 							break;
 						}            
 					}
+					
 					if(newStories[i].isNew) {
 						feed.numNew++;
 					}
@@ -836,7 +836,6 @@ var feeds = Class.create ({
 					}
 				}
 				newStories.sort(this.dateSort);
-				
 				feed.stories = newStories;
 			} 
 		} catch(e) {
