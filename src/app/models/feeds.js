@@ -934,7 +934,7 @@ var feeds = Class.create ({
 		this.updateInProgress = this.fullUpdateInProgress;
 		this.interactiveUpdate = false;
 		this.notifyOfFeedUpdate(index, false);
-		this.updatePseudoFeeds();
+		this.updateAllItemsFeed();
 		this.leaveActivity();
 		
 		this.spooler.nextAction();
@@ -970,7 +970,7 @@ var feeds = Class.create ({
 	 *
 	 * @param {Boolean}	disableNotification		If set, omit the notification
 	 */
-	updatePseudoFeeds: function(disableNotification) {
+	updateAllItemsFeed: function(disableNotification) {
 		if(this.updateInProgress) {
 			return;
 		}
@@ -1014,18 +1014,22 @@ var feeds = Class.create ({
 						continue;
 					}
 					this.list[i].numUnRead = 0;
+					this.list[i].numNew = 0;
 					for(j = 0; j < this.list[i].stories.length; j++) {
 						this.list[i].stories[j].isRead = true;
+						this.list[i].stories[j].isNew = false;						
 					}
 					this.notifyOfFeedUpdate(i, false);
 				}
-				this.updatePseudoFeeds();
+				this.updateAllItemsFeed();
 			} else {
 				this.list[index].numUnRead = 0;
+				this.list[index].numNew = 0;
 				for(i = 0; i < this.list[index].stories.length; i++) {
 					this.list[index].stories[i].isRead = true;
+					this.list[index].stories[i].isNew = false;
 				}
-				this.updatePseudoFeeds();
+				this.updateAllItemsFeed();
 				this.notifyOfFeedUpdate(index, false);
 			}
 			this.save();
@@ -1044,7 +1048,7 @@ var feeds = Class.create ({
 				if(!this.list[index].stories[story].isRead) {
 					this.list[index].stories[story].isRead = true;
 					this.list[index].numUnRead--;
-					this.updatePseudoFeeds();
+					this.updateAllItemsFeed();
 				}
 			}
 			this.save();
@@ -1070,13 +1074,13 @@ var feeds = Class.create ({
 					}
 					this.notifyOfFeedUpdate(i, false);
 				}
-				this.updatePseudoFeeds();
+				this.updateAllItemsFeed();
 			} else {
 				this.list[index].numUnRead = this.list[index].stories.length;
 				for(i = 0; i < this.list[index].stories.length; i++) {
 					this.list[index].stories[i].isRead = false;
 				}
-				this.updatePseudoFeeds();
+				this.updateAllItemsFeed();
 				this.notifyOfFeedUpdate(index, false);
 			}
 			this.save();
@@ -1103,7 +1107,7 @@ var feeds = Class.create ({
 					this.list[index].stories[i].isNew = false;
 				}
 				this.list[index].numNew = 0;
-				this.updatePseudoFeeds();
+				this.updateAllItemsFeed();
 			}
 			this.save();
 		}
@@ -1119,7 +1123,7 @@ var feeds = Class.create ({
 			Mojo.Log.info("FEEDS> Deleting feed", index);
 			this.list.splice(index, 1);
 			this.save();
-			this.updatePseudoFeeds();
+			this.updateAllItemsFeed();
 		}
 	},
 	

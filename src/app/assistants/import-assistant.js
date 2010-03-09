@@ -181,11 +181,11 @@ ImportAssistant.prototype.ajaxRequestFailed = function(transport) {
 };
 
 ImportAssistant.prototype.parseStartTag = function(tag, attr) {
-	if(tag.toLowerCase().match(/head/)) {
+	if(tag.match(/head/i)) {
 		this.inHeader = true;
 	} else if(!this.inHeader) {
 		return;
-	} else if(tag.toLowerCase().match(/link/)) {
+	} else if(tag.match(/link/i)) {
 		var possibility = 0;
 		var type = "";
 		var href = "";
@@ -205,7 +205,7 @@ ImportAssistant.prototype.parseStartTag = function(tag, attr) {
 					type = "rss";
 					possibility++;
 				} else if(attr[i].name.match(/href/i)) {
-					href = attr[i].value;
+					href = attr[i].value.replace(/^\//, "");
 					possibility++;
 				} else if(attr[i].name.match(/title/i)) {
 					title = attr[i].value;
@@ -214,6 +214,10 @@ ImportAssistant.prototype.parseStartTag = function(tag, attr) {
 		}
 		
 		if((possibility == 3) && (href.length > 0)) {
+		    if(/^[a-z]{1,5}:/.test(href) === false) {
+				href = this.urlModel.value.replace(/$\//, "") + "/" + href;
+			}
+			
 			this.feedList.push({
 				type: type,
 				title: title,
