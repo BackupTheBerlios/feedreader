@@ -731,15 +731,16 @@ var feeds = Class.create ({
 				}
 				
 				// Set the publishing date.
-				if (rssItems[i].getElementsByTagName("pubDate") && rssItems[i].getElementsByTagName("pubDate").item(0)) {
-					story.intDate = this.dateConverter.dateToInt(rssItems[i].getElementsByTagName("pubDate").item(0).textContent);
+				if(rssItems[i].getElementsByTagName("pubDate") && rssItems[i].getElementsByTagName("pubDate").item(0)) {
+				   story.intDate = this.dateConverter.dateToInt(rssItems[i].getElementsByTagName("pubDate").item(0).textContent);
 				} else if (rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date") &&
 						   rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0)) {
 					story.intDate = this.dateConverter.dateToInt(rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0).textContent);
 				}
 				
 				// Set the unique id.
-				if (rssItems[i].getElementsByTagName("guid") && rssItems[i].getElementsByTagName("guid").item(0)) {
+				if(rssItems[i].getElementsByTagName("guid") && rssItems[i].getElementsByTagName("guid").item(0) &&
+				   rssItems[i].getElementsByTagName("guid").item(0).textContent) {
 					story.uid = rssItems[i].getElementsByTagName("guid").item(0).textContent;
 				} else {
 					story.uid = story.url;

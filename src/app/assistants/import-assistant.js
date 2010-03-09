@@ -193,21 +193,21 @@ ImportAssistant.prototype.parseStartTag = function(tag, attr) {
 
 		for(var i = 0; i < attr.length; i++) {
 			if(attr[i]) {
-				if(attr[i].name.toLowerCase().match(/rel/) &&
-				   attr[i].value.toLowerCase().match(/alternate/)) {
+				if(attr[i].name.match(/rel/i) &&
+				   attr[i].value.match(/alternate/i)) {
 					possibility++;
-				} else if(attr[i].name.toLowerCase().match(/type/) &&
-						  attr[i].value.toLowerCase().match(/application\/atom\+xml/)) {
+				} else if(attr[i].name.match(/type/i) &&
+						  attr[i].value.match(/application\/atom\+xml/i)) {
 					type = "atom";
 					possibility++;
-				} else if(attr[i].name.toLowerCase().match(/type/) &&
-						  attr[i].value.toLowerCase().match(/application\/rss\+xml/)) {
+				} else if(attr[i].name.match(/type/i) &&
+						  attr[i].value.match(/application\/rss\+xml/i)) {
 					type = "rss";
 					possibility++;
-				} else if(attr[i].name.toLowerCase().match(/href/)) {
+				} else if(attr[i].name.match(/href/i)) {
 					href = attr[i].value;
 					possibility++;
-				} else if(attr[i].name.toLowerCase().match(/title/)) {
+				} else if(attr[i].name.match(/title/i)) {
 					title = attr[i].value;
 				}
 			}
@@ -225,7 +225,7 @@ ImportAssistant.prototype.parseStartTag = function(tag, attr) {
 };
 
 ImportAssistant.prototype.parseEndTag = function(tag) {
-	if(tag.toLowerCase().match(/head/)) {
+	if(tag.match(/head/i)) {
 		this.htmlparser.finished = true;
 	}
 };
