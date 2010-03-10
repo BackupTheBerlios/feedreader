@@ -36,6 +36,7 @@ function StorylistAssistant(feeds, index) {
 	this.listFindHandler = this.listFind.bind(this);
 	this.sortModeTapHandler = this.sortModeTap.bindAsEventListener(this);
 	this.sortModeChooseHandler = this.sortModeChoose.bind(this);
+	this.sendChooseHandler = this.sendChoose.bind(this);
 	
 	this.setupComplete = false;
 	this.wasActiveBefore = false;
@@ -103,11 +104,22 @@ StorylistAssistant.prototype.initCommandModel = function() {
 			]
 		},
 		{
-			icon: "refresh",
-			disabled: this.feeds.updateInProgress,
-			command: "do-feedUpdate"
+			items: [
+				{
+					icon: "refresh",
+					disabled: this.feeds.updateInProgress,
+					command: "do-feedUpdate"
+				}
+			]
 		}
 	];
+	
+	if(!this.isAllItems) {
+		this.commandModel.items[1].items.unshift({
+			icon: "send",
+			command: "do-send"
+		});
+	}
 	
 	if(!FeedReader.prefs.leftHanded) {
 		this.commandModel.items.reverse();
@@ -327,6 +339,19 @@ StorylistAssistant.prototype.sortModeChoose = function(command) {
 	this.feeds.save();
 };
 
+StorylistAssistant.prototype.sendChoose = function(command) {
+	switch(command) {
+		case "send-sms":
+			FeedReader.sendSMS($L("Check out this feed") + ": " + this.feed.url);
+			break;
+		
+		case "send-email":
+			FeedReader.sendEMail($L("Check out this feed"),
+								 	'<a href="' + this.feed.url + '">' + this.feed.url + '</a>');
+			break;
+	};
+};
+
 StorylistAssistant.prototype.handleCommand = function(event) {
 	if(event.type === Mojo.Event.command) {
 		switch(event.command) {
@@ -351,6 +376,17 @@ StorylistAssistant.prototype.handleCommand = function(event) {
 				} else {
 					this.feeds.updateFeed(this.feedIndex);
 				}
+				break;
+			
+			case "do-send":
+				this.controller.popupSubmenu({
+					onChoose:  this.sendChooseHandler,
+					placeNear: event.originalEvent.target,
+					items: [
+						{ label: $L("Send via SMS/IM"),	command: "send-sms" },
+						{ label: $L("Send via E-Mail"),	command: "send-email" }
+					]
+				});
 				break;
 		}
 	}

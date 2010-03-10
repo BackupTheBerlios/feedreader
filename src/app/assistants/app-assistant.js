@@ -27,7 +27,7 @@
 FeedReader = {
 	appName:			"FeedReader",
 	appAuthor:			"Timo Tegtmeier",
-	versionString:		"1.2.2",
+	versionString:		"1.2.3",
 	versionInt:			4,
 	copyrightYears:		"2009, 2010",
 
@@ -149,6 +149,44 @@ FeedReader = {
 		} else {
 			dashboardStageController.delegateToSceneAssistant("updateDashboard", count);
 		}
+	},
+	
+	/**
+	 *
+	 * Send a SMS
+	 *
+	 * @param {String}		Body of the sms
+	 */
+	sendSMS: function(text) {
+		var req = new Mojo.Service.Request("palm://com.palm.applicationManager", {
+			   method: "open",
+			   parameters: {
+				   id: "com.palm.app.messaging",
+				   params: {
+					   messageText: text
+				   }
+			   }
+		});
+	},
+	
+	/**
+	 *
+	 * Send an E-Mail
+	 *
+	 * @param {String}		Subject line
+	 * @param {String}		Body of the E-Mail
+	 */
+	sendEMail: function(subject, text) {
+		var req = new Mojo.Service.Request("palm://com.palm.applicationManager", {
+			   method: "open",
+			   parameters:  {
+				   id: "com.palm.app.email",
+				   params: {
+					summary:	subject,
+					text:		text
+				}
+			}
+		});
 	}
 };
 

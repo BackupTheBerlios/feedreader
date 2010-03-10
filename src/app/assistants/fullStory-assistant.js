@@ -57,6 +57,7 @@ function FullStoryAssistant(feeds, feedIndex, storyList, storyIndex) {
 	this.startSeekingHandler = this.startSeeking.bindAsEventListener(this);
 	this.doSeekHandler = this.doSeek.bindAsEventListener(this);
 	this.stopSeekingHandler = this.stopSeeking.bindAsEventListener(this);
+	this.sendChooseHandler = this.sendChoose.bind(this);
 	
 	this.storyTapHandler = this.storyTap.bindAsEventListener(this);
 	this.pictureLoadedHandler = this.pictureLoaded.bind(this);
@@ -189,6 +190,9 @@ FullStoryAssistant.prototype.initCommandModel = function() {
 	if(this.doShowMedia && (this.story.audio.length > 0)) {
 		this.commandModel.items.push({
 			items :[{
+				icon: "send",
+				command: "do-send"
+			}, {
 				iconPath: "images/player/icon-play.png",
 				command: "do-togglePlay",
 				disabled: !this.mediaReady
@@ -201,20 +205,23 @@ FullStoryAssistant.prototype.initCommandModel = function() {
 		
 		switch(this.playState) {
 			case 0:	// stopped
-				this.commandModel.items[1].items[0].iconPath = "images/player/icon-play.png";
-				this.commandModel.items[1].items[1].disabled = true;
+				this.commandModel.items[1].items[1].iconPath = "images/player/icon-play.png";
+				this.commandModel.items[1].items[2].disabled = true;
 				break;
 				
 			case 1:	// playing
-				this.commandModel.items[1].items[0].iconPath = "images/player/icon-pause.png";
+				this.commandModel.items[1].items[1].iconPath = "images/player/icon-pause.png";
 				break;
 				
 			case 2:	// paused
-				this.commandModel.items[1].items[0].iconPath = "images/player/icon-play.png";
+				this.commandModel.items[1].items[1].iconPath = "images/player/icon-play.png";
 				break;
 		}
 	} else {
-		this.commandModel.items.push({});
+		this.commandModel.items.push({
+			icon: "send",
+			command: "do-send"
+		});
 	}
 	
 	if(!FeedReader.prefs.leftHanded) {
@@ -398,6 +405,20 @@ FullStoryAssistant.prototype.storyTap = function(event) {
 	});
 };
 
+FullStoryAssistant.prototype.sendChoose = function(command) {
+	switch(command) {
+		case "send-sms":
+			FeedReader.sendSMS($L("Check out this story") + ": " + this.story.url);
+			break;
+		
+		case "send-email":
+			FeedReader.sendEMail($L("Check out this story"), this.story.summary +
+								 '<br><br><a href="' + this.story.url + '">' + this.story.url + '</a>');
+			break;
+	};
+
+};
+
 FullStoryAssistant.prototype.handleCommand = function(event) {
 	if(event.type === Mojo.Event.command) {
 		switch(event.command) {
@@ -424,6 +445,18 @@ FullStoryAssistant.prototype.handleCommand = function(event) {
 			case "do-stop":
 				this.stopMedia();
 				break;
+			
+			case "do-send":
+				this.controller.popupSubmenu({
+					onChoose:  this.sendChooseHandler,
+					placeNear: event.originalEvent.target,
+					items: [
+						{ label: $L("Send via SMS/IM"),	command: "send-sms" },
+						{ label: $L("Send via E-Mail"),	command: "send-email" }
+					]
+				});
+				break;
+
 		}
 	}
 };

@@ -24,6 +24,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 Changelog
 =========
 
+Version 1.2.3 (Minor Feature Release)
+-------------------------------------
+ * One can now send a feed's URL via E-Mail and SMS
+ * One can now send a story via E-Mail and SMS
+
 Version 1.2.2 (Maintenance Release)
 -----------------------------------
  * Redirection from the story list to the browser works again
