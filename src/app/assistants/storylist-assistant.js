@@ -270,7 +270,7 @@ StorylistAssistant.prototype.showStory = function(event) {
 				parameters: {
 					id: "com.palm.app.browser",
 					params: {
-						target: story.url
+						target: this.feeds.list[origin.feedIndex].stories[origin.storyIndex].url
 					}
 				}
 			});

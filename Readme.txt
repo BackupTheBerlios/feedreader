@@ -24,6 +24,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 Changelog
 =========
 
+Version 1.2.2 (Maintenance Release)
+-----------------------------------
+ * Redirection from the story list to the browser works again
+ * The feed importer now works with relative urls too
+ * minor processing improvements
+
 Version 1.2.1 (Minor Feature Release)
 -------------------------------------
  * The core navi button pulsates when new stories arrive (under webOS 1.4)
