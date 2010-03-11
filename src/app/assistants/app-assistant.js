@@ -248,6 +248,7 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 				if (cardStageController) {
 					cardStageController.setWindowOrientation("free");
 				    cardStageController.popScenesTo("feedlist");
+					cardStageController.activate();
 				} else {
 	                this.controller.createStageWithCallback({
 						name: FeedReader.mainStageName,

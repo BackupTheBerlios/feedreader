@@ -28,6 +28,8 @@ Version 1.2.3 (Minor Feature Release)
 -------------------------------------
  * One can now send a feed's URL via E-Mail and SMS
  * One can now send a story via E-Mail and SMS
+ * Fixed a problem, when dashboard it tapped while application
+   is running
 
 Version 1.2.2 (Maintenance Release)
 -----------------------------------
