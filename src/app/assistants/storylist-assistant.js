@@ -274,7 +274,7 @@ StorylistAssistant.prototype.showStory = function(event) {
 	
 	switch((parseInt(this.feeds.list[origin.feedIndex].viewMode, 10) & 0xFFFF)) {
 		case 0:
-			if (!story.isRead) {
+			if (!this.feeds.list[origin.feedIndex].stories[origin.storyIndex].isRead) {
 				this.feeds.markStoryRead(origin.feedIndex, origin.storyIndex);
 			}
 			this.controller.serviceRequest("palm://com.palm.applicationManager", {
