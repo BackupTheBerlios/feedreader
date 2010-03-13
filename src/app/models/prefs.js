@@ -96,7 +96,18 @@ var prefs = Class.create({
 				hours   = parseInt(this.updateInterval / 60, 10);
 				minutes = this.updateInterval % 60;
 				seconds = 0;
+				
+				if(hours < 10) {
+					hours = "0" + hours;
+				}
+				if(minutes < 10) {
+					minutes = "0" + minutes;
+				}
+				if(seconds < 10) {
+					seconds = "0" + seconds;
+				}
 			}
+			
 			var t = new Template("#{h}:#{m}:#{s}");
 			
             this.timer = new Mojo.Service.Request("palm://com.palm.power/timeout", {
