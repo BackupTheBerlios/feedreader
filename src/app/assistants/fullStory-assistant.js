@@ -415,8 +415,7 @@ FullStoryAssistant.prototype.sendChoose = function(command) {
 			FeedReader.sendEMail($L("Check out this story"), this.story.summary +
 								 '<br><br><a href="' + this.story.url + '">' + this.story.url + '</a>');
 			break;
-	};
-
+	}
 };
 
 FullStoryAssistant.prototype.handleCommand = function(event) {

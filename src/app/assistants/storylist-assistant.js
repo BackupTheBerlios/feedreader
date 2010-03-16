@@ -349,7 +349,7 @@ StorylistAssistant.prototype.sendChoose = function(command) {
 			FeedReader.sendEMail($L("Check out this feed"),
 								 	'<a href="' + this.feed.url + '">' + this.feed.url + '</a>');
 			break;
-	};
+	}
 };
 
 StorylistAssistant.prototype.handleCommand = function(event) {
