@@ -26,6 +26,10 @@ var spooler = new Class.create({
 	actionIdent: "",
 	
 	initialize: function() {
+		this.setActivitySuccessHandler = this.setActivitySuccess.bind(this);
+		this.setActivityFailedHandler = this.setActivityFailed.bind(this);
+		this.leaveActivitySuccessHandler = this.leaveActivitySuccess.bind(this);
+		this.leaveActivityFailedHandler = this.leaveActivityFailed.bind(this);
 	},
 	
 	addAction: function(action, identifier, unique) {
@@ -65,16 +69,84 @@ var spooler = new Class.create({
 		}
 	},
 	
+	/** @private
+	 *
+	 * Tell the system, that we enter a phase of activity.
+	 */
+	enterActivity: function(duration) {
+		if(duration === undefined) {
+			duration = 15000;
+		}
+		var request = new Mojo.Service.Request("palm://com.palm.power/com/palm/power", {
+			method: "activityStart",
+			parameters: {
+				id: "com.tegi-stuff.app.feedreader",
+				duration_ms: duration
+			},
+			onSuccess: this.setActivitySuccessHandler,
+			onFailure: this.setActivityFailedHandler
+		});
+	},
+	
+	/** @private
+	 *
+	 * Gets called when setting the activity was successful.
+	 */
+	setActivitySuccess: function(response) {
+		Mojo.Log.info("SPOOLER> Successfully set activity");
+	},
+	
+	/** @private
+	 *
+	 * Gets called when setting the acitivity failed.
+	 */
+	setActivityFailed: function(response) {
+		Mojo.Log.error("SPOOLER> Unable to set activity", response);
+	},
+
+	/** @private
+	 *
+	 * Tell the system, that we left our activity phase.
+	 */
+	leaveActivity: function() {
+		var request = new Mojo.Service.Request("palm://com.palm.power/com/palm/power", {
+			method: "activityEnd",
+			parameters: {
+				id: "com.tegi-stuff.app.feedreader"
+			},
+			onSuccess: this.leaveActivitySuccessHandler,
+			onFailure: this.leaveActivityFailedHandler
+		});
+	},
+
+	/** @private
+	 *
+	 * Gets called when setting the activity was successful.
+	 */
+	leaveActivitySuccess: function(response) {
+		Mojo.Log.info("SPOOLER> Successfully left activity");
+	},
+	
+	/** @private
+	 *
+	 * Gets called when setting the acitivity failed.
+	 */
+	leaveActivityFailed: function(response) {
+		Mojo.Log.error("SPOOLER> Unable to leave activity", response);
+	},
+	
 	nextAction: function() {
 		try {
 			if(this.list.length >= 1) {
 				var action = this.list.shift();
 				this.actionRunning = true;
 				this.actionIdent = action.ident;
+				this.enterActivity();
 				action.execute();
 			} else {
 				this.actionRunning = false;
 				this.actionIdent = "";
+				this.leaveActivity();
 			}
 		} catch(e) {
 			Mojo.Log.logException(e);
