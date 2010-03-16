@@ -24,7 +24,6 @@ var feeds = Class.create ({
 	list: [],			// contains the individual feeds
 
 	db: {},				// takes the depot object
-	activity: {},		// takes the activity service
 	connStatus: {},		// takes the connection state service
 	cookie: {},			// takes the database info cookie
 	spooler: {},		// action spooler
@@ -36,7 +35,6 @@ var feeds = Class.create ({
 	interactiveUpdate: false,		// true if the update is interactive
 	modified: false,				// used by save() to indicate changes
 	saveInProgress: false,			// true if a save process is ongoing
-	activityLevel: 0,				// activity counter
 	properties: {
 		migratingFrom: 1			// db version loaded
 	},
@@ -58,10 +56,6 @@ var feeds = Class.create ({
 		} else {
 			this.properties.migratingFrom = 1;
 		}
-		
-		// Pre-bind some things to speed up repetitive usage.
-		this.setActivitySuccessHandler = this.setActivitySuccess.bind(this);
-		this.setActivityFailedHandler  = this.setActivityFailed.bind(this);
 		
 		this.openDBSuccessHandler = this.openDBSuccess.bind(this);
 		this.openDBFailedHandler  = this.openDBFailed.bind(this);
@@ -380,66 +374,6 @@ var feeds = Class.create ({
 	},
 	
 	/** @private
-	 *
-	 * Tell the system, that we enter a phase of activity.
-	 */
-	enterActivity: function(index) {
-		this.activityLevel++;
-		if(this.activityLevel == 1) {
-			var count;
-			if(index !== undefined) {
-				count = 15000;
-			} else {
-				count = this.list.length * 15000;
-			}
-			this.activity = new Mojo.Service.Request("palm://com.palm.power/com/palm/power", {
-				method: "activityStart",
-				parameters: {
-					id: "com.tegi-stuff.app.feedreader",
-					duration_ms: count
-				},
-				onSuccess: this.setActivitySuccessHandler,
-				onFailure: this.setActivityFailedHandler
-			});
-		}
-	},
-	
-	/** @private
-	 *
-	 * Tell the system, that we left our activity phase.
-	 */
-	leaveActivity: function() {
-		this.activityLevel--;
-		if(this.activityLevel <= 0) {
-			this.activityLevel = 0;
-			this.activity = new Mojo.Service.Request("palm://com.palm.power/com/palm/power", {
-				method: "activityEnd",
-				parameters: {
-					id: "com.tegi-stuff.app.feedreader"
-				},
-				onSuccess: this.setActivitySuccessHandler,
-				onFailure: this.setActivityFailedHandler
-			});
-		}
-	},
-
-	/** @private
-	 *
-	 * Gets called when setting the activity was successful.
-	 */
-	setActivitySuccess: function(response) {
-		Mojo.Log.info("FEEDS> Successfully set activity");
-	},
-	
-	/** @private
-	 *
-	 * Gets called when setting the acitivity failed.
-	 */
-	setActivityFailed: function(response) {
-		Mojo.Log.error("FEEDS> Unable to set activity", response);
-	},
-	
-	/** @private
 	 * 
 	 * Send a notification about a feeds update state. 
 	 * 
@@ -495,7 +429,6 @@ var feeds = Class.create ({
 	 */	
 	getConnStatusSuccess: function(index, result) {
 		if(result.isInternetConnectionAvailable) {
-			this.enterActivity(index);
 			this.updateInProgress = true;
 			this.list[index].updated  = false;			
 			this.notifyOfFeedUpdate(index, true);
@@ -605,9 +538,9 @@ var feeds = Class.create ({
 			try {
 				story = {
 					index:		0,
-					title:		unescape(atomItems[i].getElementsByTagName("title").item(0).textContent),
+					title:		"",
 					summary:	"",
-					url:		atomItems[i].getElementsByTagName("link").item(0).getAttribute("href"),
+					url:		"",
 					picture:	"",
 					audio:		"",
 					video:		"",
@@ -617,10 +550,17 @@ var feeds = Class.create ({
 					isNew:		true
 				};
 				
-				// Set the summary. Normally this will be pulled out of the summary element,
-				// but sometimes this element does not exist.
-				if (atomItems[i].getElementsByTagName("summary") && atomItems[i].getElementsByTagName("summary").item(0)) {
+				if(atomItems[i].getElementsByTagName("title") &&
+				   atomItems[i].getElementsByTagName("title").item(0)) {
+					story.title = unescape(atomItems[i].getElementsByTagName("title").item(0).textContent);
+				}
+				if (atomItems[i].getElementsByTagName("summary") &&
+					atomItems[i].getElementsByTagName("summary").item(0)) {
 					story.summary = this.reformatSummary(atomItems[i].getElementsByTagName("summary").item(0).textContent);
+				}				
+				if(atomItems[i].getElementsByTagName("link") &&
+				   atomItems[i].getElementsByTagName("link").item(0)) {
+					story.url = atomItems[i].getElementsByTagName("link").item(0).getAttribute("href");
 				}
 				
 				// Analyse the enclosures.
@@ -654,12 +594,14 @@ var feeds = Class.create ({
 				}
 				
 				// Set the publishing date.
-				if (atomItems[i].getElementsByTagName("updated") && atomItems[i].getElementsByTagName("updated").item(0)) {
+				if (atomItems[i].getElementsByTagName("updated") &&
+					atomItems[i].getElementsByTagName("updated").item(0)) {
 					story.intDate = this.dateConverter.dateToInt(atomItems[i].getElementsByTagName("updated").item(0).textContent);
 				}
 				
 				// Set the unique id.
-				if (atomItems[i].getElementsByTagName("id") && atomItems[i].getElementsByTagName("id").item(0)) {
+				if (atomItems[i].getElementsByTagName("id") &&
+					atomItems[i].getElementsByTagName("id").item(0)) {
 					story.uid = atomItems[i].getElementsByTagName("id").item(0).textContent;
 				}
 				else {
@@ -693,9 +635,9 @@ var feeds = Class.create ({
 			try {
 				story = {
 					index: 		0,
-					title: 		unescape(rssItems[i].getElementsByTagName("title").item(0).textContent),
-					summary:	this.reformatSummary(rssItems[i].getElementsByTagName("description").item(0).textContent),
-					url:		rssItems[i].getElementsByTagName("link").item(0).textContent,
+					title: 		"",
+					summary:	"",
+					url:		"",
 					picture:	"",
 					audio:		"",
 					video:		"",
@@ -705,9 +647,22 @@ var feeds = Class.create ({
 					isNew:		true
 				};
 				
+				if(rssItems[i].getElementsByTagName("title") &&
+				   rssItems[i].getElementsByTagName("title").item(0)) {
+					story.title = unescape(rssItems[i].getElementsByTagName("title").item(0).textContent);
+				}
+				if(rssItems[i].getElementsByTagName("description") &&
+				   rssItems[i].getElementsByTagName("description").item(0)) {
+					story.summary = this.reformatSummary(rssItems[i].getElementsByTagName("description").item(0).textContent);
+				}
+				if(rssItems[i].getElementsByTagName("link") &&
+				   rssItems[i].getElementsByTagName("link").item(0)) {
+					story.url = rssItems[i].getElementsByTagName("link").item(0).textContent;
+				}
+				
 				// Analyse the enclosures.
 				enclosures = rssItems[i].getElementsByTagName("enclosure");
-				if(enclosures && (enclosures.length > 0)) {
+				if(enclosures && (enclosures.length > 0)) {					
 					el = enclosures.length;
 					for(enc = 0; enc < el; enc++) {
 						url = enclosures.item(enc).getAttribute("url");
@@ -723,7 +678,9 @@ var feeds = Class.create ({
 								story.audio = url;
 							} else if(url.match(/.*\.mpg/i) ||
 									  url.match(/.*\.mpeg/i) ||
-									  url.match(/.*\.avi/i)) {
+									  url.match(/.*\.avi/i) ||
+									  url.match(/.*\.mp4/i) ||
+									  url.match(/.*\.m4v/i)) {
 								story.video = url;
 							}
 						}
@@ -731,7 +688,8 @@ var feeds = Class.create ({
 				}
 				
 				// Set the publishing date.
-				if(rssItems[i].getElementsByTagName("pubDate") && rssItems[i].getElementsByTagName("pubDate").item(0)) {
+				if(rssItems[i].getElementsByTagName("pubDate") &&
+				   rssItems[i].getElementsByTagName("pubDate").item(0)) {
 				   story.intDate = this.dateConverter.dateToInt(rssItems[i].getElementsByTagName("pubDate").item(0).textContent);
 				} else if (rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date") &&
 						   rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0)) {
@@ -739,8 +697,8 @@ var feeds = Class.create ({
 				}
 				
 				// Set the unique id.
-				if(rssItems[i].getElementsByTagName("guid") && rssItems[i].getElementsByTagName("guid").item(0) &&
-				   rssItems[i].getElementsByTagName("guid").item(0).textContent) {
+				if(rssItems[i].getElementsByTagName("guid") &&
+				   rssItems[i].getElementsByTagName("guid").item(0)) {
 					story.uid = rssItems[i].getElementsByTagName("guid").item(0).textContent;
 				} else {
 					story.uid = story.url;
@@ -925,7 +883,6 @@ var feeds = Class.create ({
 					FeedReader.postNotification(n);
 				}
 				
-				this.leaveActivity();
 				this.save();
 			}
 		} else {
@@ -935,7 +892,6 @@ var feeds = Class.create ({
 		this.interactiveUpdate = false;
 		this.notifyOfFeedUpdate(index, false);
 		this.updateAllItemsFeed();
-		this.leaveActivity();
 		
 		this.spooler.nextAction();
 	},
@@ -953,7 +909,6 @@ var feeds = Class.create ({
 		Mojo.Log.info("FEEDS> Full update requested");
 		this.fullUpdateInProgress = true;
 		this.updateInProgress = true;
-		this.enterActivity();
 		
 		for(i = 0; i < l; i++) { 	// Reset update flag first.
 			if(this.list[i].type != "allItems") {
