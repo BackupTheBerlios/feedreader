@@ -78,7 +78,8 @@
 	"Playing": "Wiedergabe läuft",
 	"Paused": "Wiedergabe pausiert",
 	"Stopped": "Wiedergabe gestoppt",
-	"Not connected": "Nicht verbunden",
+	"Seeking": "Suchlauf",
+	"Waiting for data": "Warte auf Daten",
 	"Media error": "Medienfehler",
 	"Stalled": "Verbindung unterbrochen",
 	"Story list": "Übersicht",
@@ -104,5 +105,6 @@
 	"Send via SMS/IM": "Als SMS/IM senden",
 	"Send via E-Mail": "Als E-Mail senden",
 	"Check out this story": "Schauen Sie sich diese Nachrichtenmeldung an",
-	"Check out this feed": "Schauen Sie sich diesen News Feed an"
+	"Check out this feed": "Schauen Sie sich diesen News Feed an",
+	"Updating feeds...": "Aktualisiere Feeds..."
 }

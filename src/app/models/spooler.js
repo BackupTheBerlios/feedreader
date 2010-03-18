@@ -146,6 +146,7 @@ var spooler = new Class.create({
 			} else {
 				this.actionRunning = false;
 				this.actionIdent = "";
+				FeedReader.removeUpdateDashboard();
 				this.leaveActivity();
 			}
 		} catch(e) {

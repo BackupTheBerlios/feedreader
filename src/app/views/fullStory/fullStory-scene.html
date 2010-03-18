@@ -1,8 +1,7 @@
 <div id="fullStoryScene">
-	<div id="audio-container" autoplay="false"></div>
 	<div id="scene-scrim" class="palm-scrim"></div>
     <div id="scene-main" class="hidden">
-		<div class="list-fade-top" x-mojo-scroll-fade="top"></div>
+		<div id="fade-top" class="list-fade-top" x-mojo-scroll-fade="top"></div>
 		<div class="palm-page-header">
 			<div class="palm-page-header-wrapper">
 				<div id="appIcon" class="header-icon icon"></div>                        
@@ -20,6 +19,7 @@
 					</div>
 					<div id="media-controls-wrapper">
 						<div id="media-progress">
+							<video id="media-video"></video>
 							<div id="media-progress" class="stream-buffer-bar" x-mojo-element="ProgressSlider"></div>
 							<div id="media-info">
 								<div id="media-currentPos">00:00</div>
@@ -33,6 +33,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="list-fade-bottom" x-mojo-scroll-fade="bottom"></div>
+		<div id="fade-bottom" class="list-fade-bottom" x-mojo-scroll-fade="bottom"></div>
 	</div>
 </div>

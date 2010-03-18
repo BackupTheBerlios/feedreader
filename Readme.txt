@@ -24,12 +24,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 Changelog
 =========
 
-Version 1.2.3 (Minor Feature Release)
+Version 1.2.3 (Feature Release)
 -------------------------------------
  * One can now send a feed's URL via E-Mail and SMS
  * One can now send a story via E-Mail and SMS
  * Fixed a problem, when dashboard it tapped while application
    is running
+ * basic video podcast support
+ * changed the media handling to conform webOS 1.4
+ * work-around the timeout for headless apps in webOS 1.4
 
 Version 1.2.2 (Maintenance Release)
 -----------------------------------

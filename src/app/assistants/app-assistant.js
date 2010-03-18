@@ -28,7 +28,7 @@ FeedReader = {
 	appName:			"FeedReader",
 	appAuthor:			"Timo Tegtmeier",
 	versionString:		"1.2.3",
-	versionInt:			4,
+	versionInt:			5,
 	copyrightYears:		"2009, 2010",
 
 	mainStageName: 		"FeedReaderStage",
@@ -107,12 +107,16 @@ FeedReader = {
 	 * 
 	 * @param {Object}		Scene assistant
 	 */
-	endSceneSetup: function(caller) {
+	endSceneSetup: function(caller, unhide) {
+		if(unhide === undefined) {
+			unhide = true;
+		}
+		
 		if(caller.controller) {
 			var scrimDiv = caller.controller.get("scene-scrim");
 			var sceneDiv = caller.controller.get("scene-main");
 			
-			if(sceneDiv) {
+			if(sceneDiv && unhide) {
 				sceneDiv.className = "";
 			}
 			if(scrimDiv) {
@@ -148,6 +152,54 @@ FeedReader = {
 			}, "dashboard");
 		} else {
 			dashboardStageController.delegateToSceneAssistant("updateDashboard", count);
+		}
+	},
+	
+	/**
+	 *
+	 * WebOS 1.4+ doesn't allow headless apps to run longer than 15 seconds
+	 * without an open stage. Therefore we use the dashboard stage to indicate
+	 * a scheduled update.
+	 *
+	 * Open the update dashboard.
+	 * 
+	 */
+	createUpdateDashboard: function() {
+		var appController = Mojo.Controller.getAppController();
+		var mainStageController = appController.getStageProxy(this.mainStageName);
+		var dashboardStageController = appController.getStageProxy(this.dashboardStageName);
+		
+		if(mainStageController) {
+			return;
+		}
+		
+		if(!dashboardStageController) {
+			appController.createStageWithCallback({
+				name: this.dashboardStageName,
+				lightweight: true
+			}, function(stageController) {
+				stageController.pushScene("dashboard", -1);
+			}, "dashboard");
+		} else {
+			dashboardStageController.delegateToSceneAssistant("updateDashboard", -1);
+		}
+	},
+	
+	/**
+	 *
+	 * WebOS 1.4+ doesn't allow headless apps to run longer than 15 seconds
+	 * without an open stage. Therefore we use the dashboard stage to indicate
+	 * a scheduled update.
+	 *
+	 * Close the update dashboard.
+	 *
+	 */
+	removeUpdateDashboard: function() {
+		var appController = Mojo.Controller.getAppController();
+		var dashboardStageController = appController.getStageProxy(this.dashboardStageName);
+		
+		if(dashboardStageController) {
+			dashboardStageController.delegateToSceneAssistant("updateDashboard", -2);
 		}
 	},
 	

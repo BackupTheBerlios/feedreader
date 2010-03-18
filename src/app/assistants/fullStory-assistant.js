@@ -30,8 +30,21 @@ function FullStoryAssistant(feeds, feedIndex, storyList, storyIndex) {
 	this.feed = this.feeds.list[this.origin.feedIndex];
 	this.story = this.feed.stories[this.origin.storyIndex];
 
-	this.doShowMedia = this.feeds.list[this.origin.feedIndex].showMedia;
+	this.doShowMedia = this.feeds.list[this.origin.feedIndex].showMedia &&
+					   ((this.story.audio.length > 0) ||
+					    (this.story.video.length > 0));
 	this.doShowPicture = this.feeds.list[this.origin.feedIndex].showPicture;
+	
+	if(this.story.video.length > 0) {
+		this.mediaURL = this.story.video;
+		this.mediaMode = 2;
+	} else if(this.story.audio.length > 0) {
+		this.mediaURL = this.story.audio;
+		this.mediaMode = 1;
+	} else {
+		this.mediaURL = "";
+		this.mediaMode = 0;
+	}
 	
 	this.commandModel = {};
 	this.setupComplete = false;
@@ -46,10 +59,11 @@ function FullStoryAssistant(feeds, feedIndex, storyList, storyIndex) {
 	this.seeking = false;
 
 	/* pre bind handlers */	
-	if(this.doShowMedia && (this.story.audio.length > 0)) {
-		this.mediaConnectedHandler = this.mediaConnected.bindAsEventListener(this);
-		this.mediaDisConnectedHandler = this.mediaDisConnected.bindAsEventListener(this);
+	if(this.doShowMedia) {
+		this.mediaCanPlayHandler = this.mediaCanPlay.bindAsEventListener(this);
 		this.mediaPlayingHandler = this.mediaPlaying.bindAsEventListener(this);
+		this.mediaSeekingHandler = this.mediaSeeking.bindAsEventListener(this);
+		this.mediaSeekedHandler = this.mediaSeeked.bindAsEventListener(this);
 		this.mediaStoppedHandler = this.mediaStopped.bindAsEventListener(this);
 		this.mediaErrorHandler = this.mediaError.bindAsEventListener(this);
 		this.mediaProgressHandler = this.mediaProgress.bind(this);
@@ -92,6 +106,22 @@ FullStoryAssistant.prototype.setup = function() {
 	}
 	
 	// Setup player controls.
+	if(this.mediaMode == 2) {
+		// Re-order the DOM nodes.
+		var wrapper = this.controller.get("media-controls-wrapper");
+		var content = this.controller.get("fullStoryScene");
+		var video = this.controller.get("media-video");
+		content.appendChild(video);
+		content.appendChild(wrapper);
+		wrapper.className = "video";
+		
+		// Delete the list fades.
+		var node = this.controller.get("fade-top");
+		node.parentNode.removeChild(node);
+		node = this.controller.get("fade-bottom");
+		node.parentNode.removeChild(node);
+	}
+	
 	// The controls should be intialized even if no audio is to be played.
 	this.controller.setupWidget("media-progress", this.mediaProgressAttribs = {
 		sliderProperty: "value",
@@ -109,35 +139,50 @@ FullStoryAssistant.prototype.setup = function() {
 	this.controller.listen("media-progress", Mojo.Event.sliderDragStart, this.startSeekingHandler);
 	this.controller.listen("media-progress", Mojo.Event.sliderDragEnd, this.stopSeekingHandler);
 
-	if(!this.doShowMedia || (this.story.audio.length <= 0)) {
+	// Setup command menu.
+	this.initCommandModel();
+    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel);
+
+	if(!this.doShowMedia) {
 		// Hide the player.
 		this.controller.get("media-controls-wrapper").className = "hidden";
-	} else {
-		// Setup audio.
-		this.media = AudioTag.extendElement(this.controller.get("audio-container"), this.controller);
-		this.media.palm.audioClass = Media.AudioClass.MEDIA;
-		this.media.addEventListener(Media.Event.X_PALM_CONNECT, this.mediaConnectedHandler, false);
-		this.media.addEventListener(Media.Event.X_PALM_DISCONNECT, this.mediaDisConnectedHandler, false);
-		this.media.addEventListener(Media.Event.PLAY, this.mediaPlayingHandler, false);
-		this.media.addEventListener(Media.Event.ABORT, this.mediaStoppedHandler, false);
-		this.media.addEventListener(Media.Event.ENDED, this.mediaStoppedHandler, false);
-		this.media.addEventListener(Media.Event.ERROR, this.mediaErrorHandler, false);
-		this.controller.get("media-playState").update($L("Not connected"));
+	} else {	
+		// Setup media player.
+		switch(this.mediaMode) {
+			case 1:
+				this.media = new Audio();
+				// Remove the video element.
+				var video = this.controller.get("media-video");
+				video.parentNode.removeChild(video);
+				break;
+			
+			case 2:			
+				this.media = this.controller.get("media-video");
+			    this.controller.listen("media-video", Mojo.Event.tap, this.storyTapHandler);
+				break;
+		}
+		this.media.autoPlay = false;
+		this.media.addEventListener("canplay", this.mediaCanPlayHandler, false);
+		this.media.addEventListener("play", this.mediaPlayingHandler, false);
+		this.media.addEventListener("seeking", this.mediaSeekingHandler, false);
+		this.media.addEventListener("seeked", this.mediaSeekedHandler, false);
+		this.media.addEventListener("abort", this.mediaStoppedHandler, false);
+		this.media.addEventListener("ended", this.mediaStoppedHandler, false);
+		this.media.addEventListener("error", this.mediaErrorHandler, false);
+		this.controller.get("media-playState").update($L("Waiting for data"));		
+		this.media.src = this.mediaURL;
+		this.media.load();
 	}
 
 	// Setup story view.
 	this.controller.get("story-title").className += " " + FeedReader.prefs.titleColor + (FeedReader.prefs.largeFont ? " large" : "");
 	this.controller.get("story-content").className += (FeedReader.prefs.largeFont ? " large" : "");
-	
-	// Setup command menu.
-	this.initCommandModel();
-    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel);
-	
+		
 	// Handle a story click.
     this.controller.listen("story-content", Mojo.Event.tap, this.storyTapHandler);
 	this.controller.listen("story-title", Mojo.Event.tap, this.storyTapHandler);
 
-	FeedReader.endSceneSetup(this, true);
+	FeedReader.endSceneSetup(this, this.mediaMode != 2);
 };
 
 FullStoryAssistant.prototype.activate = function(event) {
@@ -153,18 +198,18 @@ FullStoryAssistant.prototype.deactivate = function(event) {
 
 FullStoryAssistant.prototype.cleanup = function(event) {
 	if(this.media) {
-		this.media.removeEventListener(Media.Event.X_PALM_CONNECT, this.mediaConnectedHandler);
-		this.media.removeEventListener(Media.Event.X_PALM_DISCONNECT, this.mediaDisConnectedHandler);
-		this.media.removeEventListener(Media.Event.PLAY, this.mediaPlayingHandler);
-		this.media.removeEventListener(Media.Event.ABORT, this.mediaStoppedHandler);
-		this.media.removeEventListener(Media.Event.ENDED, this.mediaStoppedHandler);
-		this.media.removeEventListener(Media.Event.ERROR, this.mediaErrorHandler);
+		this.media.removeEventListener("canplay", this.mediaCanPlayHandler);
+		this.media.removeEventListener("play", this.mediaPlayingHandler);
+		this.media.removeEventListener("seeking", this.mediaSeekingHandler);
+		this.media.removeEventListener("seeked", this.mediaSeekedHandler);
+		this.media.removeEventListener("abort", this.mediaStoppedHandler);
+		this.media.removeEventListener("ended", this.mediaStoppedHandler);
+		this.media.removeEventListener("error", this.mediaErrorHandler);
 		try {
 			this.setMediaTimer(false);
 			this.media.src = "";
 			this.media.load();
 		} catch(e) {
-			// The emulator will land here...
 		}
 		delete this.media;
 	}
@@ -187,7 +232,7 @@ FullStoryAssistant.prototype.initCommandModel = function() {
 		}]
 	}];
 	
-	if(this.doShowMedia && (this.story.audio.length > 0)) {
+	if(this.doShowMedia) {
 		this.commandModel.items.push({
 			items :[{
 				icon: "send",
@@ -234,32 +279,39 @@ FullStoryAssistant.prototype.pictureLoaded = function() {
 	this.controller.modelChanged(this.pictureSpinnerModel);	
 };
 
-FullStoryAssistant.prototype.mediaConnected = function(event) {
-	Mojo.Log.info("media connected");
-
- 	this.mediaReady = true;
+FullStoryAssistant.prototype.mediaCanPlay = function(event) {
+	Mojo.Log.info("MEDIA> media can play");
+	this.mediaReady = true;
 	this.updateMediaUI();
-};
-
-FullStoryAssistant.prototype.mediaDisConnected = function(event) {
-	Mojo.Log.info("media disconnected");
-
-	this.mediaReady = false;
-	this.updateMediaUI();
-};
+}
 
 FullStoryAssistant.prototype.mediaPlaying = function(event) {
+	Mojo.Log.info("MEDIA> media playing");
 	this.mediaReady = true;
 	this.playState = 1;
 	this.updateMediaUI();
 };
 
+FullStoryAssistant.prototype.mediaSeeking = function(event) {
+	Mojo.Log.info("MEDIA> media seeking");
+	this.controller.get("media-playState").update($L("Seeking"));
+};
+
+
+FullStoryAssistant.prototype.mediaSeeked = function(event) {
+	Mojo.Log.info("MEDIA> media seeked");
+	this.updateMediaUI();
+};
+
 FullStoryAssistant.prototype.mediaStopped = function(event) {
+	Mojo.Log.info("MEDIA> media stopped");
 	this.playState = 0;
+	this.currentTime = 0;
 	this.updateMediaUI();
 };
 
 FullStoryAssistant.prototype.mediaError = function(event) {
+	Mojo.Log.info("MEDIA> media error");
 	this.playState = 0;
 	this.updateMediaUI();
 	this.controller.get("media-playState").update($L("Media error"));
@@ -267,12 +319,10 @@ FullStoryAssistant.prototype.mediaError = function(event) {
 
 FullStoryAssistant.prototype.mediaProgress = function() {
 	if(!this.seeking) {
-		if((this.media.mojo._media !== undefined) && (this.media.mojo._media !== null)) {
-			var buffered = this.media.mojo._media.buffered;
-			if ((buffered !== undefined) && (buffered !== null)) {
-				this.mediaProgressModel.progressStart = buffered.start(0) / this.media.duration;
-				this.mediaProgressModel.progressEnd = buffered.end(0) / this.media.duration;
-			}
+		var buffered = this.media.buffered;
+		if ((buffered !== undefined) && (buffered !== null)) {
+			this.mediaProgressModel.progressStart = buffered.start(0) / this.media.duration;
+			this.mediaProgressModel.progressEnd = buffered.end(0) / this.media.duration;
 		}
 		this.mediaProgressModel.value = Math.ceil((this.media.currentTime / this.media.duration) * 1000);
 		this.controller.modelChanged(this.mediaProgressModel);
@@ -286,36 +336,42 @@ FullStoryAssistant.prototype.togglePlay = function() {
 		return;
 	}
 	
-	switch(this.playState) {
-		case 0:		// stopped
-			this.media.src = this.story.audio;
-			// Override the state and menu temporarely, so the
-			// user does not click on click twice.
-			// Once the media is playing, this will be changed automatically.
-			this.controller.get("media-playState").update($L("Starting playback"));
-			this.mediaReady = false;
-			this.initCommandModel();
-			this.controller.modelChanged(this.commandModel);
-			break;
-		
-		case 1:		// playing
-			this.media.pause();
-			this.playState = 2;
-			this.updateMediaUI();
-			this.setMediaTimer(false);
-			break;
-		
-		case 2:		// paused
-			this.media.play();
-			break;
+	try {
+		switch(this.playState) {
+			case 0:		// stopped --> play
+				// Override the state and menu temporarely, so the
+				// user does not click on click twice.
+				// Once the media is playing, this will be changed automatically.
+				this.controller.get("media-playState").update($L("Starting playback"));
+				this.mediaReady = false;
+				this.initCommandModel();
+				this.controller.modelChanged(this.commandModel);
+				this.media.play();
+				break;
+			
+			case 1:		// playing --> pause
+				this.media.pause();
+				this.playState = 2;
+				this.updateMediaUI();
+				this.setMediaTimer(false);
+				break;
+			
+			case 2:		// paused --> play
+				this.media.play();
+				break;
+		}
+	} catch(e) {
+		Mojo.Log.logException(e);
 	}
 };
 
 FullStoryAssistant.prototype.stopMedia = function() {
 	if(this.playState !== 0) {
-		this.media.src = "";
-		this.media.load();
+		this.media.pause();
+		this.media.currentTime = 0;
+		this.playState = 0;
 		this.setMediaTimer(false);
+		this.updateMediaUI();
 	}
 };
 
@@ -347,18 +403,14 @@ FullStoryAssistant.prototype.setMediaTimer = function(active) {
 	if(active && (this.playState == 1)) {
 		if(!this.timer) {
 			this.timer = this.controller.window.setInterval(this.mediaProgressHandler, 200);
-			Mojo.Log.info("mediaUpdateTimer ENABLED");
 		}
 	} else if(this.timer) {
 		this.controller.window.clearInterval(this.timer);
 		this.timer = undefined;
-		Mojo.Log.info("mediaUpdateTimer DISABLED");
 	}	
 };
 
 FullStoryAssistant.prototype.updateMediaUI = function() {
-	var DisableStop = false;
-	
 	if(!this.mediaReady || (this.playState === 0)) {
 		this.mediaProgressModel.progress = 0;
 		this.mediaProgressModel.value = 0;
@@ -376,7 +428,6 @@ FullStoryAssistant.prototype.updateMediaUI = function() {
 			this.controller.get("media-duration").update(this.feeds.dateConverter.formatTimeString(0));
 			this.mediaProgressModel.progressStart = 0;
 			this.mediaProgressModel.progressEnd = 0;
-			DisableStop = true;
 			break;
 			
 		case 1:	// playing

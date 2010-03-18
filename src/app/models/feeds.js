@@ -529,7 +529,7 @@ var feeds = Class.create ({
 	parseAtom: function(index, transport) {
 		var container = [];
 		var enclosures = {};
-		var url = "", enc = 0;
+		var url = "", enc = 0, type = "";
 		var el = 0;
 		
 		var atomItems = transport.responseXML.getElementsByTagName("entry");
@@ -574,6 +574,11 @@ var feeds = Class.create ({
 						}
 						
 						url = enclosures.item(enc).getAttribute("href");
+						type = enclosures.item(enc).getAttribute("type");
+						if(!type) {
+							type = "";
+						}
+
 						if(url && (url.length > 0)) {						
 							if(url.match(/.*\.jpg/i) ||
 							   url.match(/.*\.jpeg/i) ||
@@ -581,11 +586,13 @@ var feeds = Class.create ({
 							   url.match(/.*\.png/i)) {
 								story.picture = url;
 							} else if(url.match(/.*\.mp3/i) ||
+									  (url.match(/.*\.mp4/i) && type.match(/audio\/.*/i)) ||
 									  url.match(/.*\.wav/i) ||
 									  url.match(/.*\.aac/i)) {
 								story.audio = url;
 							} else if(url.match(/.*\.mpg/i) ||
 									  url.match(/.*\.mpeg/i) ||
+									  (url.match(/.*\.mp4/i) && type.match(/video\/.*/i)) ||
 									  url.match(/.*\.avi/i)) {
 								story.video = url;
 							}
@@ -626,7 +633,7 @@ var feeds = Class.create ({
 	parseRSS: function(index, transport) {
 		var container = [];
 		var enclosures = {};
-		var url = "", enc = 0;
+		var url = "", type = "", enc = 0;
 		var el = 0;
 		
 		var rssItems = transport.responseXML.getElementsByTagName("item");
@@ -666,6 +673,10 @@ var feeds = Class.create ({
 					el = enclosures.length;
 					for(enc = 0; enc < el; enc++) {
 						url = enclosures.item(enc).getAttribute("url");
+						type = enclosures.item(enc).getAttribute("type");
+						if(!type) {
+							type = "";
+						}
 						if(url && (url.length > 0)) {
 							if(url.match(/.*\.jpg/i) ||
 							   url.match(/.*\.jpeg/i) ||
@@ -673,13 +684,14 @@ var feeds = Class.create ({
 							   url.match(/.*\.png/i)) {
 								story.picture = url;
 							} else if(url.match(/.*\.mp3/i) ||
+									  (url.match(/.*\.mp4/i) && type.match(/audio\/.*/i)) ||
 									  url.match(/.*\.wav/i) ||
 									  url.match(/.*\.aac/i)) {
 								story.audio = url;
 							} else if(url.match(/.*\.mpg/i) ||
 									  url.match(/.*\.mpeg/i) ||
+									  (url.match(/.*\.mp4/i) && type.match(/video\/.*/i)) ||
 									  url.match(/.*\.avi/i) ||
-									  url.match(/.*\.mp4/i) ||
 									  url.match(/.*\.m4v/i)) {
 								story.video = url;
 							}
@@ -905,6 +917,8 @@ var feeds = Class.create ({
 		if(l < 2) {
 			return;
 		}
+		
+		FeedReader.createUpdateDashboard();
 		
 		Mojo.Log.info("FEEDS> Full update requested");
 		this.fullUpdateInProgress = true;

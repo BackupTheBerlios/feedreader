@@ -22,11 +22,12 @@
 
 function DashboardAssistant(count) {
     this.count = count;
+	this.inUpdate = false;
     this.launchAppHandler = this.launchApp.bindAsEventListener(this);
 }
 
 DashboardAssistant.prototype.setup = function() {
-    this.renderDashboard();
+    this.updateDashboard(this.count);
     this.controller.listen("dashboardinfo", Mojo.Event.tap, this.launchAppHandler);
 };
 
@@ -35,19 +36,31 @@ DashboardAssistant.prototype.cleanup = function() {
 };
 
 DashboardAssistant.prototype.renderDashboard = function() {
+	var info = {};
 	var t = new Template($L("#{num} new stories"));
 
-    var info = {
-		message: t.evaluate({ num: this.count }),
-		count: this.count
-	};
+	if(!this.inUpdate) {
+		info = {
+			message: t.evaluate({ num: this.count }),
+			count: this.count
+		};
+	} else {
+		info = {
+			message: $L("Updating feeds..."),
+			count: ""
+		}
+	}
 	
     var infoElement = this.controller.get("dashboardinfo").update(Mojo.View.render({
 		object: info,
 		template: "dashboard/dashboard-item"
 	}));
 	
-	this.controller.stageController.indicateNewContent(true);
+	if(this.count > 0) {
+		this.controller.stageController.indicateNewContent(true);
+	} else if(!this.inUpdate) {
+		this.controller.window.close();
+	}
 };
 
 DashboardAssistant.prototype.launchApp = function() {
@@ -56,6 +69,13 @@ DashboardAssistant.prototype.launchApp = function() {
 };
 
 DashboardAssistant.prototype.updateDashboard = function(count) {
-    this.count = count;
+	if(count == -1) {
+		this.inUpdate = true;
+	} else if(count == -2) {
+		this.inUpdate = false;
+	} else {
+		this.count = count;
+	}
+	
     this.renderDashboard();
 };
