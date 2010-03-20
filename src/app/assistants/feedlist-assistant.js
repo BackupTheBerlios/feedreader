@@ -123,7 +123,7 @@ FeedlistAssistant.prototype.activate = function(event) {
 
 	FeedReader.isActive = true;
 	var appController = Mojo.Controller.getAppController();
-	var dashboardStageController = appController.getStageProxy(this.dashboardStageName);
+	var dashboardStageController = appController.getStageProxy(FeedReader.dashboardStageName);
 	
 	if(dashboardStageController) {
 		dashboardStageController.delegateToSceneAssistant("closeDashboard");
