@@ -298,7 +298,9 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 			case "bannerPressed":
 				if (cardStageController) {
 					cardStageController.setWindowOrientation("free");
-				    cardStageController.popScenesTo("feedlist");
+					if(cardStageController.topScene().sceneName != "feedlist") {
+						cardStageController.popScenesTo("feedlist");
+					}
 					cardStageController.activate();
 				} else {
 	                this.controller.createStageWithCallback({

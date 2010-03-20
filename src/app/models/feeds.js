@@ -881,7 +881,7 @@ var feeds = Class.create ({
 			}
 			
 			if(updateComplete) {
-				Mojo.Log.info("FEEDS> Full Update completed.");
+				Mojo.Log.info("FEEDS> Full Update completed; isActive =", FeedReader.isActive, "; notifications =", FeedReader.prefs.notificationEnabled);
 				this.fullUpdateInProgress = false;
 				
 				// Post a banner notification if applicable.
@@ -891,7 +891,8 @@ var feeds = Class.create ({
 						if(this.list[i].type != "allItems") {
 							n += this.list[i].numNew;
 						}
-					}			
+					}
+					Mojo.Log.info("FEEDS> About to post notification for new items; count =", n);
 					FeedReader.postNotification(n);
 				}
 				

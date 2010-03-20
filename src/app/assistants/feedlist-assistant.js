@@ -26,10 +26,19 @@ function FeedlistAssistant(feeds) {
 	this.filter = "";
 	this.feedListWidget = null;
 	this.commandModel = {};
+	
+	this.activateWindowHandler = this.activateWindow.bindAsEventListener(this);
+	this.deactivateWindowHandler = this.deactivateWindow.bindAsEventListener(this);
 }
 
 FeedlistAssistant.prototype.setup = function() {
 	FeedReader.beginSceneSetup(this, true);
+
+	// Setup activation/deactivation handlers.
+	this.controller.listen(this.controller.stageController.document,
+						   Mojo.Event.stageActivate, this.activateWindowHandler);
+	this.controller.listen(this.controller.stageController.document,
+						   Mojo.Event.stageDeactivate, this.deactivateWindowHandler);
 
 	// Setup the feed list.
 	this.feedListWidget = this.controller.get("feedList");
@@ -114,14 +123,7 @@ FeedlistAssistant.prototype.getLargeFont = function(property, model) {
 	return { large: FeedReader.prefs.largeFont ? "large" : "" };
 };
 
-FeedlistAssistant.prototype.activate = function(event) {
-	if(this.setupComplete) {
-		this.initCommandModel();
-		this.controller.modelChanged(this.commandModel);
-		this.updateFeedModel();
-	}
-
-	FeedReader.isActive = true;
+FeedlistAssistant.prototype.closeDashboard = function() {
 	var appController = Mojo.Controller.getAppController();
 	var dashboardStageController = appController.getStageProxy(FeedReader.dashboardStageName);
 	
@@ -130,9 +132,31 @@ FeedlistAssistant.prototype.activate = function(event) {
 	}
 };
 
+FeedlistAssistant.prototype.activate = function(event) {
+	if(this.setupComplete) {
+		this.initCommandModel();
+		this.controller.modelChanged(this.commandModel);
+		this.updateFeedModel();
+	}
+
+	FeedReader.isActive = true;
+	this.closeDashboard();
+};
+
 FeedlistAssistant.prototype.deactivate = function(event) {
 	FeedReader.isActive = false;
 };
+
+FeedlistAssistant.prototype.activateWindow = function(event) {
+	if(this.controller.stageController.topScene().sceneName == "feedlist") {
+		FeedReader.isActive = true;
+		this.closeDashboard();
+	}
+};
+ 
+FeedlistAssistant.prototype.deactivateWindow = function(event) {
+	FeedReader.isActive = false;
+};   
 
 FeedlistAssistant.prototype.cleanup = function(event) {
 };
