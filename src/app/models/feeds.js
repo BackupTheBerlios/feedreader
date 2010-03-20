@@ -757,7 +757,7 @@ var feeds = Class.create ({
 	updateFeedSuccess: function(index, transport) {
 		try {
 			if((transport.responseXML === null) && (transport.responseText !== null)) {
-				Mojo.Log.info("FEEDS> Manually converting feed info to xml", transport.responseText);
+				Mojo.Log.info("FEEDS> Manually converting feed info to xml");
 				transport.responseXML = new DOMParser().parseFromString(transport.responseText, "text/xml");
 			}
 			
@@ -856,14 +856,14 @@ var feeds = Class.create ({
 	
 			Mojo.Log.warn("FEEDS> Feed", index, "is defect; disabling feed; error:", error);
 			if (this.interactiveUpdate) {
+				this.list[index].enabled = false;
+				this.list[index].type = "unknown";
 				var errorMsg = new Template($L("The Feed '#{title}' could not be retrieved. The server responded: #{err}. The Feed was automatically disabled."));
 				FeedReader.showError(errorMsg, {title: this.list[index].url, err: error});
 			}
 		} catch(e) {
 			Mojo.Log.logException(e);
 		}
-		
-		this.list[index].enabled = false;
 		this.finishUpdate(index);
 	},
 	
@@ -917,9 +917,7 @@ var feeds = Class.create ({
 		if(l < 2) {
 			return;
 		}
-		
-		FeedReader.createUpdateDashboard();
-		
+				
 		Mojo.Log.info("FEEDS> Full update requested");
 		this.fullUpdateInProgress = true;
 		this.updateInProgress = true;

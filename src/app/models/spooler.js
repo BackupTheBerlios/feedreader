@@ -62,6 +62,7 @@ var spooler = new Class.create({
 			});
 			
 			if((this.list.length == 1) && !this.actionRunning)  {
+				FeedReader.createUpdateDashboard();
 				this.nextAction();
 			}
 		} catch(e) {
@@ -75,7 +76,7 @@ var spooler = new Class.create({
 	 */
 	enterActivity: function(duration) {
 		if(duration === undefined) {
-			duration = 15000;
+			duration = 60000;
 		}
 		var request = new Mojo.Service.Request("palm://com.palm.power/com/palm/power", {
 			method: "activityStart",

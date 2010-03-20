@@ -79,6 +79,8 @@ function FullStoryAssistant(feeds, feedIndex, storyList, storyIndex) {
 
 FullStoryAssistant.prototype.setup = function() {
 	FeedReader.beginSceneSetup(this, true);
+	
+	var video = {};
 
 	this.controller.setDefaultTransition(Mojo.Transition.defaultTransition);
 
@@ -110,7 +112,7 @@ FullStoryAssistant.prototype.setup = function() {
 		// Re-order the DOM nodes.
 		var wrapper = this.controller.get("media-controls-wrapper");
 		var content = this.controller.get("fullStoryScene");
-		var video = this.controller.get("media-video");
+		video = this.controller.get("media-video");
 		content.appendChild(video);
 		content.appendChild(wrapper);
 		wrapper.className = "video";
@@ -152,7 +154,7 @@ FullStoryAssistant.prototype.setup = function() {
 			case 1:
 				this.media = new Audio();
 				// Remove the video element.
-				var video = this.controller.get("media-video");
+				video = this.controller.get("media-video");
 				video.parentNode.removeChild(video);
 				break;
 			
@@ -283,7 +285,7 @@ FullStoryAssistant.prototype.mediaCanPlay = function(event) {
 	Mojo.Log.info("MEDIA> media can play");
 	this.mediaReady = true;
 	this.updateMediaUI();
-}
+};
 
 FullStoryAssistant.prototype.mediaPlaying = function(event) {
 	Mojo.Log.info("MEDIA> media playing");

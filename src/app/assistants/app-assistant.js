@@ -139,7 +139,6 @@ FeedReader = {
 		if(!count) {	// nothing new or undefined.
 			return;
 		}
-
 		var appController = Mojo.Controller.getAppController();
 		var dashboardStageController = appController.getStageProxy(this.dashboardStageName);
 		

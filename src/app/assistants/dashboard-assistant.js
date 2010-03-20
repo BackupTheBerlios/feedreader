@@ -48,7 +48,7 @@ DashboardAssistant.prototype.renderDashboard = function() {
 		info = {
 			message: $L("Updating feeds..."),
 			count: ""
-		}
+		};
 	}
 	
     var infoElement = this.controller.get("dashboardinfo").update(Mojo.View.render({
@@ -59,13 +59,13 @@ DashboardAssistant.prototype.renderDashboard = function() {
 	if(this.count > 0) {
 		this.controller.stageController.indicateNewContent(true);
 	} else if(!this.inUpdate) {
-		this.controller.window.close();
+		this.closeDashboard();
 	}
 };
 
 DashboardAssistant.prototype.launchApp = function() {
     Mojo.Controller.getAppController().assistant.handleLaunch({ action: "bannerPressed" });
-    this.controller.window.close();
+    this.closeDashboard();
 };
 
 DashboardAssistant.prototype.updateDashboard = function(count) {
@@ -78,4 +78,8 @@ DashboardAssistant.prototype.updateDashboard = function(count) {
 	}
 	
     this.renderDashboard();
+};
+
+DashboardAssistant.prototype.closeDashboard = function() {
+	this.controller.window.close();
 };

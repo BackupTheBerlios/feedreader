@@ -30,12 +30,7 @@ function FeedlistAssistant(feeds) {
 
 FeedlistAssistant.prototype.setup = function() {
 	FeedReader.beginSceneSetup(this, true);
-	
-	// Setup activation/de-activation handlers.
-	var stageDocument = this.controller.stageController.document;
-	Mojo.Event.listen(stageDocument, Mojo.Event.stageActivate, this.activateWindow.bindAsEventListener(this));
-	Mojo.Event.listen(stageDocument, Mojo.Event.stageDeactivate, this.deactivateWindow.bindAsEventListener(this));
-	
+
 	// Setup the feed list.
 	this.feedListWidget = this.controller.get("feedList");
 	this.controller.setupWidget("feedList", {
@@ -119,23 +114,24 @@ FeedlistAssistant.prototype.getLargeFont = function(property, model) {
 	return { large: FeedReader.prefs.largeFont ? "large" : "" };
 };
 
-FeedlistAssistant.prototype.activateWindow = function(event) {
-	FeedReader.isActive = true;
-};
-
-FeedlistAssistant.prototype.deactivateWindow = function(event) {
-	FeedReader.isActive = false;
-};
-
 FeedlistAssistant.prototype.activate = function(event) {
 	if(this.setupComplete) {
 		this.initCommandModel();
 		this.controller.modelChanged(this.commandModel);
 		this.updateFeedModel();
 	}
+
+	FeedReader.isActive = true;
+	var appController = Mojo.Controller.getAppController();
+	var dashboardStageController = appController.getStageProxy(this.dashboardStageName);
+	
+	if(dashboardStageController) {
+		dashboardStageController.delegateToSceneAssistant("closeDashboard");
+	}
 };
 
 FeedlistAssistant.prototype.deactivate = function(event) {
+	FeedReader.isActive = false;
 };
 
 FeedlistAssistant.prototype.cleanup = function(event) {
