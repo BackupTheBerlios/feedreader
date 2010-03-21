@@ -152,6 +152,9 @@ FeedlistAssistant.prototype.activateWindow = function(event) {
 		FeedReader.isActive = true;
 		this.closeDashboard();
 	}
+	Mojo.Controller.getAppController().sendToNotificationChain({
+		type: "app-activate"
+	});		
 };
  
 FeedlistAssistant.prototype.deactivateWindow = function(event) {

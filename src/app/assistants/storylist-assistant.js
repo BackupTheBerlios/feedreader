@@ -276,9 +276,7 @@ StorylistAssistant.prototype.showStory = function(event) {
 	
 	switch((parseInt(this.feeds.list[origin.feedIndex].viewMode, 10) & 0xFFFF)) {
 		case 0:
-			if (!this.feeds.list[origin.feedIndex].stories[origin.storyIndex].isRead) {
-				this.feeds.markStoryRead(origin.feedIndex, origin.storyIndex);
-			}
+			this.feeds.markStoryRead(origin.feedIndex, origin.storyIndex);
 			this.controller.serviceRequest("palm://com.palm.applicationManager", {
 				method: "open",
 				parameters: {
@@ -405,7 +403,9 @@ StorylistAssistant.prototype.considerForNotification = function(params){
 				this.controller.modelChanged(this.commandModel);
 				break;
 			
-			case "jslint-dummy":
+			case "app-activate":
+				Mojo.Log.info("STORYLIST> App re-activated; updating display");
+				this.activate();
 				break;
 		}
 	}

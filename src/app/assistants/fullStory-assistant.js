@@ -506,7 +506,22 @@ FullStoryAssistant.prototype.handleCommand = function(event) {
 					]
 				});
 				break;
-
 		}
 	}
+};
+
+FullStoryAssistant.prototype.considerForNotification = function(params){
+	if(params) {
+		switch(params.type) {
+			case "app-activate":
+				Mojo.Log.info("FULLSTORY> App re-activated; updating display");
+				this.activate();
+				break;
+			
+			case "jslint-dummy":
+				break;
+		}
+	}
+	
+	return params;
 };
