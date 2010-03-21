@@ -1016,10 +1016,9 @@ var feeds = Class.create ({
 				if(!this.list[index].stories[story].isRead) {
 					this.list[index].stories[story].isRead = true;
 					this.list[index].numUnRead--;
-					this.updateAllItemsFeed();
+					this.markSeen(index);
 				}
 			}
-			this.save();
 		}
 	},
 	
