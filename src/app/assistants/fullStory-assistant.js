@@ -189,7 +189,8 @@ FullStoryAssistant.prototype.activate = function(event) {
 	}
 
 	var unReadCount = this.feeds.list[this.feedIndex].numUnRead - (this.story.isRead ? 0 : 1);
-	this.controller.get("new-count").update(this.feeds.list[this.feedIndex].numNew);
+	var newCount = this.feeds.list[this.feedIndex].numNew - (this.story.isNew ? 1 : 0);
+	this.controller.get("new-count").update(newCount);
 	this.controller.get("unread-count").update(unReadCount);
 };
 
