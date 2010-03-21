@@ -153,5 +153,15 @@ var spooler = new Class.create({
 		} catch(e) {
 			Mojo.Log.logException(e);
 		}
-	}
+	},
+	
+	aboutToClose: function() {
+		try {
+			if(this.actionRunning) {
+				FeedReader.createUpdateDashboard(true);
+			}
+		} catch(e) {
+			Mojo.Log.logException(e);
+		}
+	},
 });

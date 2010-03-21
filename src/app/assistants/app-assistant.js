@@ -163,12 +163,12 @@ FeedReader = {
 	 * Open the update dashboard.
 	 * 
 	 */
-	createUpdateDashboard: function() {
+	createUpdateDashboard: function(force) {
 		var appController = Mojo.Controller.getAppController();
 		var mainStageController = appController.getStageProxy(this.mainStageName);
 		var dashboardStageController = appController.getStageProxy(this.dashboardStageName);
 		
-		if(mainStageController) {
+		if(mainStageController && (force === undefined)) {
 			return;
 		}
 		

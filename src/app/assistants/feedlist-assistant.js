@@ -159,6 +159,8 @@ FeedlistAssistant.prototype.deactivateWindow = function(event) {
 };   
 
 FeedlistAssistant.prototype.cleanup = function(event) {
+	Mojo.Log.info("FEEDLIST> About to close app");
+	this.feeds.spooler.aboutToClose();
 };
 
 FeedlistAssistant.prototype.updateFeedModel = function() {
