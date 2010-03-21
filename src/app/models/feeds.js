@@ -440,6 +440,7 @@ var feeds = Class.create ({
 	            	onFailure: this.updateFeedFailed.bind(this, index)});
 		} else {
 			Mojo.Log.info("FEEDS> No internet connection available");
+			this.spooler.nextAction();
 		}
 	},
 	
