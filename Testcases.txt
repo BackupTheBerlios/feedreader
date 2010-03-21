@@ -1,0 +1,21 @@
+AUTO UPDATE:
+1:	updates arrive if app is closed
+2:	updates arrive if app is open
+
+PREFS:
+1:	Leaving the prefs instantly applies all settings in
+	every scene
+2:	All settings work as intended
+
+NOTIFICATIONS:
+1:	app open and maximized, feedlist active			Dashboard should not appear
+2:	app open and minimized, feedlist active			Dashboard should appear
+3:	app open and maximized, other scene active		Dashboard should appear
+4:	app open and minimized, other scene active		Dashboard should appear
+5:	app closed						Dashboard should appear
+6:	Tapping on dashboard leads to feedlist scene
+7:	app closed, opening the app makes the dashboard
+	disappear
+8:	app open, dashboard open, opening feedlist scene
+	makes the dashboard disappear
+
