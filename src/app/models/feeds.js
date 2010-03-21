@@ -1017,8 +1017,12 @@ var feeds = Class.create ({
 				if(!this.list[index].stories[story].isRead) {
 					this.list[index].stories[story].isRead = true;
 					this.list[index].numUnRead--;
-					this.markSeen(index);
 				}
+				if(this.list[index].stories[story].isNew) {
+					this.list[index].stories[story].isNew = false;
+					this.list[index].numNew--;
+				}
+				this.updateAllItemsFeed();
 			}
 		}
 	},
