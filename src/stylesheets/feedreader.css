@@ -244,11 +244,55 @@ img {
 	border-width: 0px 12px 0px 12px;
 }
 
-.feed-newitem span {
+.header-feed-unreaditem {
+	display: inline;
+	position: relative;
+ 	float: right;
+	top: 2px;
+	right: -10px; 
+	font-weight: bold;
+ 	line-height: 23px;
+ 	height: 24px;
+ 	min-width: 22px;
+ 	text-align: center;
+ 	vertical-align: baseline;
+ 	-webkit-border-image: url(../images/lists/icon-unreaditem.png) 0 10 0 10 stretch stretch;
+ 	-webkit-box-sizing: border-box;
+	border-width: 0px 10px 0px 10px;
+	z-index: 100000;
+}
+
+.header-feed-newitem {
+	display: inline;
+	position: relative;
+ 	float: left;
+	left: -7px;
+	top: 2px;
+	font-weight: bold;
+ 	line-height: 23px;
+ 	height: 24px;
+ 	min-width: 22px;
+ 	text-align: center;
+ 	vertical-align: baseline;
+ 	-webkit-border-image: url(../images/lists/icon-newitem.png) 0 10 0 10 stretch stretch;
+ 	-webkit-box-sizing: border-box;
+	border-width: 0px 10px 0px 10px;
+	z-index: 5000;
+}
+
+.feed-newitem span,
+.header-feed-newitem span,
+.header-feed-unreaditem span {
  	position: relative;
  	top: -3px;
  	margin: 0 -6px;
  	font-size: 16px;
+}
+
+.header-feed-newitem span,
+.header-feed-unreaditem span {
+	margin: 0 -4px;
+ 	font-size: 12px;
 }
 
 .feed-count {

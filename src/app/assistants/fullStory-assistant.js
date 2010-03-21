@@ -193,6 +193,10 @@ FullStoryAssistant.prototype.activate = function(event) {
 		this.controller.modelChanged(this.commandModel);
 		this.controller.modelChanged(this.pictureSpinnerModel);
 	}
+
+	var unReadCount = this.feeds.list[this.feedIndex].numUnRead - (this.story.isRead ? 0 : 1);
+	this.controller.get("new-count").update(this.feeds.list[this.feedIndex].numNew);
+	this.controller.get("unread-count").update(unReadCount);
 };
 
 FullStoryAssistant.prototype.deactivate = function(event) {

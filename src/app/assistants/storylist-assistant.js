@@ -133,6 +133,8 @@ StorylistAssistant.prototype.activate = function(event) {
 		this.controller.modelChanged(this.commandModel);
 	}
 	this.wasActiveBefore = true;
+	this.controller.get("new-count").update(this.feed.numNew);
+	this.controller.get("unread-count").update(this.feed.numUnRead);
 };
 
 StorylistAssistant.prototype.deactivate = function(event) {
