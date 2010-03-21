@@ -116,12 +116,6 @@ FullStoryAssistant.prototype.setup = function() {
 		content.appendChild(video);
 		content.appendChild(wrapper);
 		wrapper.className = "video";
-		
-		// Delete the list fades.
-		var node = this.controller.get("fade-top");
-		node.parentNode.removeChild(node);
-		node = this.controller.get("fade-bottom");
-		node.parentNode.removeChild(node);
 	}
 	
 	// The controls should be intialized even if no audio is to be played.
