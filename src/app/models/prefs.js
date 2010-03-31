@@ -22,6 +22,7 @@
 
 var prefs = Class.create({
 	updateInterval:	30,
+	updateOnStart: true,
 	notificationEnabled: true,
 	wakingEnabled: false,
 	titleColor: "red",
@@ -55,6 +56,9 @@ var prefs = Class.create({
 			if(settings.version > 3) {
 				this.leftHanded = settings.leftHanded;
 			}
+			if(settings.version > 5) {
+				this.updateOnStart = settings.updateOnStart;
+			}
 			
 			if(settings.version < FeedReader.versionInt) {
 				this.showChanges = true;
@@ -67,6 +71,7 @@ var prefs = Class.create({
 		this.cookie.put({
 			version: 				FeedReader.versionInt,
 			updateInterval: 		this.updateInterval,
+			updateOnStart:			this.updateOnStart,
 			notificationEnabled: 	this.notificationEnabled,
 			wakingEnabled: 			this.wakingEnabled,
 			summaryLength: 			this.summaryLength,

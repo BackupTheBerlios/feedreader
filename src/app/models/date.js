@@ -10,6 +10,7 @@ var dateConverter = Class.create({
 	},
 	
 	convertRFC2822: function(dateString) {
+		// Wed Mar 31 12:00 EDT 2010
 		var d = new Date();
 		var parts = dateString.split(" ");
 		
@@ -31,9 +32,17 @@ var dateConverter = Class.create({
 		d.setYear(parseInt(parts[5], 10));
 		
 		parts = parts[3].split(":");
-		d.setHours(parts[0]);
-		d.setMinutes(parts[1]);
-		d.setSeconds(parts[2]);
+		if(parts[0]) {
+			d.setHours(parts[0]);
+		}
+		if(parts[1]) {
+			d.setMinutes(parts[1]);
+		}
+		if(parts[2]) {
+			d.setSeconds(parts[2]);
+		} else {
+			d.setSeconds(0);
+		}
 		
 		return d.getTime();
 	},
@@ -110,12 +119,13 @@ var dateConverter = Class.create({
 		var intDate;
 		
 		try {
+			dateString = FeedReader.stripCDATA(dateString);
 			if(!dateString) {
 				var d = new Date();
 				intDate = d.getTime();
 			} else if(dateString.match(/\D{3},\s\d{1,2}\s\D{3}\s\d{2,4}\s\d{1,2}:\d{1,2}:\d*/)) {
 				intDate = this.convertRFC822(dateString);
-			} else if(dateString.match(/\D{3}\s\D{3}\s\d{2}\s\d{2}:\d{2}:\d{2}\s[a-zA-Z\+\-0-9]{1,5}\s\d{3}/)) {
+			} else if(dateString.match(/\D{3}\s\D{3}\s\d{2}\s\d{2}:\d{2}(:\d{2}){0,1}\s[a-zA-Z\+\-0-9]{1,5}\s\d{3,4}/)) {
 				intDate = this.convertRFC2822(dateString);
 			} else if(dateString.match(/\d{1,2}\.\d{1,2}.\d{4}/)) {
 				intDate = this.convertSimpleDate(dateString);

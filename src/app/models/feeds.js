@@ -137,7 +137,9 @@ var feeds = Class.create ({
 			
 		this.cookie.put({ version: FeedReader.versionInt });
 		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-loaded" });
-        this.update();
+		if(FeedReader.prefs.updateOnStart) {
+			this.update();
+		}
 	},
 	
 	/** @private
@@ -455,7 +457,8 @@ var feeds = Class.create ({
 		Mojo.Log.warn("FEEDS> Unable to determine connection status");
 		this.spooler.nextAction();
 	},
-	
+
+
 	/** @private
 	 * 
 	 * Reformat a story's summary.
@@ -464,7 +467,7 @@ var feeds = Class.create ({
 	 * @return {String}				reformatted summary
 	 */
 	reformatSummary: function(summary) {
-        summary = summary.replace(/(<([^>]+)>)/ig, "");
+		summary = FeedReader.stripCDATA(summary);
         summary = summary.replace(/(\{([^\}]+)\})/ig, "");
         summary = summary.replace(/digg_url .../, "");
 		summary = summary.replace(/\[i\](.*)\[\/i\]/ig, '<span class="italic">$1</span>');

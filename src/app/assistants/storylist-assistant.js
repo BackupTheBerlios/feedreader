@@ -194,10 +194,11 @@ StorylistAssistant.prototype.getSummary = function(property, model) {
 			}
 		}
 		
-		if(property.length > (parseInt(FeedReader.prefs.summaryLength, 10) + 10)) {
-			return { shortSummary: property.slice(0, parseInt(FeedReader.prefs.summaryLength, 10) - 1) + '...' };
+		var baseSummary = FeedReader.stripHTML(property);
+		if(baseSummary.length > (parseInt(FeedReader.prefs.summaryLength, 10) + 10)) {
+			return { shortSummary: baseSummary.slice(0, parseInt(FeedReader.prefs.summaryLength, 10) - 1) + '...' };
 		} else {
-			return { shortSummary: property };
+			return { shortSummary: baseSummary };
 		}
 	}	
 };

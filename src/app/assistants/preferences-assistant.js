@@ -31,17 +31,20 @@ PreferencesAssistant.prototype.setup = function() {
 	this.controller.get("prefs-appearance-group-title").update($L("Summary appearance"));
 	
 	this.controller.get("notify-title").update($L("Show notification"));
+	this.controller.get("updateOnStart-title").update($L("Update on start"));
 	this.controller.get("wake-device-title").update($L("Wake device"));
 	this.controller.get("left-handed-title").update($L("Navigation on left side"));
 	this.controller.get("largeFont-title").update($L("Use large fonts"));
 
 	this.controller.setupWidget("leftHanded",
     							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
-         						this.leftHandedModel = {value: this.prefs.leftHanded, disabled: false});	
-
+         						this.leftHandedModel = {value: this.prefs.leftHanded, disabled: false});
 	this.controller.setupWidget("notificationEnabled",
     							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
          						this.notificationModel = {value: this.prefs.notificationEnabled, disabled: false});
+	this.controller.setupWidget("updateOnStart",
+    							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
+         						this.updateOnStartModel = {value: this.prefs.updateOnStart, disabled: false});
 	this.controller.setupWidget("wakingEnabled",
     							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
          						this.wakingModel = {value: this.prefs.wakingEnabled, disabled: false});
@@ -95,6 +98,7 @@ PreferencesAssistant.prototype.cleanup = function(event) {
 	this.prefs.notificationEnabled = this.notificationModel.value;
 	this.prefs.wakingEnabled = this.wakingModel.value;
 	this.prefs.updateInterval = this.updateIntervalModel.value;
+	this.prefs.updateOnStart = this.updateOnStartModel.value;
 	this.prefs.titleColor = this.titleColorModel.value;
 	this.prefs.summaryLength = this.summaryLengthModel.value;
 	this.prefs.largeFont = this.largeFontModel.value;

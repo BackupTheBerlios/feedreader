@@ -27,8 +27,8 @@
 FeedReader = {
 	appName:			"FeedReader",
 	appAuthor:			"Timo Tegtmeier",
-	versionString:		"1.2.3",
-	versionInt:			5,
+	versionString:		"1.3.0",
+	versionInt:			6,
 	copyrightYears:		"2009, 2010",
 
 	mainStageName: 		"FeedReaderStage",
@@ -238,6 +238,26 @@ FeedReader = {
 				}
 			}
 		});
+	},
+	
+	/**
+	 * Strip CDATA tags from text.
+	 * 
+	 * @param {String} text			string containing CDATA tags
+	 * @return {String}				string without CDATA tags
+	 */
+	stripCDATA: function(text) {
+		return text.replace(/<\!\[CDATA\[(.*)\]\]/ig, "$1");		
+	},
+	
+	/**
+	 * Strip HTML tags from text.
+	 * 
+	 * @param {String} text			string containing HTML tags
+	 * @return {String}				string without HTML tags
+	 */
+	stripHTML: function(text) {
+        return text.replace(/(<([^>]+)>)/ig, "");		
 	}
 };
 

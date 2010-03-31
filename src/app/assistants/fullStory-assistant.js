@@ -87,6 +87,8 @@ FullStoryAssistant.prototype.setup = function() {
 	this.controller.get("appIcon").className += " " + this.feeds.getFeedHeaderIcon(this.feeds.list[this.feedIndex]);
 	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feeds.list[this.origin.feedIndex]));
 	this.controller.get("story-date").update(this.feeds.dateConverter.dateToLocalTime(this.story.intDate));
+	
+	this.controller.get("followLink-title").update($L("Web link"));
 
 	if(this.feeds.showCaption(this.feeds.list[this.origin.feedIndex], true)) {
 		this.controller.get("story-title").update(this.story.title);
@@ -175,8 +177,7 @@ FullStoryAssistant.prototype.setup = function() {
 	this.controller.get("story-content").className += (FeedReader.prefs.largeFont ? " large" : "");
 		
 	// Handle a story click.
-    this.controller.listen("story-content", Mojo.Event.tap, this.storyTapHandler);
-	this.controller.listen("story-title", Mojo.Event.tap, this.storyTapHandler);
+    this.controller.listen("followLink", Mojo.Event.tap, this.storyTapHandler);
 
 	FeedReader.endSceneSetup(this, this.mediaMode != 2);
 };
