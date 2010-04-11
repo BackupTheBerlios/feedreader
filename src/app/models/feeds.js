@@ -36,7 +36,6 @@ var feeds = Class.create ({
 	updateInProgress: false,		// true if any kind of update is in progress
 	interactiveUpdate: false,		// true if the update is interactive
 	changingFeed: false,			// true if a feed is changed
-	modified: false,				// used by save() to indicate changes
 	properties: {
 		migratingFrom: 1			// db version loaded
 	},
