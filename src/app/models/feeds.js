@@ -631,7 +631,7 @@ var feeds = Class.create ({
 				   rssItems[i].getElementsByTagName("guid").item(0)) {
 					story.uid = rssItems[i].getElementsByTagName("guid").item(0).textContent;
 				} else {
-					story.uid = story.url;
+					story.uid = story.title;
 				}
 				
 				container.push(story);
