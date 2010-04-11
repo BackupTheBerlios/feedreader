@@ -111,13 +111,14 @@ var feeds = Class.create ({
         if (Object.toJSON(data) == "{}" || data === null) { 
 			this.list = [ {
 				type: 			"allItems",
-				url: 			"",
+				url: 			[],
 				title: 			"",
 				enabled: 		true,
 				numUnRead: 		0,
 				numNew: 		0,
 				viewMode: 		0,
 				sortMode:		0,
+				allowHTML:		1,
 				updated: 		true,
 				spinning: 		false,
 				preventDelete: 	true,
@@ -131,6 +132,9 @@ var feeds = Class.create ({
 			}
 			if(this.properties.migratingFrom < 4) {
 				data = this.migrateV3(data);
+			}
+			if(this.properties.migratingFrom < 6) {
+				data = this.migrateV5(data);
 			}
             this.list = data;
 		}
@@ -254,6 +258,32 @@ var feeds = Class.create ({
 		
 		return data;		
 	},
+	
+	/** @private
+	 *
+	 * Migrate a v5 database to a v6 database.
+	 */
+	migrateV5: function(data) {
+		var j = 0;
+		var oldURL = "";
+		for(var i = 0; i < data.length; i++) {
+			if(data[i].type == "allItems") {
+				continue;
+			}
+			
+			data[i].allowHTML = 1;
+			for(j = 0; j < data[i].stories.length; j++) {
+				oldURL = data[i].stories[j].url;
+				data[i].stories[j].url = [];
+				data[i].stories[j].url.push({
+					title:	"Weblink",
+					href:	oldURL
+				});
+			}
+		}
+		
+		return data;		
+	},
 
 	/** @private
 	 *
@@ -305,14 +335,17 @@ var feeds = Class.create ({
 	/**
 	 * Add a new feed.
 	 * 
-	 * @param {String} title
-	 * @param {String} url
+	 * @param {String} 	title
+	 * @param {String} 	url
 	 * @param {Boolean} enabled
-	 * @param {Int} viewMode
+	 * @param {Int} 	viewMode
 	 * @param {Boolean} showPicture
 	 * @param {Boolean} showMedia
+	 * @param {Int}		sortMode
+	 * @param {Boolean} allowHTML
 	 */
-	addFeed: function(title, url, enabled, viewMode, showPicture, showMedia) {
+	addFeed: function(title, url, enabled, viewMode, showPicture,
+					  showMedia, sortMode, allowHTML) {
 		this.interactiveUpdate = true;
 		if (title === "") {
 			title = "RSS Feed";
@@ -326,21 +359,22 @@ var feeds = Class.create ({
 		}
 			
 		this.list.push({
-			title: title,
-			url: url,
-			type: "rss",
-			uid: Math.uuid(15),
-			numUnRead: 0,
-			numNew: 0,
-			enabled: enabled,
-			viewMode: viewMode,
-			showPicture: showPicture,
-			showMedia: showMedia,
-			sortMode: 0,
-			preventDelete: false,
-			updated: true,
-			spinning: false,
-			stories: []
+			title:			title,
+			url:			url,
+			type:			"rss",
+			uid:			Math.uuid(15),
+			numUnRead:		0,
+			numNew:			0,
+			enabled:		enabled,
+			viewMode:		viewMode,
+			showPicture:	showPicture,
+			showMedia:		showMedia,
+			sortMode: 		sortMode,
+			allowHTML: 		allowHTML,
+			preventDelete:	false,
+			updated:		true,
+			spinning:		false,
+			stories:		[]
 		});
 		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-newfeed" });
 		this.interactiveUpdate = true;
@@ -350,23 +384,28 @@ var feeds = Class.create ({
 	/**
 	 * Update the properties of a feed.
 	 * 
-	 * @param {int} index
-	 * @param {String} title
-	 * @param {String} url
+	 * @param {Int} 	index
+	 * @param {String} 	title
+	 * @param {String} 	url
 	 * @param {Boolean} enabled
-	 * @param {Int} viewMode
+	 * @param {Int} 	viewMode
 	 * @param {Boolean} showPicture
 	 * @param {Boolean} showMedia
+	 * @param {Int}		sortMode
+	 * @param {Boolean} allowHTML
 	 */
-	editFeed: function(index, title, url, enabled, viewMode, showPicture, showMedia) {
+	editFeed: function(index, title, url, enabled, viewMode, showPicture,
+					   showMedia, sortMode, allowHTML) {
 		if((index >= 0) && (index < this.list.length)) {
 			this.interactiveUpdate = true;
 			this.list[index].title = title;
 			this.list[index].url = url;
 			this.list[index].enabled = enabled;
 			this.list[index].viewMode = viewMode;
+			this.list[index].sortMode = sortMode;
 			this.list[index].showPicture = showPicture;
-			this.list[index].showMedia = showMedia;			
+			this.list[index].showMedia = showMedia;
+			this.list[index].allowHTML = allowHTML;
 			Mojo.Controller.getAppController().sendToNotificationChain({
 				type: "feedlist-editedfeed",
 				feedIndex: index
@@ -385,9 +424,9 @@ var feeds = Class.create ({
 	notifyOfFeedUpdate: function(index, updating) {
 		this.list[index].spinning = updating;
 		Mojo.Controller.getAppController().sendToNotificationChain({
-			type: "feed-update",
+			type: 		"feed-update",
 			inProgress: updating,
-			feedIndex: index
+			feedIndex:	index
 		});		
 	},
 	
@@ -533,7 +572,7 @@ var feeds = Class.create ({
 	parseAtom: function(index, transport) {
 		var container = [];
 		var enclosures = {};
-		var url = "", enc = 0, type = "";
+		var url = "", enc = 0, type = "", title = "";
 		var el = 0;
 		
 		var atomItems = transport.responseXML.getElementsByTagName("entry");
@@ -544,7 +583,7 @@ var feeds = Class.create ({
 					index:		0,
 					title:		"",
 					summary:	"",
-					url:		"",
+					url:		[],
 					picture:	"",
 					audio:		"",
 					video:		"",
@@ -561,10 +600,6 @@ var feeds = Class.create ({
 				if (atomItems[i].getElementsByTagName("summary") &&
 					atomItems[i].getElementsByTagName("summary").item(0)) {
 					story.summary = this.reformatSummary(atomItems[i].getElementsByTagName("summary").item(0).textContent);
-				}				
-				if(atomItems[i].getElementsByTagName("link") &&
-				   atomItems[i].getElementsByTagName("link").item(0)) {
-					story.url = atomItems[i].getElementsByTagName("link").item(0).getAttribute("href");
 				}
 				
 				// Analyse the enclosures.
@@ -576,15 +611,22 @@ var feeds = Class.create ({
 						if(!rel || !rel.match(/enclosure/)) {
 							continue;
 						}
-						
 						url = enclosures.item(enc).getAttribute("href");
 						type = enclosures.item(enc).getAttribute("type");
 						if(!type) {
 							type = "";
 						}
-
-						if(url && (url.length > 0)) {						
-							if(url.match(/.*\.jpg/i) ||
+						if(url && (url.length > 0)) {
+							if(url.match(/.*\.htm(l){0,1}/i)){
+								title = enclosures.item(enc).getAttribute("title");
+								if((title === null) || (title.length == 0)) {
+									title = "Weblink";
+								}
+								story.url.push({
+									title:	title,
+									href:	url
+								});
+							} else if(url.match(/.*\.jpg/i) ||
 							   url.match(/.*\.jpeg/i) ||
 							   url.match(/.*\.gif/i) ||
 							   url.match(/.*\.png/i)) {
@@ -614,8 +656,7 @@ var feeds = Class.create ({
 				if (atomItems[i].getElementsByTagName("id") &&
 					atomItems[i].getElementsByTagName("id").item(0)) {
 					story.uid = atomItems[i].getElementsByTagName("id").item(0).textContent;
-				}
-				else {
+				} else {
 					story.uid = story.url;
 				}
 				
@@ -648,7 +689,7 @@ var feeds = Class.create ({
 					index: 		0,
 					title: 		"",
 					summary:	"",
-					url:		"",
+					url:		[],
 					picture:	"",
 					audio:		"",
 					video:		"",
@@ -668,7 +709,10 @@ var feeds = Class.create ({
 				}
 				if(rssItems[i].getElementsByTagName("link") &&
 				   rssItems[i].getElementsByTagName("link").item(0)) {
-					story.url = rssItems[i].getElementsByTagName("link").item(0).textContent;
+					story.url.push({
+						title:	"Weblink",
+						href:	rssItems[i].getElementsByTagName("link").item(0).textContent
+					});
 				}
 				
 				// Analyse the enclosures.

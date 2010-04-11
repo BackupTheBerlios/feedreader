@@ -74,6 +74,7 @@ function FullStoryAssistant(feeds, feedIndex, storyList, storyIndex) {
 	this.sendChooseHandler = this.sendChoose.bind(this);
 	
 	this.storyTapHandler = this.storyTap.bindAsEventListener(this);
+	this.openURLHandler = this.openURL.bind(this);
 	this.pictureLoadedHandler = this.pictureLoaded.bind(this);
 }
 
@@ -88,14 +89,22 @@ FullStoryAssistant.prototype.setup = function() {
 	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feeds.list[this.origin.feedIndex]));
 	this.controller.get("story-date").update(this.feeds.dateConverter.dateToLocalTime(this.story.intDate));
 	
-	this.controller.get("followLink-title").update($L("Web link"));
+	if(this.story.url.length > 1) {
+		this.controller.get("followLink-title").update($L("Web links"));
+	} else {
+		this.controller.get("followLink-title").update($L("Open Web link"));		
+	}
 
 	if(this.feeds.showCaption(this.feeds.list[this.origin.feedIndex], true)) {
 		this.controller.get("story-title").update(this.story.title);
 	}
 	
 	if(this.feeds.showSummary(this.feeds.list[this.origin.feedIndex], true)) {
-		this.controller.get("story-content").update(this.story.summary);
+		if(this.feed.allowHTML) {
+			this.controller.get("story-content").update(this.story.summary);
+		} else {
+			this.controller.get("story-content").update(FeedReader.stripHTML(this.story.summary));
+		}
 	}
 	
 	// Setup the story's picture.
@@ -447,15 +456,35 @@ FullStoryAssistant.prototype.updateMediaUI = function() {
 };
 
 FullStoryAssistant.prototype.storyTap = function(event) {
+	if(this.story.url.length == 1) {
+		this.openURL(this.story.url[0].href);
+	} else if(this.story.url.length > 1) {
+		var subMenu = {
+			onChoose:  this.openURLHandler,
+			placeNear: event.target,
+			items: []
+		};
+		for(var i = 0; i < this.story.url.length; i++) {
+			subMenu.items.push({
+				label:		this.story.url[i].title,
+				command:	this.story.url[i].href
+			});
+		}
+		
+		this.controller.popupSubmenu(subMenu);
+	}
+};
+
+FullStoryAssistant.prototype.openURL = function(url) {
 	this.controller.serviceRequest("palm://com.palm.applicationManager", {
 		method: "open",
 		parameters: {
 			id: "com.palm.app.browser",
 			params: {
-				target: this.story.url
+				target: url
 			}
 		}
-	});
+	});	
 };
 
 FullStoryAssistant.prototype.sendChoose = function(command) {

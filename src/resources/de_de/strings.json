@@ -64,8 +64,6 @@
 	"Show unread items": "Ungelesene Nachrichten anzeigen",
 	"Show new items": "Neue Nachrichten anzeigen",
 	"Aggregation of all feeds": "Zusammenfassung aller Feeds",
-	"Aggregation of all unread items": "Zusammenfassung aller ungelesenen Nachrichten",
-	"Aggregation of all new items": "Zusammenfassung aller neuen Nachrichten",
 	"Basic settings": "Grundeinstellungen",
 	"View settings": "Anzeigeeinstellungen",
 	"Show full stories": "Vollansicht",
@@ -108,6 +106,8 @@
 	"Check out this feed": "Schauen Sie sich diesen News Feed an",
 	"Updating feeds...": "Aktualisiere Feeds...",
 	"Update on start": "Beim Start aktualisieren",
-	"Resources": "Resourcen",
-	"Web link": "Web-Link"
+	"Web links": "Web-Links",
+	"Open Web link": "Web-Link öffnen",
+	"Filter": "Filter",
+	"Allow HTML": "HTML erlauben"
 }

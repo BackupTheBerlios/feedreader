@@ -32,6 +32,8 @@ function AddfeedAssistant(feeds, index) {
 		this.viewMode = 1;
 		this.showMedia = true;
 		this.showPicture = true;
+		this.sortMode = 0;
+		this.allowHTML = true;
 	} else {
 		this.feed = feeds.list[index];
 		this.index = index;
@@ -41,6 +43,8 @@ function AddfeedAssistant(feeds, index) {
 		this.viewMode = this.feed.viewMode;
 		this.showMedia = this.feed.showMedia;
 		this.showPicture = this.feed.showPicture;
+		this.sortMode = this.feed.sortMode;
+		this.allowHTML = this.feed.allowHTML;
 	}
 }
 
@@ -63,6 +67,18 @@ AddfeedAssistant.prototype.setup = function() {
         ]},
 		this.listModeModel = {
 			value: (this.viewMode >> 16) & 0xFF,
+			disabled: false
+		});
+
+	this.controller.setupWidget("sortMode", {
+		label: $L("Filter"),
+        choices: [
+            { label: $L("Show all items"),		value: 0 },
+            { label: $L("Show unread items"),	value: 1 },
+			{ label: $L("Show new items"),		value: 2 }
+        ]},
+		this.sortModeModel = {
+			value: this.sortMode,
 			disabled: false
 		});
 	
@@ -115,6 +131,15 @@ AddfeedAssistant.prototype.setup = function() {
 		value: this.showMedia,
 		disabled: false
 	});
+
+	this.controller.setupWidget("allowHTML", {
+		property: "value",
+		trueLabel: $L("Yes"),
+		falseLabel: $L("No")
+	}, this.allowHTMLModel = {
+		value: this.allowHTML,
+		disabled: false
+	});
     
 	this.okButton = this.controller.get("okButton");
 	this.controller.setupWidget("okButton", { type: Mojo.Widget.activityButton },
@@ -149,6 +174,7 @@ AddfeedAssistant.prototype.setup = function() {
 	
 	this.controller.get("showMedia-title").update($L("Show media"));
 	this.controller.get("showPicture-title").update($L("Show picture"));
+	this.controller.get("allowHTML-title").update($L("Allow HTML"));
 	
 	this.controller.get("fullStory-title").update($L("Show full stories"));
 };
@@ -170,6 +196,8 @@ AddfeedAssistant.prototype.updateFeed = function() {
 	var viewMode = (detailMode << 24) | (listMode << 16) | (fullStoryMode & 0xFF);
 	var showPicture = this.showPictureModel.value;
 	var showMedia = this.showMediaModel.value;
+	var sortMode = this.sortModeModel.value;
+	var allowHTML = this.allowHTMLModel.value;
 	
     if(/^[a-z]{1,5}:/.test(url) === false) {
         url = url.replace(/^\/{1,2}/, "");                                
@@ -187,12 +215,12 @@ AddfeedAssistant.prototype.updateFeed = function() {
 
 	if(this.feed !== null) {
 		FeedReader.feeds.editFeed(this.index, title, url, enabled, viewMode,
-								  showPicture, showMedia);
+								  showPicture, showMedia, sortMode, allowHTML);
 		this.okButton.mojo.deactivate();
 		this.controller.stageController.popScene();
 	} else {
 		FeedReader.feeds.addFeed(title, url, enabled, viewMode,
-								 showPicture, showMedia);
+								 showPicture, showMedia, sortMode, allowHTML);
 		this.okButton.mojo.deactivate();
 		this.controller.stageController.popScene();
 	}

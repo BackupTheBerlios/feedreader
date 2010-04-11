@@ -277,16 +277,24 @@ StorylistAssistant.prototype.showStory = function(event) {
 	
 	switch((parseInt(this.feeds.list[origin.feedIndex].viewMode, 10) & 0xFFFF)) {
 		case 0:
-			this.feeds.markStoryRead(origin.feedIndex, origin.storyIndex);
-			this.controller.serviceRequest("palm://com.palm.applicationManager", {
-				method: "open",
-				parameters: {
-					id: "com.palm.app.browser",
-					params: {
-						target: this.feeds.list[origin.feedIndex].stories[origin.storyIndex].url
-					}
+			var story = this.feeds.list[origin.feedIndex].stories[origin.storyIndex];
+			if(story.url.length == 1) {
+				this.openURL(origin.feedIndex, origin.storyIndex, story.url[0].href);
+			} else if(story.url.length > 1) {
+				var subMenu = {
+					onChoose:  this.openURL.bind(this, origin.feedIndex, origin.storyIndex),
+					placeNear: event.originalEvent.target,
+					items: []
+				};
+				for(var i = 0; i < story.url.length; i++) {
+					subMenu.items.push({
+						label:		story.url[i].title,
+						command:	story.url[i].href
+					});
 				}
-			});
+				
+				this.controller.popupSubmenu(subMenu);
+			}
 			break;
 			
 		case 1:
@@ -295,6 +303,19 @@ StorylistAssistant.prototype.showStory = function(event) {
 													  this.storyList, storyIndex);
 			break;
 	}
+};
+
+StorylistAssistant.prototype.openURL = function(feedIndex, storyIndex, url) {
+	this.feeds.markStoryRead(feedIndex, storyIndex);
+	this.controller.serviceRequest("palm://com.palm.applicationManager", {
+		method: "open",
+		parameters: {
+			id: "com.palm.app.browser",
+			params: {
+				target: url
+			}
+		}
+	});	
 };
 
 StorylistAssistant.prototype.sortModeTap = function(event) {
