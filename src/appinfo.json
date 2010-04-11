@@ -24,6 +24,10 @@
 			"type": "web",
 			"label": "Homepage",
 			"url": "http://www.tegi-stuff.de/doku.php?id=feedreader"
+		}, {
+			"type": "scene",
+			"label": "Contributors",
+			"sceneName": "contributors"
 		}]
 	}
 }
