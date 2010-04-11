@@ -1,0 +1,29 @@
+{
+	"id": "com.tegi-stuff.app.feedreader",
+	"version": "1.3.0",
+	"type": "web",
+	"vendor": "Timo Tegtmeier",
+	"vendorurl": "http://www.tegi-stuff.de",
+	"main": "../../index.html",
+	"title": "FeedReader",
+	"icon":"../../icon.png",
+	"miniicon":"../../smalliconbw.png",
+	"smallicon":"smallicon.png",
+	"splashicon": "../../splashicon.png",
+	"splashBackground": "../../images/splash.png",
+    "noWindow" : "true",
+    "noDeprecatedStyles": "true",
+    "theme": "light",
+	"copyright": "&copy; 2009, 2010 Timo Tegtmeier",
+	"support": {
+		"email": {
+			"address": "general@tegi-stuff.de",
+			"subject": "FeedReader"
+		},
+		"resources": [{
+			"type": "web",
+			"label": "Homepage",
+			"url": "http://www.tegi-stuff.de/doku.php?id=feedreader"
+		}]
+	}
+}
