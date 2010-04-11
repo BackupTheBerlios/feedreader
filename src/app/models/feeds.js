@@ -221,7 +221,7 @@ var feeds = Class.create ({
 		});
 		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-newfeed" });
 		this.changingFeed = true;
-		this.updateFeed(this.list.length - 1);
+		this.enqueueUpdate(this.list.length - 1);
 	},
 	
 	/**
@@ -253,7 +253,7 @@ var feeds = Class.create ({
 				type: "feedlist-editedfeed",
 				feedIndex: index
 			});
-			this.updateFeed(index);
+			this.enqueueUpdate(index);
 		}
 	},
 	
@@ -478,11 +478,9 @@ var feeds = Class.create ({
 					el = enclosures.length;
 					for(enc = 0; enc < el; enc++) {
 						rel = enclosures.item(enc).getAttribute("rel");
-						if(!rel || !rel.match(/enclosure/)) {
-							continue;
-						}
 						url = enclosures.item(enc).getAttribute("href");
 						type = enclosures.item(enc).getAttribute("type");
+
 						if(!type) {
 							type = "";
 						}
@@ -496,21 +494,23 @@ var feeds = Class.create ({
 									title:	title,
 									href:	url
 								});
-							} else if(url.match(/.*\.jpg/i) ||
-							   url.match(/.*\.jpeg/i) ||
-							   url.match(/.*\.gif/i) ||
-							   url.match(/.*\.png/i)) {
-								story.picture = url;
-							} else if(url.match(/.*\.mp3/i) ||
-									  (url.match(/.*\.mp4/i) && type.match(/audio\/.*/i)) ||
-									  url.match(/.*\.wav/i) ||
-									  url.match(/.*\.aac/i)) {
-								story.audio = url;
-							} else if(url.match(/.*\.mpg/i) ||
-									  url.match(/.*\.mpeg/i) ||
-									  (url.match(/.*\.mp4/i) && type.match(/video\/.*/i)) ||
-									  url.match(/.*\.avi/i)) {
-								story.video = url;
+							} else if(rel && rel.match(/enclosure/i)) {
+								if(url.match(/.*\.jpg/i) ||
+								   url.match(/.*\.jpeg/i) ||
+								   url.match(/.*\.gif/i) ||
+								   url.match(/.*\.png/i)) {
+									story.picture = url;
+								} else if(url.match(/.*\.mp3/i) ||
+										  (url.match(/.*\.mp4/i) && type.match(/audio\/.*/i)) ||
+										  url.match(/.*\.wav/i) ||
+										  url.match(/.*\.aac/i)) {
+									story.audio = url;
+								} else if(url.match(/.*\.mpg/i) ||
+										  url.match(/.*\.mpeg/i) ||
+										  (url.match(/.*\.mp4/i) && type.match(/video\/.*/i)) ||
+										   url.match(/.*\.avi/i)) {
+									story.video = url;
+								}
 							}
 						}
 					}

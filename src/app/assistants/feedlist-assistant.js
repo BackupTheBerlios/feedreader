@@ -258,9 +258,7 @@ FeedlistAssistant.prototype.popupHandler = function(command) {
 			
 		case "feed-update":
 			this.feeds.interactiveUpdate = true;
-			if(this.feeds.list[this.popupIndex].type == "allItems") {
-				this.feeds.enqueueUpdate(this.popupIndex);
-			}
+			this.feeds.enqueueUpdate(this.popupIndex);
 			break;
 			
 		case "feed-show":
