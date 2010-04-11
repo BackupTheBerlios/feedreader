@@ -259,9 +259,7 @@ FeedlistAssistant.prototype.popupHandler = function(command) {
 		case "feed-update":
 			this.feeds.interactiveUpdate = true;
 			if(this.feeds.list[this.popupIndex].type == "allItems") {
-				this.feeds.update();
-			} else {
-				this.feeds.updateFeed(this.popupIndex);
+				this.feeds.enqueueUpdate(this.popupIndex);
 			}
 			break;
 			
@@ -281,7 +279,7 @@ FeedlistAssistant.prototype.handleCommand = function(event) {
             switch(event.command) {
                 case "do-fullUpdate":
 					this.feeds.interactiveUpdate = true;
-					this.feeds.update();
+					this.feeds.enqueueUpdate(-1);
                 	break;
 				
 				case "jslint-dummy":

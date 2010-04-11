@@ -358,7 +358,7 @@ StorylistAssistant.prototype.sortModeChoose = function(command) {
 	}
 	
 	this.refreshList();
-	this.feeds.save();
+	this.feeds.enqueueSave();
 };
 
 StorylistAssistant.prototype.sendChoose = function(command) {
@@ -394,11 +394,7 @@ StorylistAssistant.prototype.handleCommand = function(event) {
 			case "do-feedUpdate":
 				event.stopPropagation();
 				this.feeds.interactiveUpdate = true;
-				if(this.feed.type == "allItems") {
-					this.feeds.update();	
-				} else {
-					this.feeds.updateFeed(this.feedIndex);
-				}
+				this.feeds.enqueueUpdate(this.feedIndex);	
 				break;
 			
 			case "do-send":

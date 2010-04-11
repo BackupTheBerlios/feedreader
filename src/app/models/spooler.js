@@ -24,12 +24,25 @@ var spooler = new Class.create({
 	list: [],
 	actionRunning: false,
 	actionIdent: "",
+	updateCounter: 0,
 	
 	initialize: function() {
 		this.setActivitySuccessHandler = this.setActivitySuccess.bind(this);
 		this.setActivityFailedHandler = this.setActivityFailed.bind(this);
 		this.leaveActivitySuccessHandler = this.leaveActivitySuccess.bind(this);
 		this.leaveActivityFailedHandler = this.leaveActivityFailed.bind(this);
+	},
+	
+	beginUpdate: function() {
+		this.updateCounter++;
+	},
+	
+	endUpdate: function() {
+		this.updateCounter--;
+		if(!this.actionRunning && (this.list.length >= 1)) {
+			FeedReader.createUpdateDashboard();
+			this.nextAction();
+		}
 	},
 	
 	addAction: function(action, identifier, unique) {
@@ -61,7 +74,7 @@ var spooler = new Class.create({
 				ident: identifier
 			});
 			
-			if((this.list.length == 1) && !this.actionRunning)  {
+			if((this.updateCounter === 0) && (this.list.length == 1) && !this.actionRunning)  {
 				FeedReader.createUpdateDashboard();
 				this.nextAction();
 			}
@@ -163,5 +176,5 @@ var spooler = new Class.create({
 		} catch(e) {
 			Mojo.Log.logException(e);
 		}
-	},
+	}
 });

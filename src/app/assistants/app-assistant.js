@@ -324,7 +324,7 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 			case "feedUpdate":
 				Mojo.Log.info("scheduled feed update");
 				FeedReader.prefs.setTimer();
-				FeedReader.feeds.update();
+				FeedReader.feeds.enqueueUpdate(-1);
 				break;
         
 			case "bannerPressed":
@@ -400,7 +400,7 @@ AppAssistant.prototype.handleCommand = function(event) {
                 	break;
             
                 case "do-feedUpdate":
-                    FeedReader.feeds.update();
+                    FeedReader.feeds.enqueueUpdate(-1);
                 	break;
             }
         }

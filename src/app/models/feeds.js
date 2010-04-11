@@ -145,12 +145,12 @@ var feeds = Class.create ({
 	/**
 	 * Save the feed list to a depot.
 	 */
-	save: function() {
+	enqueueSave: function() {
 		this.spooler.addAction(this.doSaveHandler, "feedmodel.save", true);
 	},
 	
 	/** @private
-	 *
+	 * Save the feed list.
 	 */
 	doSave: function() {
 		this.db.add("feedList", this.list,
@@ -278,17 +278,44 @@ var feeds = Class.create ({
 	 * 
 	 * @param {int} index		index of the feed to update.
 	 */
-	updateFeed: function(index) {
-		// Tell the current scene that we're about to update a feed.
-		if ((index >= 0) && (index < this.list.length)) {
-			if((this.list[index].type == "allItems") || !this.list[index].enabled) {
+	enqueueUpdate: function(index) {
+		if ((index >= 0) && (index < this.list.length) && (this.list[index].type != "allItems")) {
+			if(!this.list[index].enabled) {
 				this.list[index].updated = true;
 				this.list[index].spinning = false;
 				return;
 			}
 			
+			this.updateInProgress = true;
+			this.spooler.beginUpdate();
 			this.spooler.addAction(this.doUpdateFeed.bind(this, index), "feedmodel.updateFeed");
-		}		
+		} else {
+			var l = this.list.length;
+			if(l < 2) {
+				return;
+			}
+			
+			Mojo.Log.info("FEEDS> Full update requested");
+			this.fullUpdateInProgress = true;
+			this.updateInProgress = true;
+			
+			this.spooler.beginUpdate();
+			for(var i = 0; i < l; i++) {
+				if((this.list[i].type == "allItems") || !this.list[i].enabled) {
+					this.list[i].updated = true;
+					this.list[i].spinning = false;
+				}
+				
+				if(this.list[i].type != "allItems") {
+					this.list[i].updated = false;
+					this.spooler.addAction(this.doUpdateFeed.bind(this, i), "feedmodel.updateFeed");
+				}
+			}
+		}
+		
+		this.enqueueAllItemsUpdate();
+		this.enqueueSave();
+		this.spooler.endUpdate();		
 	},
 	
 	/** @private
@@ -314,7 +341,7 @@ var feeds = Class.create ({
 	getConnStatusSuccess: function(index, result) {
 		if(result.isInternetConnectionAvailable) {
 			this.updateInProgress = true;
-			this.list[index].updated  = false;			
+			this.list[index].updated  = false;
 			this.notifyOfFeedUpdate(index, true);
 			var request = new Ajax.Request(this.list[index].url, {
 	    	        method: "get",
@@ -462,7 +489,7 @@ var feeds = Class.create ({
 						if(url && (url.length > 0)) {
 							if(url.match(/.*\.htm(l){0,1}/i)){
 								title = enclosures.item(enc).getAttribute("title");
-								if((title === null) || (title.length == 0)) {
+								if((title === null) || (title.length === 0)) {
 									title = "Weblink";
 								}
 								story.url.push({
@@ -787,55 +814,34 @@ var feeds = Class.create ({
 					FeedReader.postNotification(n);
 				}
 				
-				this.save();
 				this.interactiveUpdate = false;
 			}
 		} else {
 			this.interactiveUpdate = false;
-			this.save();
 		}
 		this.updateInProgress = this.fullUpdateInProgress;
 		this.changingFeed = false;
 		this.notifyOfFeedUpdate(index, false);
-		this.updateAllItemsFeed();
 		
 		this.spooler.nextAction();
 	},
 
 	/**
-	 * Updates all feeds.
-	 */
-	update: function() {
-		var i, l = this.list.length;
-		
-		if(l < 2) {
-			return;
-		}
-		
-		Mojo.Log.info("FEEDS> Full update requested");
-		this.fullUpdateInProgress = true;
-		this.updateInProgress = true;
-		
-		for(i = 0; i < l; i++) { 	// Reset update flag first.
-			if(this.list[i].type != "allItems") {
-				this.list[i].updated = false;
-			}
-		}
-		for(i = 0; i < l; i++) {
-			this.updateFeed(i);
-		}
-	},
-	
-	/**
-	 * Update the pseudo feeds.
+	 * Enqueue updating the all items feed.
 	 *
 	 * @param {Boolean}	disableNotification		If set, omit the notification
 	 */
-	updateAllItemsFeed: function(disableNotification) {
-		if(this.updateInProgress) {
-			return;
-		}
-		
+	enqueueAllItemsUpdate: function(disableNotification) {
+		this.spooler.addAction(this.updateAllItemsFeed.bind(this, disableNotification),
+							   "feeds-updateAllItemsFeed");
+	},
+
+	/** @private
+	 * Update the all items feed.
+	 *
+	 * @param {Boolean}	disableNotification		If set, omit the notification
+	 */
+	updateAllItemsFeed: function(disableNotification) {	
 		var allItemsIndex = -1;
 		var numUnRead = 0, numNew = 0;
 		var l = this.list.length;
@@ -859,6 +865,8 @@ var feeds = Class.create ({
 		} else {
 			Mojo.Log.error("FEEDS> Something went wrong: no allItems feed found!");
 		}
+		
+		this.spooler.nextAction();
 	},
 	
 	/**
@@ -882,7 +890,6 @@ var feeds = Class.create ({
 					}
 					this.notifyOfFeedUpdate(i, false);
 				}
-				this.updateAllItemsFeed();
 			} else {
 				this.list[index].numUnRead = 0;
 				this.list[index].numNew = 0;
@@ -890,10 +897,12 @@ var feeds = Class.create ({
 					this.list[index].stories[i].isRead = true;
 					this.list[index].stories[i].isNew = false;
 				}
-				this.updateAllItemsFeed();
 				this.notifyOfFeedUpdate(index, false);
 			}
-			this.save();
+			this.spooler.beginUpdate();
+			this.enqueueAllItemsUpdate();
+			this.enqueueSave();
+			this.spooler.endUpdate();
 		}
 	},
 	
@@ -914,7 +923,11 @@ var feeds = Class.create ({
 					this.list[index].stories[story].isNew = false;
 					this.list[index].numNew--;
 				}
-				this.updateAllItemsFeed();
+				
+				this.spooler.beginUpdate();
+				this.enqueueAllItemsUpdate();
+				this.enqueueSave();
+				this.spooler.endUpdate();
 			}
 		}
 	},
@@ -938,16 +951,18 @@ var feeds = Class.create ({
 					}
 					this.notifyOfFeedUpdate(i, false);
 				}
-				this.updateAllItemsFeed();
 			} else {
 				this.list[index].numUnRead = this.list[index].stories.length;
 				for(i = 0; i < this.list[index].stories.length; i++) {
 					this.list[index].stories[i].isRead = false;
 				}
-				this.updateAllItemsFeed();
 				this.notifyOfFeedUpdate(index, false);
 			}
-			this.save();
+			
+			this.spooler.beginUpdate();
+			this.enqueueAllItemsUpdate();
+			this.enqueueSave();
+			this.spooler.endUpdate();
 		}
 	},
 
@@ -960,20 +975,27 @@ var feeds = Class.create ({
 		if((index >= 0) && (index < this.list.length)) {
 			if(this.list[index].type == "allItems") {
 				for(var j = 0; j < this.list.length; j++) {
+					if(j == index) {
+						continue;
+					}
+					
 					for(var k = 0; k < this.list[j].stories.length; k++) {
 						this.list[j].stories[k].isNew = false;
 					}
 					this.list[j].numNew = 0;
 				}
-				this.save();
 			} else {
 				for(var i = 0; i < this.list[index].stories.length; i++) {
 					this.list[index].stories[i].isNew = false;
 				}
 				this.list[index].numNew = 0;
-				this.updateAllItemsFeed();
+				this.notifyOfFeedUpdate(index, false);
 			}
-			this.save();
+			
+			this.spooler.beginUpdate();
+			this.enqueueAllItemsUpdate();
+			this.enqueueSave();
+			this.spooler.endUpdate();
 		}
 	},
 	
@@ -986,8 +1008,11 @@ var feeds = Class.create ({
 		if((index >= 0) && (index < this.list.length)) {
 			Mojo.Log.info("FEEDS> Deleting feed", index);
 			this.list.splice(index, 1);
-			this.save();
-			this.updateAllItemsFeed();
+			
+			this.spooler.beginUpdate();
+			this.enqueueAllItemsUpdate();
+			this.enqueueSave();
+			this.spooler.endUpdate();
 		}
 	},
 	
@@ -1012,7 +1037,8 @@ var feeds = Class.create ({
 			for(var i = 0; i < behind.length; i++) {
 				this.list.push(behind[i]);
 			}
-			this.save();
+			
+			this.enqueueSave();
 		}
 	},
 	
