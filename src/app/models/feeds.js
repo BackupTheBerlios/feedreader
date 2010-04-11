@@ -30,12 +30,13 @@ var feeds = Class.create ({
 	spooler: {},		// action spooler
 	converter: {},		// codepage converter
 	dateConverter: {},	// date converter
+	migrator: {},		// migrator class
 
 	fullUpdateInProgress: false,	// true if a full update is in progress
 	updateInProgress: false,		// true if any kind of update is in progress
 	interactiveUpdate: false,		// true if the update is interactive
+	changingFeed: false,			// true if a feed is changed
 	modified: false,				// used by save() to indicate changes
-	saveInProgress: false,			// true if a save process is ongoing
 	properties: {
 		migratingFrom: 1			// db version loaded
 	},
@@ -48,15 +49,11 @@ var feeds = Class.create ({
 		this.spooler = new spooler();
 		this.converter = new codepageConverter();
 		this.dateConverter = new dateConverter();
+		this.migrator = new migrator();
 		
 		this.cookie = new Mojo.Model.Cookie("comtegi-stuffAppFeedReaderProps");
-		
 		var data = this.cookie.get();
-		if(data) {
-			this.properties.migratingFrom = data.version;
-		} else {
-			this.properties.migratingFrom = 1;
-		}
+		this.properties.migratingFrom = data ? data.version : 1;
 		
 		this.openDBSuccessHandler = this.openDBSuccess.bind(this);
 		this.openDBFailedHandler  = this.openDBFailed.bind(this);
@@ -124,20 +121,8 @@ var feeds = Class.create ({
 				spinning: 		false,
 				preventDelete: 	true,
 				stories: 		[] } ];
-        } else {		
-			if(this.properties.migratingFrom < 2) {
-				data = this.migrateV1(data);
-			}
-			if(this.properties.migratingFrom < 3) {
-				data = this.migrateV2(data);
-			}
-			if(this.properties.migratingFrom < 4) {
-				data = this.migrateV3(data);
-			}
-			if(this.properties.migratingFrom < 6) {
-				data = this.migrateV5(data);
-			}
-            this.list = data;
+        } else {
+            this.list = this.migrator.migrate(data, this.properties.migratingFrom);
 		}
 			
 		this.cookie.put({ version: FeedReader.versionInt });
@@ -150,149 +135,11 @@ var feeds = Class.create ({
 	
 	/** @private
 	 *
-	 * Migrate a v1 database to v2 format.
-	 *
-	 */
-	migrateV1: function(data) {
-		var j;
-		var newdata = [];
-		
-		for(var i = 0; i < data.length; i++) {
-			// Skip invalid feeds.
-			if((data[i].type != "rss") &&
-			   (data[i].type != "RDF") &&
-			   (data[i].type != "atom")) {
-				continue;	
-			}
-			
-			// Update all feeds to new format.
-			// New properties:	viewMode		Show feeds in FeedReader or in Browser
-			//					sortMode		How the feed should be sorted
-			//					spinning		Wether the feed's spinner is spinning
-			//					preventDelete	Prevent deletion (to avoid delete pseudo feeds)
-			newdata.push({
-				type: 			data[i].type,
-				url: 			data[i].url,
-				title: 			data[i].title,
-				enabled: 		data[i].enabled,
-				numUnRead: 		data[i].numUnRead,
-				numNew: 		data[i].numNew,
-				viewMode: 		0,
-				sortMode:		0,
-				updated: 		true,
-				spinning: 		false,
-				preventDelete: 	false,
-				stories: 		[]
-			});
-			
-			// Update stories.
-			// New properties:	intDate			Takes the date as an integer, will be used
-			//									for sorting purposes in future.
-			// Changed:			summary			Will contain the full story from now on.
-			//									This cannot be reconstructed.
-			for(j = 0; j < data[i].stories.length; j++) {
-				newdata[newdata.length - 1].stories.push({
-					title: 		data[i].stories[j].title,
-					summary:	data[i].stories[j].summary,
-					url: 		data[i].stories[j].url,
-					intDate:	0,
-					uid: 		data[i].stories[j].uid,
-					isRead: 	data[i].stories[j].isRead,
-					isNew: 		data[i].stories[j].isNew
-				});
-			}
-		}
-		
-		// Add the new "All Items" pseudo feed.
-		newdata.unshift({
-			type: 			"allItems",
-			url: 			"",
-			title: 			"",
-			enabled: 		true,
-			numUnRead: 		0,
-			numNew: 		0,
-			viewMode: 		0,
-			updated: 		true,
-			spinning: 		false,
-			preventDelete: 	true,
-			stories: 		[]
-		});
-		
-		return newdata;
-	},
-	
-	/** @private
-	 *
-	 * Migrate a v2 database to a v3 database.
-	 */
-	migrateV2: function(data) {
-		var j;
-		
-		for(var i = 0; i < data.length; i++) {
-			data[i].uid = Math.uuid(15);
-			data[i].showPicture = true;
-			data[i].showMedia = true;
-			for(j = 0; j < data[i].stories.length; j++) {
-				data[i].stories[j].picture = "";
-				data[i].stories[j].audio = "";
-				data[i].stories[j].video = "";
-			}
-		}
-		
-		return data;
-	},
-	
-	/** @private
-	 *
-	 * Migrate a v3 database to a v4 database.
-	 */
-	migrateV3: function(data) {
-		var j;
-		
-		for(var i = 0; i < data.length; i++) {
-			// The sortMode was introduced in DBv2, but addFeed failed to
-			// add this to new feeds, so re-introduce it here.
-			data[i].sortMode = 0;
-			for(j = 0; j < data[i].stories.length; j++) {
-				data[i].stories[j].index = 0;
-			}
-		}
-		
-		return data;		
-	},
-	
-	/** @private
-	 *
-	 * Migrate a v5 database to a v6 database.
-	 */
-	migrateV5: function(data) {
-		var j = 0;
-		var oldURL = "";
-		for(var i = 0; i < data.length; i++) {
-			if(data[i].type == "allItems") {
-				continue;
-			}
-			
-			data[i].allowHTML = 1;
-			for(j = 0; j < data[i].stories.length; j++) {
-				oldURL = data[i].stories[j].url;
-				data[i].stories[j].url = [];
-				data[i].stories[j].url.push({
-					title:	"Weblink",
-					href:	oldURL
-				});
-			}
-		}
-		
-		return data;		
-	},
-
-	/** @private
-	 *
 	 * Called when the feed list cannot be retrieved.
 	 */
 	loadFeedListFailed: function() {
 		Mojo.Log.warn("FEEDS> unable to retrieve feedlist");
+		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-loaded" });
 	},
 
 	/**
@@ -306,7 +153,6 @@ var feeds = Class.create ({
 	 *
 	 */
 	doSave: function() {
-		this.saveInProgress = true;
 		this.db.add("feedList", this.list,
 					this.saveFeedListSuccessHandler,
 					this.saveFeedListFailedHandler);
@@ -317,9 +163,7 @@ var feeds = Class.create ({
 	 * Called when saving the feed list succeeds.
 	 */
 	saveFeedListSuccess: function() {
-		this.saveInProgress = false;
 		Mojo.Log.info("FEEDS> feed list saved");
-		
 		this.spooler.nextAction();
 	},
 	
@@ -328,9 +172,7 @@ var feeds = Class.create ({
 	 * Called when saving the feed list fails.
 	 */
 	saveFeedListFailed: function(transaction, result) {
-		this.saveInProgress = false;
 		Mojo.Log.error("FEEDS> feed list could not be saved: ", result.message);
-
 		this.spooler.nextAction();
 	},
 	
@@ -347,19 +189,18 @@ var feeds = Class.create ({
 	 * @param {Boolean} allowHTML
 	 */
 	addFeed: function(title, url, enabled, viewMode, showPicture,
-					  showMedia, sortMode, allowHTML) {
-		this.interactiveUpdate = true;
-		if (title === "") {
-			title = "RSS Feed";
-		}
-			
+					  showMedia, sortMode, allowHTML) {			
 		for(var i; i < this.list.length; i++) {
 			if (this.list[i].url == url) {
 				this.editFeed(i, title, url, enabled, viewmode, showPicture, showMedia);
 				return;
 			} 
 		}
-			
+		
+		if (title === "") {
+			title = "RSS Feed";
+		}
+		
 		this.list.push({
 			title:			title,
 			url:			url,
@@ -379,7 +220,7 @@ var feeds = Class.create ({
 			stories:		[]
 		});
 		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-newfeed" });
-		this.interactiveUpdate = true;
+		this.changingFeed = true;
 		this.updateFeed(this.list.length - 1);
 	},
 	
@@ -399,7 +240,7 @@ var feeds = Class.create ({
 	editFeed: function(index, title, url, enabled, viewMode, showPicture,
 					   showMedia, sortMode, allowHTML) {
 		if((index >= 0) && (index < this.list.length)) {
-			this.interactiveUpdate = true;
+			this.changingFeed = true;
 			this.list[index].title = title;
 			this.list[index].url = url;
 			this.list[index].enabled = enabled;
@@ -531,7 +372,7 @@ var feeds = Class.create ({
 		var errorMsg = {};
 		
 		if(transport.responseText.length === 0) {
-			if (this.interactiveUpdate) {
+			if (this.changingFeed) {
 				errorMsg = new Template($L("The Feed '#{title}' does not return data."));
 				FeedReader.showError(errorMsg, { title: this.list[index].url });
 			}
@@ -551,7 +392,7 @@ var feeds = Class.create ({
 				if (feedType.length > 0) {
 					this.list[index].type = "atom";		// ATOM
 				} else {
-					if (this.interactiveUpdate) {
+					if (this.changingFeed) {
 						errorMsg = new Template($L("The format of Feed '#{title}' is unsupported."));
 						FeedReader.showError(errorMsg, {title: this.list[index].url});
 					}
@@ -905,7 +746,7 @@ var feeds = Class.create ({
 			}
 	
 			Mojo.Log.warn("FEEDS> Feed", index, "is defect; disabling feed; error:", error);
-			if (this.interactiveUpdate) {
+			if (this.changingFeed) {
 				this.list[index].enabled = false;
 				this.list[index].type = "unknown";
 				var errorMsg = new Template($L("The Feed '#{title}' could not be retrieved. The server responded: #{err}. The Feed was automatically disabled."));
@@ -935,7 +776,7 @@ var feeds = Class.create ({
 				this.fullUpdateInProgress = false;
 				
 				// Post a banner notification if applicable.
-				if((!FeedReader.isActive) && (FeedReader.prefs.notificationEnabled)) {
+				if((!FeedReader.isActive) && (!this.interactiveUpdate) && (FeedReader.prefs.notificationEnabled)) {
 					var n = 0;
 					for(i = 0; i < this.list.length; i++) {
 						if(this.list[i].type != "allItems") {
@@ -947,12 +788,14 @@ var feeds = Class.create ({
 				}
 				
 				this.save();
+				this.interactiveUpdate = false;
 			}
 		} else {
+			this.interactiveUpdate = false;
 			this.save();
 		}
 		this.updateInProgress = this.fullUpdateInProgress;
-		this.interactiveUpdate = false;
+		this.changingFeed = false;
 		this.notifyOfFeedUpdate(index, false);
 		this.updateAllItemsFeed();
 		
@@ -968,7 +811,7 @@ var feeds = Class.create ({
 		if(l < 2) {
 			return;
 		}
-				
+		
 		Mojo.Log.info("FEEDS> Full update requested");
 		this.fullUpdateInProgress = true;
 		this.updateInProgress = true;

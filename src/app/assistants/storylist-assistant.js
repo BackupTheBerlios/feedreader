@@ -393,6 +393,7 @@ StorylistAssistant.prototype.handleCommand = function(event) {
 			
 			case "do-feedUpdate":
 				event.stopPropagation();
+				this.feeds.interactiveUpdate = true;
 				if(this.feed.type == "allItems") {
 					this.feeds.update();	
 				} else {

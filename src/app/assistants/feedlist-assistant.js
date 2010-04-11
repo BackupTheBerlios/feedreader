@@ -257,6 +257,7 @@ FeedlistAssistant.prototype.popupHandler = function(command) {
 			break;
 			
 		case "feed-update":
+			this.feeds.interactiveUpdate = true;
 			if(this.feeds.list[this.popupIndex].type == "allItems") {
 				this.feeds.update();
 			} else {
@@ -279,6 +280,7 @@ FeedlistAssistant.prototype.handleCommand = function(event) {
         if(event.type === Mojo.Event.command) {
             switch(event.command) {
                 case "do-fullUpdate":
+					this.feeds.interactiveUpdate = true;
 					this.feeds.update();
                 	break;
 				
