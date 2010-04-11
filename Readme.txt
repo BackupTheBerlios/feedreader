@@ -24,8 +24,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 Changelog
 =========
 
-Version 1.2.3 (Feature Release)
--------------------------------------
+Version 1.3.0 (feature release)
+-------------------------------
+ * changes from 1.2.3
+ * improved splash screen handling
+ * improved handling of links in ATOM feeds
+ * html can be allowed for full story view (new default)
+
+Version 1.2.3 (not released)
+----------------------------
  * One can now send a feed's URL via E-Mail and SMS
  * One can now send a story via E-Mail and SMS
  * Fixed a problem, when dashboard it tapped while application

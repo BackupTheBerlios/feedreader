@@ -22,6 +22,7 @@
 
 var feeds = Class.create ({
 	list: [],			// contains the individual feeds
+	loaded: false,		// indicates if list is successfully loaded
 
 	db: {},				// takes the depot object
 	connStatus: {},		// takes the connection state service
@@ -140,6 +141,7 @@ var feeds = Class.create ({
 		}
 			
 		this.cookie.put({ version: FeedReader.versionInt });
+		this.loaded = true;
 		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-loaded" });
 		if(FeedReader.prefs.updateOnStart) {
 			this.update();

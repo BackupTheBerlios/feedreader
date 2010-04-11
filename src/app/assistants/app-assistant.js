@@ -201,6 +201,17 @@ FeedReader = {
 			dashboardStageController.delegateToSceneAssistant("updateDashboard", -2);
 		}
 	},
+
+	/**
+	 * Remove the application splash screen.
+	 */	
+	hideSplash: function() {
+		var cardStageController = Mojo.Controller.getAppController().getStageController(this.mainStageName);
+		if(cardStageController) {
+			Mojo.Log.info("FEEDREADER> Main stage exist, removing splash screen");
+			cardStageController.hideSplashScreen();
+		}
+	},
 	
 	/**
 	 *
@@ -302,6 +313,7 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
         } else {
             this.controller.createStageWithCallback({name: FeedReader.mainStageName, lightweight: true}, 
                 									function(stageController) {
+														stageController.enableManualSplashScreenMode();
 														stageController.setWindowOrientation("free");
 														stageController.pushScene("feedlist", FeedReader.feeds);
 													},
@@ -327,6 +339,7 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 						name: FeedReader.mainStageName,
 						lightweight: true
 					}, function(stageController) {
+						stageController.enableManualSplashScreenMode();
 						stageController.setWindowOrientation("free");
 	                	stageController.pushScene("feedlist", FeedReader.feeds);
 	                }, "card");        
@@ -392,4 +405,18 @@ AppAssistant.prototype.handleCommand = function(event) {
             }
         }
     }
+};
+
+AppAssistant.prototype.considerForNotification = function(params){
+	if(params) {
+		switch(params.type) {
+			case "feedlist-loaded":
+				Mojo.Log.info("APPASSISTANT> Feed list loaded; removing splash");
+				FeedReader.hideSplash();
+				break;
+				
+			case "jslint-dummy":
+				break;
+		}
+	}
 };

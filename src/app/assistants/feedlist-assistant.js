@@ -80,6 +80,10 @@ FeedlistAssistant.prototype.setup = function() {
     this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel);
 	
 	FeedReader.endSceneSetup(this);
+	if(this.feeds.loaded) {
+		Mojo.Log.info("FEEDLIST> List already loaded, removing splash");
+		FeedReader.hideSplash();
+	}
 };
 
 FeedlistAssistant.prototype.initCommandModel = function() {
