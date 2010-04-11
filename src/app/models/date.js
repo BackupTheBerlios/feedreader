@@ -125,7 +125,7 @@ var dateConverter = Class.create({
 				intDate = d.getTime();
 			} else if(dateString.match(/\D{3},\s\d{1,2}\s\D{3}\s\d{2,4}\s\d{1,2}:\d{1,2}:\d*/)) {
 				intDate = this.convertRFC822(dateString);
-			} else if(dateString.match(/\D{3}\s\D{3}\s\d{2}\s\d{2}:\d{2}(:\d{2}){0,1}\s[a-zA-Z\+\-0-9]{1,5}\s\d{3,4}/)) {
+			} else if(dateString.match(/\D{3}\s\D{3}\s\d{1,2}\s\d{2}:\d{2}(:\d{2}){0,1}\s[a-zA-Z\+\-0-9]{1,5}\s\d{3,4}/)) {
 				intDate = this.convertRFC2822(dateString);
 			} else if(dateString.match(/\d{1,2}\.\d{1,2}.\d{4}/)) {
 				intDate = this.convertSimpleDate(dateString);
