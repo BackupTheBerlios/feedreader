@@ -78,6 +78,7 @@ ImportAssistant.prototype.setup = function() {
 	this.controller.get("import-title").update($L("Import feeds"));
 	this.controller.get("import-group-title").update($L("Source"));
 	this.controller.get("importURL-title").update($L("URL"));
+	this.controller.get("feedlist-title").update($L("Feeds"));
 	
 	this.searchButton = this.controller.get("searchButton");
 	this.controller.setupWidget("searchButton", { type: Mojo.Widget.defaultButton },
