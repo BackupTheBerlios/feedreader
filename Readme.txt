@@ -21,6 +21,11 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+Contributors
+============
+ * Milan Roubal <roubal@keyserver.cz>
+ * Daniel Razny <daniel.razny@hksinformatik.de>
+
 Changelog
 =========
 
@@ -30,6 +35,7 @@ Version 1.3.0 (feature release)
  * improved splash screen handling
  * improved handling of links in ATOM feeds
  * html can be allowed for full story view (new default)
+ * Added czech locale
 
 Version 1.2.3 (not released)
 ----------------------------

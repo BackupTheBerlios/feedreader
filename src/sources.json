@@ -35,6 +35,10 @@
         "source": "app/assistants/license-assistant.js"
     },
     {
+        "scenes": "contributors",
+        "source": "app/assistants/contributors-assistant.js"
+    },
+    {
         "scenes": "import",
         "source": "app/assistants/import-assistant.js"
     },

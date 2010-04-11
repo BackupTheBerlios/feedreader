@@ -51,6 +51,7 @@
 	"Blue": "Blau",
 	"Yellow": "Gelb",
 	"Purple": "Violett",
+	"Black": "Schwarz",
 	"Length": "Länge",
 	"100 characters": "100 Zeichen",
 	"120 characters": "120 Zeichen",
@@ -109,5 +110,7 @@
 	"Web links": "Web-Links",
 	"Open Web link": "Web-Link öffnen",
 	"Filter": "Filter",
-	"Allow HTML": "HTML erlauben"
+	"Allow HTML": "HTML erlauben",
+	"Contributors": "Mitwirkende",
+	"Feeds": "Feeds"
 }
