@@ -129,7 +129,7 @@ var feeds = Class.create ({
 		this.loaded = true;
 		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-loaded" });
 		if(FeedReader.prefs.updateOnStart) {
-			this.update();
+			this.enqueueUpdate(-1);
 		}
 	},
 	
