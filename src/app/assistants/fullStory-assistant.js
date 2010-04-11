@@ -97,6 +97,7 @@ FullStoryAssistant.prototype.setup = function() {
 
 	if(this.feeds.showCaption(this.feeds.list[this.origin.feedIndex], true)) {
 		this.controller.get("story-title").update(this.story.title);
+		this.controller.listen("story-title", Mojo.Event.tap, this.storyTapHandler);
 	}
 	
 	if(this.feeds.showSummary(this.feeds.list[this.origin.feedIndex], true)) {
