@@ -16,7 +16,7 @@
 	"Yes": "Ano",
 	"No": "Ne",
 	"RSS/ATOM Feed": "RSS/ATOM Kanál",
-	"Optional": "Optional",
+	"Optional": "Volitelné",
 	"Adding Feed...": "Přidávám kanál...",
 	"Updating Feed...": "Aktualizuji kanál...",
 	"Interval": "Interval",
@@ -46,7 +46,7 @@
 	"#{appName} — v#{version}": "#{appName} — v#{version}",
 	"Copyright #{years} #{author}, published under the terms of the GNU GPL v3. See License for details.": "Copyright #{years} #{author}, překlad do češtiny Milan Roubal, publikováno pod licencí GNU GPL v3.",
 	"Title color": "Barva titulku",
-	"Black": "Black",
+	"Black": "Černá",
 	"Red": "Červená",
 	"Green": "Zelená",
 	"Blue": "Modrá",
@@ -111,5 +111,5 @@
 	"Open Web link": "Otevři webovou adresu",
 	"Filter": "Filtr",
 	"Allow HTML": "Povolit HTML",
-	"Feeds": "Feeds"
+	"Feeds": "Kanály"
 }
