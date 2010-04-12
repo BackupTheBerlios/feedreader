@@ -1,5 +1,5 @@
 {
-	"About FeedReader": "O applikaci FeedReader",
+	"About FeedReader": "O aplikaci FeedReader",
 	"Update all Feeds": "Update všechny kanály",
 	"License": "Licence",
 	"Add new Feed...": "Přidat nový kanál...",
@@ -111,5 +111,6 @@
 	"Open Web link": "Otevři webovou adresu",
 	"Filter": "Filtr",
 	"Allow HTML": "Povolit HTML",
+	"Contributors": "Spolupracovníci",
 	"Feeds": "Kanály"
 }

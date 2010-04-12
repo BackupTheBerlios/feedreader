@@ -14,7 +14,7 @@
     "noWindow" : "true",
     "noDeprecatedStyles": "true",
     "theme": "light",
-	"copyright": "&copy; 2009, 2010 Timo Tegtmeier, pøeklad do èeštiny Milan Roubal",
+	"copyright": "&copy; 2009, 2010 Timo Tegtmeier",
 	"support": {
 		"email": {
 			"address": "general@tegi-stuff.de",
@@ -26,7 +26,7 @@
 			"url": "http://www.tegi-stuff.de/doku.php?id=feedreader"
 		}, {
 			"type": "scene",
-			"label": "Mitwirkende",
+			"label": "Spolupracovnici",
 			"sceneName": "contributors"
 		}]
 	}
