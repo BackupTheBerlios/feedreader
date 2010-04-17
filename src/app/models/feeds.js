@@ -366,7 +366,6 @@ var feeds = Class.create ({
 		this.spooler.nextAction();
 	},
 
-
 	/** @private
 	 * 
 	 * Reformat a story's summary.
@@ -376,15 +375,21 @@ var feeds = Class.create ({
 	 */
 	reformatSummary: function(summary) {
 		summary = FeedReader.stripCDATA(summary);
-		summary = summary.replace(/<script>(.*)<\/script>/ig, "$1");
-		summary = summary.replace(/(<script([^>]+)\/>)/ig, "");
+		
+		// Remove potentially dangerous tags.
+		summary = summary.replace(/<script[^>]*>(.*?)<\/script>/ig, "")
+		summary = summary.replace(/(<script([^>]*)\/>)/ig, "");
+		summary = summary.replace(/<iframe[^>]*>(.*?)<\/iframe>/ig, "")
+		summary = summary.replace(/(<iframe([^>]+)\/>)/ig, "");
+		
         summary = summary.replace(/(\{([^\}]+)\})/ig, "");
         summary = summary.replace(/digg_url .../, "");
+		
+		// Parse some BBCodes.
 		summary = summary.replace(/\[i\](.*)\[\/i\]/ig, '<span class="italic">$1</span>');
 		summary = summary.replace(/\[b\](.*)\[\/b\]/ig, '<span class="bold">$1</span>');
 		summary = summary.replace(/\[u\](.*)\[\/u\]/ig, '<span class="underline">$1</span>');
         summary = unescape(summary);
-		Mojo.Log.info(summary)
 		return summary;	
 	},
 	
