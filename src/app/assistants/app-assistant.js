@@ -268,7 +268,7 @@ FeedReader = {
 	 * @return {String}				string without HTML tags
 	 */
 	stripHTML: function(text) {
-        return text.replace(/(<([^>]+)>)/ig, "");		
+        return text.replace(/(<([^>]+)>)/ig, "");
 	}
 };
 

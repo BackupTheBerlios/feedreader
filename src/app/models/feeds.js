@@ -376,12 +376,15 @@ var feeds = Class.create ({
 	 */
 	reformatSummary: function(summary) {
 		summary = FeedReader.stripCDATA(summary);
+		summary = summary.replace(/<script>(.*)<\/script>/ig, "$1");
+		summary = summary.replace(/(<script([^>]+)\/>)/ig, "");
         summary = summary.replace(/(\{([^\}]+)\})/ig, "");
         summary = summary.replace(/digg_url .../, "");
 		summary = summary.replace(/\[i\](.*)\[\/i\]/ig, '<span class="italic">$1</span>');
 		summary = summary.replace(/\[b\](.*)\[\/b\]/ig, '<span class="bold">$1</span>');
 		summary = summary.replace(/\[u\](.*)\[\/u\]/ig, '<span class="underline">$1</span>');
         summary = unescape(summary);
+		Mojo.Log.info(summary)
 		return summary;	
 	},
 	
@@ -676,6 +679,7 @@ var feeds = Class.create ({
 			if((transport.responseXML === null) && (transport.responseText !== null)) {
 				Mojo.Log.info("FEEDS> Manually converting feed info to xml");
 				transport.responseXML = new DOMParser().parseFromString(transport.responseText, "text/xml");
+				Mojo.Log.info(transport.responseText);
 			}
 			
 			if(this.determineFeedType(index, transport)) {
