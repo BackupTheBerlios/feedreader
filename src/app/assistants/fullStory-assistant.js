@@ -189,7 +189,20 @@ FullStoryAssistant.prototype.setup = function() {
 	// Handle a story click.
     this.controller.listen("followLink", Mojo.Event.tap, this.storyTapHandler);
 
-	FeedReader.endSceneSetup(this, this.mediaMode != 2);
+	if(this.mediaMode == 2) {
+		var header = this.controller.get("page-header");
+		header.parentNode.removeChild(header);
+		var fade = this.controller.get("top-fade");
+		fade.parentNode.removeChild(fade);
+		this.controller.get("scene-main").setAttribute("style", "display: hidden");
+		this.controller.hideWidgetContainer("scene-main");
+	}
+
+	FeedReader.endSceneSetup(this);
+};
+
+FullStoryAssistant.prototype.aboutToActivate = function(callback) {
+	FeedReader.aboutToActivate(this, callback);
 };
 
 FullStoryAssistant.prototype.activate = function(event) {

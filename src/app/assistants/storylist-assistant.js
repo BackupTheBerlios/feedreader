@@ -38,13 +38,13 @@ function StorylistAssistant(feeds, index) {
 	this.sortModeChooseHandler = this.sortModeChoose.bind(this);
 	this.sendChooseHandler = this.sendChoose.bind(this);
 	
-	this.setupComplete = false;
+	this.setupComplete = false;	
 	this.wasActiveBefore = false;
 	this.listRefreshNeeded = true;
 }
 
 StorylistAssistant.prototype.setup = function() {
-	FeedReader.beginSceneSetup(this, true);
+	FeedReader.beginSceneSetup(this);
 
 	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feed));
 	this.controller.get("appIcon").className += " " + this.feeds.getFeedHeaderIcon(this.feed);
@@ -74,6 +74,8 @@ StorylistAssistant.prototype.setup = function() {
 		filterFunction: this.listFindHandler
 	}, {});
 	
+	FeedReader.endSceneSetup(this);
+
 	this.controller.listen("storyList", Mojo.Event.listTap,
 					       this.showStory.bindAsEventListener(this));
     this.controller.listen("sortIcon", Mojo.Event.tap, this.sortModeTapHandler);
@@ -81,9 +83,6 @@ StorylistAssistant.prototype.setup = function() {
 	// Setup command menu.
 	this.initCommandModel();
     this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel);
-	
-	this.setupComplete = true;
-	FeedReader.endSceneSetup(this);
 };
 
 StorylistAssistant.prototype.initCommandModel = function() {
@@ -124,6 +123,10 @@ StorylistAssistant.prototype.initCommandModel = function() {
 	if(!FeedReader.prefs.leftHanded) {
 		this.commandModel.items.reverse();
 	}
+};
+
+StorylistAssistant.prototype.aboutToActivate = function(callback) {
+	FeedReader.aboutToActivate(this, callback);
 };
 
 StorylistAssistant.prototype.activate = function(event) {

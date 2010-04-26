@@ -88,8 +88,6 @@ FeedReader = {
 	 */
 	beginSceneSetup: function(caller, initAppMenu) {
 		if(caller.controller) {
-			var sceneDiv = caller.controller.get("scene-main");
-			
 			// Setup application menu.
 			if(initAppMenu) {
 				caller.controller.setupWidget(Mojo.Menu.appMenu, FeedReader.menuAttr, FeedReader.menuModel);
@@ -103,29 +101,31 @@ FeedReader = {
 	
 	/**
 	 * Called to indicate that a scene has finished its setup.
-	 * This will hide a potential scrim and show the scene itself.
 	 * 
 	 * @param {Object}		Scene assistant
 	 */
-	endSceneSetup: function(caller, unhide) {
-		if(unhide === undefined) {
-			unhide = true;
-		}
-		
-		if(caller.controller) {
-			var scrimDiv = caller.controller.get("scene-scrim");
-			var sceneDiv = caller.controller.get("scene-main");
-			
-			if(sceneDiv && unhide) {
-				sceneDiv.className = "";
-			}
-			if(scrimDiv) {
-				scrimDiv.className = "hidden";
-			}
-		}
-		
+	endSceneSetup: function(caller) {
 		if(caller.setupComplete !== undefined) {
 			caller.setupComplete = true;
+			if(caller.setupFinished !== undefined) {
+				Mojo.Log.info("FEEDREADER> setup finished; enabling transition");
+				caller.setupFinished();
+			}
+		}
+	},
+	
+	/**
+	 * Called to indicate that a scene is about to activate.
+	 * 
+	 * @param {Object}		Scene assistant
+	 * @param {Function}	callback provided by webOS
+	 */
+	aboutToActivate: function(caller, callback) {
+		if((caller.setupComplete === undefined)|| caller.setupComplete) {
+			Mojo.Log.info("FEEDREADER> setup already completed; enabling transition");
+			callback();
+		} else {
+			caller.setupFinished = callback;
 		}
 	},
 	
