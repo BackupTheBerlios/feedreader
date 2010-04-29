@@ -377,9 +377,9 @@ var feeds = Class.create ({
 		summary = FeedReader.stripCDATA(summary);
 		
 		// Remove potentially dangerous tags.
-		summary = summary.replace(/<script[^>]*>(.*?)<\/script>/ig, "")
+		summary = summary.replace(/<script[^>]*>(.*?)<\/script>/ig, "");
 		summary = summary.replace(/(<script([^>]*)\/>)/ig, "");
-		summary = summary.replace(/<iframe[^>]*>(.*?)<\/iframe>/ig, "")
+		summary = summary.replace(/<iframe[^>]*>(.*?)<\/iframe>/ig, "");
 		summary = summary.replace(/(<iframe([^>]+)\/>)/ig, "");
 		
         summary = summary.replace(/(\{([^\}]+)\})/ig, "");
