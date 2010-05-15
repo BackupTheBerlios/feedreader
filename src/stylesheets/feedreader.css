@@ -18,6 +18,14 @@
     background: url(../images/header/icon-allitems.png) center center no-repeat;
 }
 
+.icon.starred {
+    background: url(../images/header/icon-starred.png) center center no-repeat;
+}
+
+.icon.unknown {
+    background: url(../images/header/icon-unknown.png) center center no-repeat;
+}
+
 .progress-widget-width {
 	width: 250px;
 }
@@ -174,6 +182,14 @@ img {
     background: url(../images/lists/info-icon.png) center center no-repeat;
 }
 
+.list-star-icon {
+    background: url(../images/lists/star-icon.png) center center no-repeat;
+}
+
+.list-star-icon.starred {
+    background: url(../images/lists/starred-icon.png) center center no-repeat;
+}
+
 .list-icon-spinner {
 	position: relative;
 	top: -36px;
@@ -203,6 +219,10 @@ img {
 /* feed icons */
 .feed-icon.allitems {
     background: url(../images/lists/icon-allitems.png) center no-repeat;	
+}
+
+.feed-icon.starred {
+    background: url(../images/lists/icon-starred.png) center no-repeat;	
 }
 
 .feed-icon.rss {
