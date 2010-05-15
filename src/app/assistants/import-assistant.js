@@ -264,7 +264,11 @@ ImportAssistant.prototype.addFeed = function(event) {
 
 ImportAssistant.prototype.doAddFeed = function(index, feed, value) {
 	if(value == "add") {
-		this.feeds.addFeed(feed.title, feed.url, true, 1, true, true, 0, true);
+		var f = new feedProto();
+		f.title = feed.title;
+		f.url = feed.url;
+		this.feeds.addOrEditFeed(f);
+		
 		this.feedList.splice(index, 1);
 		this.importListModel.items = this.feedList;
 		this.controller.modelChanged(this.importListModel);
