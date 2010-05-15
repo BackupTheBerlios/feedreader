@@ -2,6 +2,7 @@
     {"source": "app/assistants/app-assistant.js"},
     {"source": "app/assistants/stage-assistant.js"},
     {"source": "app/models/spooler.js"},
+	{"source": "app/models/database.js"},
     {"source": "app/models/codepages.js"},
     {"source": "app/models/date.js"},
     {"source": "app/models/Math.uuid.js"},

@@ -26,6 +26,10 @@ var spooler = new Class.create({
 	actionIdent: "",
 	updateCounter: 0,
 	
+	/** @private
+	 *
+	 * Constructor.
+	 */
 	initialize: function() {
 		this.setActivitySuccessHandler = this.setActivitySuccess.bind(this);
 		this.setActivityFailedHandler = this.setActivityFailed.bind(this);
@@ -33,10 +37,18 @@ var spooler = new Class.create({
 		this.leaveActivityFailedHandler = this.leaveActivityFailed.bind(this);
 	},
 	
+	/**
+	 * Enter update state. This will prevent the spooler from starting an
+	 * activity until the update state is left.
+	 */
 	beginUpdate: function() {
 		this.updateCounter++;
 	},
 	
+	/**
+	 * Leave update state. If actions were added while being in update state
+	 * the spooler will start the first action from the list.
+	 */
 	endUpdate: function() {
 		this.updateCounter--;
 		if(!this.actionRunning && (this.list.length >= 1)) {
@@ -45,6 +57,15 @@ var spooler = new Class.create({
 		}
 	},
 	
+	/**
+	 * Add an action to the spooler list.
+	 *
+	 * @param	action		{Function}		function to execute
+	 * @param	identifier	{String}		name of the action
+	 * @param	unique		{Boolean}		if true, only one action with the
+	 * 										given name is allowed to be executed
+	 * 										at any time
+	 */
 	addAction: function(action, identifier, unique) {
 		try {
 			if(!identifier) {
@@ -149,15 +170,21 @@ var spooler = new Class.create({
 		Mojo.Log.error("SPOOLER> Unable to leave activity", response);
 	},
 	
+	/**
+	 * Called to indicate a spooled action has finished. The next spooled
+	 * activity will be started if any.
+	 */
 	nextAction: function() {
 		try {
 			if(this.list.length >= 1) {
+				Mojo.Log.info("SPOOLER> Next action");
 				var action = this.list.shift();
 				this.actionRunning = true;
 				this.actionIdent = action.ident;
 				this.enterActivity();
 				action.execute();
 			} else {
+				Mojo.Log.info("SPOOLER> Next action; have no");
 				this.actionRunning = false;
 				this.actionIdent = "";
 				FeedReader.removeUpdateDashboard();
@@ -168,9 +195,18 @@ var spooler = new Class.create({
 		}
 	},
 	
+	hasWork: function() {
+		return ((this.list.length > 0) ||
+				(this.actionRunning) ||
+				(this.updateCounter > 0));
+	},
+	
+	/**
+	 * Called to indicate that the app is about to be closed.
+	 */
 	aboutToClose: function() {
 		try {
-			if(this.actionRunning) {
+			if(this.hasWork()) {
 				FeedReader.createUpdateDashboard(true);
 			}
 		} catch(e) {

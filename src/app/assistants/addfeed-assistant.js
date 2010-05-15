@@ -20,31 +20,31 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-function AddfeedAssistant(feeds, index) {
+function AddfeedAssistant(feeds, feed) {
 	this.feeds = feeds;
+	this.feed = feed;
 
-	if (!index) {
-		this.feed = null;
-		this.index = -1;
-		this.url = "";
-		this.title = "";
-		this.enabled = true;
-		this.viewMode = 1;
-		this.showMedia = true;
-		this.showPicture = true;
-		this.sortMode = 0;
-		this.allowHTML = true;
+	if(!this.feed) {
+		this.feed = new feedProto();
+		this.isAdd = true;
 	} else {
-		this.feed = feeds.list[index];
-		this.index = index;
-		this.url = this.feed.url;
-		this.title = this.feed.title;
-		this.enabled = this.feed.enabled;
-		this.viewMode = this.feed.viewMode;
-		this.showMedia = this.feed.showMedia;
-		this.showPicture = this.feed.showPicture;
-		this.sortMode = this.feed.sortMode;
-		this.allowHTML = this.feed.allowHTML;
+		this.isAdd = false;
+	}
+	
+	if(this.feed.showListSummary && this.feed.showListCaption) {
+		this.listMode = 0;
+	} else if(this.feed.showListCaption) {
+		this.listMode = 1;
+	} else if(this.feed.showListSummary) {
+		this.listMode = 2;
+	}
+
+	if(this.feed.showDetailSummary && this.feed.showDetailCaption) {
+		this.detailMode = 0;
+	} else if(this.feed.showDetailCaption) {
+		this.detailMode = 1;
+	} else if(this.feed.showDetailSummary) {
+		this.detailMode = 2;
 	}
 }
 
@@ -52,11 +52,11 @@ AddfeedAssistant.prototype.setup = function() {
 	this.controller.setupWidget("feedURL",
 								{ hintText: $L("RSS/ATOM Feed"), autoFocus: true, limitResize: true,
 								  autoReplace: false, textCase: Mojo.Widget.steModeLowerCase, enterSubmits: false },
-								this.urlModel = { value: this.url });
+								this.urlModel = { value: this.feed.url });
 	this.controller.setupWidget("feedTitle",
 								{ hintText: $L("Optional"), limitResize: true, autoReplace: true,
 								  textCase: Mojo.Widget.steModeTitleCase, enterSubmits: false },
-								this.titleModel = { value: this.title });
+								this.titleModel = { value: this.feed.title });
     
 	this.controller.setupWidget("listMode", {
 		label: $L("Show"),
@@ -66,7 +66,7 @@ AddfeedAssistant.prototype.setup = function() {
 			{ label: $L("Summary only"),		value: 2 }
         ]},
 		this.listModeModel = {
-			value: (this.viewMode >> 16) & 0xFF,
+			value: this.listMode,
 			disabled: false
 		});
 
@@ -78,7 +78,7 @@ AddfeedAssistant.prototype.setup = function() {
 			{ label: $L("Show new items"),		value: 2 }
         ]},
 		this.sortModeModel = {
-			value: this.sortMode,
+			value: this.feed.sortMode,
 			disabled: false
 		});
 	
@@ -90,54 +90,51 @@ AddfeedAssistant.prototype.setup = function() {
 			{ label: $L("Summary only"),		value: 2 }
         ]},
 		this.detailModeModel = {
-			value: (this.viewMode >> 24) & 0xFF,
+			value: this.detailMode,
 			disabled: false
-		});	
-
-
-	this.controller.setupWidget("fullStory", {
-		property: "value",
-		trueLabel: $L("Yes"),
-		falseLabel: $L("No"),
-		trueValue: 1,
-		falseValue: 0
-	}, this.fullStoryModel = {
-		value: this.viewMode & 0xFFFF
-	});
+		});
 	
 	this.controller.setupWidget("feedEnabled", {
 		property: "value",
 		trueLabel: $L("Yes"),
-		falseLabel: $L("No")
+		trueValue: 1,
+		falseLabel: $L("No"),
+		falseValue: 0
 	}, this.enabledModel = {
-		value: this.enabled,
+		value: this.feed.enabled,
 		disabled: false
 	});
 
 	this.controller.setupWidget("showPicture", {
 		property: "value",
 		trueLabel: $L("Yes"),
-		falseLabel: $L("No")
+		trueValue: 1,
+		falseLabel: $L("No"),
+		falseValue: 0
 	}, this.showPictureModel = {
-		value: this.showPicture,
+		value: this.feed.showPicture,
 		disabled: false
 	});
 
 	this.controller.setupWidget("showMedia", {
 		property: "value",
 		trueLabel: $L("Yes"),
-		falseLabel: $L("No")
+		trueValue: 1,
+		falseLabel: $L("No"),
+		falseValue: 0
 	}, this.showMediaModel = {
-		value: this.showMedia,
+		value: this.feed.showMedia,
 		disabled: false
 	});
 
 	this.controller.setupWidget("allowHTML", {
 		property: "value",
 		trueLabel: $L("Yes"),
-		falseLabel: $L("No")
+		trueValue: 1,
+		falseLabel: $L("No"),
+		falseValue: 0
 	}, this.allowHTMLModel = {
-		value: this.allowHTML,
+		value: this.feed.allowHTML,
 		disabled: false
 	});
     
@@ -158,7 +155,7 @@ AddfeedAssistant.prototype.setup = function() {
 								});
 	this.controller.listen("cancelButton", Mojo.Event.tap, this.cancelClick.bindAsEventListener(this));
 	
-	if (this.feed === null) {
+	if (this.isAdd) {
 		this.controller.get("addfeed-title").update($L("Add new Feed"));
 	} else {
 		this.controller.get("addfeed-title").update($L("Edit Feed"));
@@ -175,8 +172,6 @@ AddfeedAssistant.prototype.setup = function() {
 	this.controller.get("showMedia-title").update($L("Show media"));
 	this.controller.get("showPicture-title").update($L("Show picture"));
 	this.controller.get("allowHTML-title").update($L("Allow HTML"));
-	
-	this.controller.get("fullStory-title").update($L("Show full stories"));
 };
 
 AddfeedAssistant.prototype.cleanup = function(event) {
@@ -187,41 +182,38 @@ AddfeedAssistant.prototype.cancelClick = function() {
 };
 
 AddfeedAssistant.prototype.updateFeed = function() {
-    var url = this.urlModel.value;
-	var title = this.titleModel.value;
-	var enabled = this.enabledModel.value;
-	var listMode = this.listModeModel.value;
-	var detailMode = this.detailModeModel.value;
-	var fullStoryMode = this.fullStoryModel.value;
-	var viewMode = (detailMode << 24) | (listMode << 16) | (fullStoryMode & 0xFF);
-	var showPicture = this.showPictureModel.value;
-	var showMedia = this.showMediaModel.value;
-	var sortMode = this.sortModeModel.value;
-	var allowHTML = this.allowHTMLModel.value;
+    this.feed.url = this.urlModel.value;
+	this.feed.title = this.titleModel.value;
+	this.feed.enabled = this.enabledModel.value;
+	this.feed.showListSummary = (this.listModeModel.value === 0) ||
+								(this.listModeModel.value == 2)
+	this.feed.showListCaption = (this.listModeModel.value === 0) ||
+								(this.listModeModel.value == 1)
+	this.feed.showDetailSummary = (this.detailModeModel.value === 0) ||
+								  (this.detailModeModel.value == 2)
+	this.feed.showDetailCaption = (this.detailModeModel.value === 0) ||
+								  (this.detailModeModel.value == 1)
+	this.feed.showPicture = this.showPictureModel.value;
+	this.feed.showMedia = this.showMediaModel.value;
+	this.feed.sortMode = this.sortModeModel.value;
+	this.feed.allowHTML = this.allowHTMLModel.value;
 	
-    if(/^[a-z]{1,5}:/.test(url) === false) {
-        url = url.replace(/^\/{1,2}/, "");                                
-        url = "http://" + url;                                          
+    if(/^[a-z]{1,5}:/.test(this.feed.url) === false) {
+        this.feed.url = this.feed.url.replace(/^\/{1,2}/, "");                                
+        this.feed.url = "http://" + this.feed.url;
     }
     
     // Update the entered URL & model.
-    this.urlModel.value = url;
+    this.urlModel.value = this.feed.url;
     this.controller.modelChanged(this.urlModel);
 
 	// Update the OK button.	
-	this.okButtonModel.label = this.feed === null ? $L("Adding Feed...") : $L("Updating Feed...");
+	this.okButtonModel.label = this.isAdd ? $L("Adding Feed...") : $L("Updating Feed...");
 	this.okButtonModel.disabled = true;
 	this.controller.modelChanged(this.okButtonModel);
 
-	if(this.feed !== null) {
-		FeedReader.feeds.editFeed(this.index, title, url, enabled, viewMode,
-								  showPicture, showMedia, sortMode, allowHTML);
-		this.okButton.mojo.deactivate();
-		this.controller.stageController.popScene();
-	} else {
-		FeedReader.feeds.addFeed(title, url, enabled, viewMode,
-								 showPicture, showMedia, sortMode, allowHTML);
-		this.okButton.mojo.deactivate();
-		this.controller.stageController.popScene();
-	}
+	// Save the feed.
+	this.feeds.addOrEditFeed(this.feed);
+	this.okButton.mojo.deactivate();
+	this.controller.stageController.popScene();
 }; 

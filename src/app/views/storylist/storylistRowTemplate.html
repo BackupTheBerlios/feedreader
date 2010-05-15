@@ -1,7 +1,20 @@
 <div class="palm-row" x-mojo-tap-highlight="momentary">
  	<div class="palm-row-wrapper textfield-group">
- 		<div class="story-date truncating-text">#{date} #{origin}</div>
-		<div class="story-title #{titleStyle} #{titleColor} #{large} multiline">#{-title}</div>   
-		<div class="story-content #{contentStyle} #{large} condensed multiline">#{-shortSummary}</div>
+		<table>
+			<tr>
+				<td>
+					<div class="story-date truncating-text">#{date} #{origin}</div>
+					<div class="story-title #{titleStyle} #{titleColor} #{large} multiline">#{-title}</div>   
+				</td>
+				<td>
+					<div class="list-star-icon #{starClass} icon" id="starIcon" x-mojo-tap-highlight="momentary"></div>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<div class="story-content #{contentStyle} #{large} condensed multiline">#{-shortSummary}</div>
+				</td>
+			</tr>
+		</table>
 	</div>
 </div>

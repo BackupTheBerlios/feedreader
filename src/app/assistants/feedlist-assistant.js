@@ -23,12 +23,17 @@
 function FeedlistAssistant(feeds) {
 	this.feeds = feeds;
 	this.setupComplete = false;
-	this.filter = "";
+	this.filter = "dummyString";
 	this.feedListWidget = null;
 	this.commandModel = {};
+	this.popupItem = null;
 	
 	this.activateWindowHandler = this.activateWindow.bindAsEventListener(this);
 	this.deactivateWindowHandler = this.deactivateWindow.bindAsEventListener(this);
+	
+	this.listFindHandler = this.listFind.bind(this);
+	this.updateItemsHandler = this.updateItems.bind(this);
+	this.setListLengthHandler = this.setListLength.bind(this);
 }
 
 FeedlistAssistant.prototype.setup = function() {
@@ -46,10 +51,10 @@ FeedlistAssistant.prototype.setup = function() {
         itemTemplate:	"feedlist/feedlistRowTemplate", 
         listTemplate:	"feedlist/feedlistListTemplate", 
 		formatters: 	{
-			feedIcon: 		this.getFeedIcon.bind(this),
-			title:			this.getTitle.bind(this),
-			url:			this.getURL.bind(this),
-			large:			this.getLargeFont.bind(this)
+			feedIcon: 	this.listFormatter.bind(this, "feedIcon"),
+			title:		this.listFormatter.bind(this, "title"),
+			url:		this.listFormatter.bind(this, "url"),
+			large:		this.listFormatter.bind(this, "large")
 		},
 		preventDeleteProperty:	"preventDelete",
 		uniquenessProperty: 	"uid",
@@ -58,7 +63,7 @@ FeedlistAssistant.prototype.setup = function() {
         renderLimit: 	40,
         reorderable:	true,
 		delay:			700,
-		filterFunction: this.listFind.bind(this)
+		filterFunction: this.listFindHandler
     });
 	
 	this.controller.setupWidget("feedSpinner", {
@@ -78,12 +83,6 @@ FeedlistAssistant.prototype.setup = function() {
 	// Setup command menu.
 	this.initCommandModel();
     this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel);
-	
-	FeedReader.endSceneSetup(this);
-	if(this.feeds.loaded) {
-		Mojo.Log.info("FEEDLIST> List already loaded, removing splash");
-		FeedReader.hideSplash();
-	}
 };
 
 FeedlistAssistant.prototype.initCommandModel = function() {
@@ -98,33 +97,19 @@ FeedlistAssistant.prototype.initCommandModel = function() {
 	}
 };
 
-FeedlistAssistant.prototype.getFeedIcon = function(property, model) {
-	var feedIcon = "";
-	
-	switch(model.type) {
-		case "allItems":	feedIcon = "allitems";	break;
-		case "atom":		feedIcon = "atom";		break;
-		case "rss":
-		case "RDF":			feedIcon = "rss";		break;
-		default:			feedIcon = "unknown";	break;
+FeedlistAssistant.prototype.listFormatter = function(attribute, property, model) {
+	if(!model) {
+		return {};
 	}
-	if(!model.enabled) {
-		feedIcon += " disabled";
+
+	switch(attribute) {
+		case "feedIcon":	return { feedIcon: this.feeds.getFeedIconClass(model) };
+		case "title":		return { title: this.feeds.getFeedTitle(model) };
+		case "url":			return { url: this.feeds.getFeedURL(model) };
+		case "large":		return { large: FeedReader.prefs.largeFont ? "large" : "" };
 	}
 	
-	return { feedIcon: feedIcon };
-};
-
-FeedlistAssistant.prototype.getTitle = function(property, model) {
-	return { title: this.feeds.getFeedTitle(model) };
-};
-
-FeedlistAssistant.prototype.getURL = function(property, model) {
-	return { url: model.type == "allItems" ? $L("Aggregation of all feeds") : model.url };	
-};
-
-FeedlistAssistant.prototype.getLargeFont = function(property, model) {
-	return { large: FeedReader.prefs.largeFont ? "large" : "" };
+	return {};
 };
 
 FeedlistAssistant.prototype.closeDashboard = function() {
@@ -140,7 +125,17 @@ FeedlistAssistant.prototype.activate = function(event) {
 	if(this.setupComplete) {
 		this.initCommandModel();
 		this.controller.modelChanged(this.commandModel);
-		this.updateFeedModel();
+		this.refreshList();
+	} else {
+		if(this.feeds.isReady()) {
+			this.filter = "";
+			this.refreshList();
+		}
+		if(FeedReader.prefs.showChanges) {
+			FeedReader.prefs.showChanges = false;
+			this.controller.showDialog({template: "changelog/changelog-scene",
+										assistant: new ChangelogAssistant(this.controller)});
+		}
 	}
 
 	FeedReader.isActive = true;
@@ -170,68 +165,71 @@ FeedlistAssistant.prototype.cleanup = function(event) {
 	this.feeds.spooler.aboutToClose();
 };
 
-FeedlistAssistant.prototype.updateFeedModel = function() {
-	if(this.setupComplete && this.feedListWidget) {
-		this.feedListWidget.mojo.setLengthAndInvalidate(this.feeds.list.length);
-	}
+FeedlistAssistant.prototype.refreshList = function() {
+	Mojo.Log.info("FEEDLIST> Refreshing list");
+	this.feeds.getFeedCount(this.filter, this.setListLengthHandler);
 };
 
 FeedlistAssistant.prototype.showFeed = function(event) {
 	var target = event.originalEvent.target.id;
-	var itemIndex = this.feeds.list.indexOf(event.item);
-	
 	if(target !== "info") {
-		this.controller.stageController.pushScene("storylist", this.feeds, itemIndex);
+		this.controller.stageController.pushScene("storylist", this.feeds, event.item);
 	} else  {
-	    var myEvent = event;
-	    var findPlace = myEvent.originalEvent.target;
-	    this.popupIndex = itemIndex;
+	    var findPlace = event.originalEvent.target;		
+		this.popupItem = event.item;
 		
 		var items = [
 	        {label: $L("Mark all unread"),	command: "feed-unread"},
 	        {label: $L("Mark all read"),	command: "feed-read"}
 		];
-		if(this.feeds.list[itemIndex].type != "allItems") {
+		if(this.popupItem.feedType >= feedTypes.ftUnknown) {
 	        items.push({label: $L("Edit"),	command: "feed-edit"});
 		}
 		items.push({label: $L("Update"),	command: "feed-update"});
 	    items.push({label: $L("Show"),		command: "feed-show"});
 		
 	    this.controller.popupSubmenu({
-	      onChoose:  this.popupHandler,
-	      placeNear: findPlace,
-	      items: items
+	      onChoose: 	this.popupHandler,
+	      placeNear:	findPlace,
+	      items: 		items
 	      });
 	}
 };
 
 FeedlistAssistant.prototype.deleteFeed = function(event) {
 	event.preventDefault();	// Needed, otherwise bad things can happen.
-	this.feeds.deleteFeed(this.feeds.list.indexOf(event.item));
+	this.feeds.deleteFeed(event.item.id);
 };
 
 FeedlistAssistant.prototype.listFind = function(filterString, listWidget, offset, count) {
-	var subset = [];
-	var totalSubsetSize = 0;
-	var lwrFilterString = filterString.toLowerCase();
-	
-	for(var i = 0; i < this.feeds.list.length; i++) {
-		if (this.feeds.list[i].title.toLowerCase().include(lwrFilterString) ||
-			this.feeds.list[i].url.toLowerCase().include(lwrFilterString)) {
-			
-			if ((subset.length < count) && (totalSubsetSize >= offset)) {
-				subset.push(this.feeds.list[i]);
-			}
-			totalSubsetSize++;
+	if(this.feeds.isReady()) {
+		if(this.filter != filterString) {
+			this.filter = filterString;
+			this.feeds.getFeedCount(this.filter, this.setListLengthHandler);
+		} else {
+			this.feeds.getFeeds(this.filter, offset, count, this.updateItemsHandler);
 		}
 	}
-	listWidget.mojo.noticeUpdatedItems(offset, subset);
-	
-	if (this.filter !== filterString) {
-		listWidget.mojo.setLength(totalSubsetSize);
-		listWidget.mojo.setCount(totalSubsetSize);
+};
+
+FeedlistAssistant.prototype.updateItems = function(offset, items) {
+	this.feedListWidget.mojo.noticeUpdatedItems(offset, items);
+	if(!this.setupComplete) {
+		FeedReader.endSceneSetup(this);
+		FeedReader.hideSplash();
 	}
-	this.filter = filterString;
+};
+
+FeedlistAssistant.prototype.setListLength = function(count) {
+	if(this.filter !== "") {
+		// Stop the FilterField spinner and set the found count.
+		this.feedListWidget.mojo.setCount(count);
+	}
+	this.feedListWidget.mojo.setLengthAndInvalidate(count);
+	if(!this.setupComplete && (count <= 0)) {
+		FeedReader.endSceneSetup(this);
+		FeedReader.hideSplash();
+	}
 };
 
 FeedlistAssistant.prototype.reOrderFeed =  function(event) {
@@ -245,24 +243,28 @@ FeedlistAssistant.prototype.addNewFeed = function(event) {
 FeedlistAssistant.prototype.popupHandler = function(command) {
 	switch(command) {
 		case "feed-edit":
-		    this.controller.stageController.pushScene("addfeed", this.feeds, this.popupIndex);
+		    this.controller.stageController.pushScene("addfeed", this.feeds, this.popupItem);
 			break;
 		
 		case "feed-read":
-			this.feeds.markAllRead(this.popupIndex);
+			this.feeds.markAllRead(this.popupItem);
 			break;
 			
 		case "feed-unread":
-			this.feeds.markAllUnRead(this.popupIndex);
+			this.feeds.markAllUnRead(this.popupItem);
 			break;
 			
 		case "feed-update":
 			this.feeds.interactiveUpdate = true;
-			this.feeds.enqueueUpdate(this.popupIndex);
+			if(this.popupItem.feedType == feedTypes.ftAllItems) {
+				this.feeds.enqueueUpdateAll();
+			} else {
+				this.feeds.enqueueUpdate(this.popupItem.url);
+			}
 			break;
 			
 		case "feed-show":
-			this.controller.stageController.pushScene("storylist", this.feeds, this.popupIndex);
+			this.controller.stageController.pushScene("storylist", this.feeds, this.popupItem);
 			break;
 	}	  
 };
@@ -277,7 +279,7 @@ FeedlistAssistant.prototype.handleCommand = function(event) {
             switch(event.command) {
                 case "do-fullUpdate":
 					this.feeds.interactiveUpdate = true;
-					this.feeds.enqueueUpdate(-1);
+					this.feeds.enqueueUpdateAll();
                 	break;
 				
 				case "jslint-dummy":
@@ -291,20 +293,19 @@ FeedlistAssistant.prototype.considerForNotification = function(params){
 	if(params) {
 		switch(params.type) {
 			case "feedlist-loaded":
-				this.feedListWidget.mojo.setLength(this.feeds.list.length);
-				this.setupComplete = true;
-				FeedReader.endSceneSetup(this);
-				if(FeedReader.prefs.showChanges) {
-					FeedReader.prefs.showChanges = false;
-					this.controller.showDialog({template: "changelog/changelog-scene",
-												assistant: new ChangelogAssistant(this.controller)});
+				if(this.feedListWidget) {
+					Mojo.Log.info("FEEDLIST> db ready; setup completed");
+					if(!this.setupComplete) {
+						this.filter = "";
+						this.refreshList();
+					}
 				}
 				break;
 				
-			case "feedlist-newfeed":
+			case "feedlist-deletedfeed":
 			case "feedlist-editedfeed":
-				if(this.setupComplete) {
-					this.updateFeedModel();
+				if(this.feeds.isReady()) {
+					this.refreshList();
 					params = undefined;
 				}
 				break;
@@ -312,12 +313,23 @@ FeedlistAssistant.prototype.considerForNotification = function(params){
 			case "feed-update":
 				if(this.setupComplete) {
 					var updateIndex = FeedReader.prefs.leftHanded ? 1 : 0;
-					if(this.commandModel.items[updateIndex].disabled != this.feeds.updateInProgress) {
-						this.commandModel.items[updateIndex].disabled = this.feeds.updateInProgress;
+					if(this.commandModel.items[updateIndex].disabled != this.feeds.isUpdating()) {
+						this.commandModel.items[updateIndex].disabled = this.feeds.isUpdating();
 						this.controller.modelChanged(this.commandModel);
 					}
-					this.updateFeedModel();
-					params = undefined;
+					if(!this.feeds.isUpdating()) {
+						this.refreshList();
+					}
+					var node = this.feedListWidget.mojo.getNodeByIndex(params.feedOrder);
+					var item = this.feedListWidget.mojo.getItemByNode(node);
+					if(item) {
+						item.spinning = params.inProgress;
+						var items = [];
+						items.push(item);
+						this.feedListWidget.mojo.noticeUpdatedItems(params.feedOrder, items);
+						this.feeds.getFeeds(this.filter, params.feedOrder, 1, this.updateItemsHandler);
+						params = undefined;
+					}
 				}
 				break;
 		}

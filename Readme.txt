@@ -29,6 +29,16 @@ Contributors
 Changelog
 =========
 
+Version 2.0.0 (feature release)
+-------------------------------
+ * new database backend
+ * greatly improved speed
+ * stories can now be marked as being "starred"
+ * changed the way, stories are classified as being "new"
+ * refactored list formatters
+ * improved transition control
+ * the search function now searches the stories texts too
+
 Version 1.3.0 (feature release)
 -------------------------------
  * changes from 1.2.3

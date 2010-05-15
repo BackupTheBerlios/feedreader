@@ -281,9 +281,7 @@ FeedReader = {
 function AppAssistant (appController) {
 	FeedReader.prefs = new prefs();
 	FeedReader.prefs.load();
-	
 	FeedReader.feeds = new feeds();
-	FeedReader.feeds.load();
 }
 
 /**
@@ -324,7 +322,9 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 			case "feedUpdate":
 				Mojo.Log.info("scheduled feed update");
 				FeedReader.prefs.setTimer();
-				FeedReader.feeds.enqueueUpdate(-1);
+				if(FeedReader.feeds.isReady() && !FeedReader.feeds.isUpdating()) {
+					FeedReader.feeds.enqueueUpdateAll();
+				}
 				break;
         
 			case "bannerPressed":
@@ -400,7 +400,7 @@ AppAssistant.prototype.handleCommand = function(event) {
                 	break;
             
                 case "do-feedUpdate":
-                    FeedReader.feeds.enqueueUpdate(-1);
+                    FeedReader.feeds.enqueueUpdateAll();
                 	break;
             }
         }
@@ -408,15 +408,4 @@ AppAssistant.prototype.handleCommand = function(event) {
 };
 
 AppAssistant.prototype.considerForNotification = function(params){
-	if(params) {
-		switch(params.type) {
-			case "feedlist-loaded":
-				Mojo.Log.info("APPASSISTANT> Feed list loaded; removing splash");
-				FeedReader.hideSplash();
-				break;
-				
-			case "jslint-dummy":
-				break;
-		}
-	}
 };
