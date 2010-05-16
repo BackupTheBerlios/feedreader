@@ -630,6 +630,10 @@ var feeds = Class.create ({
 	getFeeds: function(filter, offset, count, onSuccess) {
 		this.db.getFeeds(filter, offset, count, onSuccess);
 	},
+
+	getFeed: function(id, onSuccess) {
+		this.db.getFeed(id, onSuccess);
+	},
 	
 	getFeedCount: function(filter, onSuccess) {
 		this.db.getFeedCount(filter, onSuccess);
@@ -643,6 +647,10 @@ var feeds = Class.create ({
 		this.db.getStoryCount(feed, filter, onSuccess);
 	},
 	
+	getStoryIDList: function(feed, onSuccess) {
+		this.db.getStoryIDList(feed, onSuccess);
+	},
+
 	getStory: function(id, onSuccess) {
 		this.db.getStory(id, onSuccess);
 	},

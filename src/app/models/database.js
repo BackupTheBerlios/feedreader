@@ -43,7 +43,13 @@ var feedTypes = {
  */
 
 var commonSQL = {
-	csGetFeedIDByURL:	"SELECT id FROM feeds WHERE url = ?"
+	csGetFeedIDByURL:	"SELECT id FROM feeds WHERE url = ?",
+	csGetFeedData:		"SELECT COALESCE(SUM(isNew), 0) AS numNew, COALESCE((COUNT(uuid) - SUM(isRead)), 0) AS numUnRead, feeds.*" +
+						"  FROM feeds" +
+						"  LEFT JOIN stories" +
+						"    ON (stories.fid = feeds.id) OR (feeds.feedType = ? AND stories.isStarred = 1) OR (feeds.feedType = ?) ",
+	csGetStoryIDs:		"SELECT id" +
+						"  FROM stories"
 };
 
 /**
@@ -485,10 +491,7 @@ var database = Class.create({
 		onFail = onFail || this.errorHandler;
 		this.transaction(
 			function(transaction) {
-				transaction.executeSql("SELECT COALESCE(SUM(isNew), 0) AS numNew, COALESCE((COUNT(uuid) - SUM(isRead)), 0) AS numUnRead, feeds.*" +
-									   "  FROM feeds" +
-									   "  LEFT JOIN stories" +
-									   "    ON (stories.fid = feeds.id) OR (feeds.feedType = ? AND stories.isStarred = 1) OR (feeds.feedType = ?) " +
+				transaction.executeSql(commonSQL.csGetFeedData +
 									   "  WHERE feeds.title LIKE '%' || ? || '%'" +
 									   "  GROUP BY feeds.id" +
 									   "  ORDER BY feedOrder" +
@@ -504,6 +507,29 @@ var database = Class.create({
 			});
 	},
 	
+	/**
+	 * Retrieve a feed.
+	 *
+	 * @param	id			{Integer}		feed id
+	 * @param	onSuccess	{function}		function to be called on success
+	 * @param	onFail		{function}		function to be called on failure
+	 */
+	getFeed: function(id, onSuccess, onFail) {
+		Mojo.assert(onSuccess, "DB> getFeed needs data handler");		
+		onFail = onFail || this.errorHandler;
+		this.transaction(
+			function(transaction) {
+				transaction.executeSql(commonSQL.csGetFeedData +
+									   "  WHERE feeds.id = ?",
+					[feedTypes.ftStarred, feedTypes.ftAllItems, id],
+					function(transaction, result) {
+						if(result.rows.length > 0) {
+							onSuccess(result.rows.item(0));
+						}
+					}, onFail);
+			});
+	},
+
 	/**
 	 * Get the count of story matching a filter string.
 	 *
@@ -619,8 +645,76 @@ var database = Class.create({
 			
 			default:
 				this.transaction(function(transaction) {
-					transaction.executeSql(selectStmt + " AND fid = ?" + orderAndLimit,
+					transaction.executeSql(selectStmt + " AND s.fid = ?" + orderAndLimit,
 										   [filter, feed.id, limit, offset],
+										   handleResult, onFail);
+				});
+				break;
+		}
+	},
+	
+	/**
+	 * Retrieve a list of story IDs.
+	 *
+	 * @param	feed		{Object}		feed object
+	 * @param	onSuccess	{function}		function to be called on success
+	 * @param	onFail		{function}		function to be called on failure
+	 */
+	getStoryIDList: function(feed, onSuccess, onFail) {
+		Mojo.assert(onSuccess, "DB> getStoryIDList needs data handler");
+		onFail = onFail || this.errorHandler;
+		
+		// This function will assemble the result set.
+		var handleResult = function(transaction, result) {
+			var list = [];
+			for(var i = 0; i < result.rows.length; i++) {
+				list.push(result.rows.item(i).id);
+			}
+			onSuccess(list);
+		};
+
+		// Build the basic SELECT statement.
+		var selectStmt = "SELECT s.id" +
+						 "  FROM stories AS s" +
+						 "  INNER JOIN feeds AS f ON (f.id = s.fid)";
+		
+		var whereClausAddOn = null;
+		switch(feed.sortMode & 0xFF) {
+			case 1:	whereClausAddOn = " s.isRead = 0";	break;
+			case 2: whereClausAddOn = " s.isNew = 1";	break;
+		}
+		
+		// Build the ORDER clause.
+		var orderAndLimit = " ORDER BY ";
+		if((feed.sortMode & 0xFF00) == 0x0100) {
+			orderAndLimit += "f.feedOrder, ";
+		}
+		orderAndLimit += "s.pubdate DESC";
+		
+		switch(feed.feedType) {
+			case feedTypes.ftAllItems:
+				this.transaction(function(transaction) {
+					transaction.executeSql(selectStmt +
+										   (whereClausAddOn ? " WHERE" + whereClausAddOn : "") +
+										   orderAndLimit, [],
+										   handleResult, onFail);
+				});
+				break;
+			
+			case feedTypes.ftStarred:
+				this.transaction(function(transaction) {
+					transaction.executeSql(selectStmt + " WHERE s.isStarred = 1" +
+										   (whereClausAddOn ? " AND" + whereClausAddOn : "") +
+										   orderAndLimit,
+										   [], handleResult, onFail);
+				});
+				break;
+			
+			default:
+				this.transaction(function(transaction) {
+					transaction.executeSql(selectStmt + " WHERE s.fid = ?" +
+										   (whereClausAddOn ? " AND" + whereClausAddOn : "") +
+										   orderAndLimit, [feed.id],
 										   handleResult, onFail);
 				});
 				break;

@@ -43,6 +43,10 @@ function FullStoryAssistant(feeds, feed, storyID) {
 	this.pictureSpinnerModel = {
 		spinning: false
 	};
+	this.storyList = null;
+	this.storyIndex = -1;
+	this.isFirst = true;
+	this.isLast = true;
 
 	/* pre bind handlers */	
 	this.startSeeking = this.startSeeking.bindAsEventListener(this);
@@ -53,8 +57,6 @@ function FullStoryAssistant(feeds, feed, storyID) {
 	this.storyTap = this.storyTap.bindAsEventListener(this);
 	this.openURL = this.openURL.bind(this);
 	this.pictureLoaded = this.pictureLoaded.bind(this);
-
-	this.feeds.getStory(this.storyID, this.dataHandler.bind(this));
 }
 
 FullStoryAssistant.prototype.setup = function() {
@@ -80,10 +82,17 @@ FullStoryAssistant.prototype.setup = function() {
 	this.controller.listen("media-progress", Mojo.Event.propertyChange, this.doSeek);
 	this.controller.listen("media-progress", Mojo.Event.sliderDragStart, this.startSeeking);
 	this.controller.listen("media-progress", Mojo.Event.sliderDragEnd, this.stopSeeking);
+
+	// Setup the picture spinner.
+	this.controller.setupWidget("picture-spinner",
+								{ spinnerSize: "small" },
+								this.pictureSpinnerModel);
 	
 	// Handle a story click.
     this.controller.listen("followLink", Mojo.Event.tap, this.storyTap);
     this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel);
+
+	this.refreshAll();
 };
 
 FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
@@ -91,8 +100,6 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 	this.story = story;
 	this.urls = urls;
 	
-	Mojo.Log.info("FS> Got feed data");
-
 	if(this.doShowMedia) {
 		this.mediaCanPlay = this.mediaCanPlay.bindAsEventListener(this);
 		this.mediaPlaying = this.mediaPlaying.bindAsEventListener(this);
@@ -144,9 +151,6 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 	}
 	
 	// Setup the story's picture.
-	this.controller.setupWidget("picture-spinner",
-								{ spinnerSize: "small" },
-								this.pictureSpinnerModel);
 	if(this.doShowPicture && (this.story.picture.length > 0)) {
 		this.controller.get("story-picture").src = this.story.picture;
 		this.pictureSpinnerModel.spinning = true;
@@ -165,9 +169,6 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 		content.appendChild(wrapper);
 		wrapper.className = "video";
 	}
-	// Setup command menu.
-	this.initCommandModel();
-    this.controller.modelChanged(this.commandModel);
 
 	if(!this.doShowMedia) {
 		// Hide the player.
@@ -213,7 +214,35 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 		this.controller.hideWidgetContainer("scene-main");
 	}
 
+	this.feedDataHandler(this.feed);
 	FeedReader.endSceneSetup(this);
+};
+
+FullStoryAssistant.prototype.listDataHandler = function(ids) {
+	this.storyList = ids;
+	
+	this.storyIndex = -1;
+	for(var i = 0; i < this.storyList.length; i++) {
+		if(this.storyList[i] == this.storyID) {
+			this.storyIndex = i;
+			break;
+		}
+	}
+	this.isFirst = this.storyIndex <= 0;
+	this.isLast = this.storyIndex >= this.storyList.length;
+
+	// Setup command menu.
+	this.initCommandModel();
+    this.controller.modelChanged(this.commandModel);
+};
+
+FullStoryAssistant.prototype.feedDataHandler = function(feed) {
+	this.feed = feed;
+
+	var unReadCount = this.feed.numUnRead - (this.story.isRead ? 0 : 1);
+	var newCount = this.feed.numNew - (this.story.isNew ? 1 : 0);
+	this.controller.get("new-count").update(newCount);
+	this.controller.get("unread-count").update(unReadCount);
 };
 
 FullStoryAssistant.prototype.aboutToActivate = function(callback) {
@@ -222,15 +251,14 @@ FullStoryAssistant.prototype.aboutToActivate = function(callback) {
 
 FullStoryAssistant.prototype.activate = function(event) {
 	if(this.setupComplete) {
-		this.initCommandModel();
-		this.controller.modelChanged(this.commandModel);
+		if(this.storyList) {
+			this.initCommandModel();
+			this.controller.modelChanged(this.commandModel);
+		}
 		this.controller.modelChanged(this.pictureSpinnerModel);
 	}
-
-	var unReadCount = this.feed.numUnRead - (this.story.isRead ? 0 : 1);
-	var newCount = this.feed.numNew - (this.story.isNew ? 1 : 0);
-	this.controller.get("new-count").update(newCount);
-	this.controller.get("unread-count").update(unReadCount);
+	
+	this.feeds.getStoryIDList(this.feed, this.listDataHandler.bind(this));
 };
 
 FullStoryAssistant.prototype.deactivate = function(event) {
@@ -258,16 +286,22 @@ FullStoryAssistant.prototype.cleanup = function(event) {
 	}
 };
 
+FullStoryAssistant.prototype.refreshAll = function() {
+	this.feeds.getStory(this.storyID, this.dataHandler.bind(this));
+	this.feeds.getStoryIDList(this.feed, this.listDataHandler.bind(this));
+	this.feeds.getFeed(this.feed.id, this.feedDataHandler.bind(this));
+};
+
 FullStoryAssistant.prototype.initCommandModel = function() {
 	this.commandModel.items.splice(0, this.commandModel.items.length);
     this.commandModel.items.push({
 		items: [{
 			icon: "back",
-			//disabled: this.storyIndex === 0,
+			disabled: this.isFirst,
 			command: "do-previousStory"
 		}, {
 			icon: "forward",
-			//disabled: this.storyIndex === (this.storyList.length - 1),
+			disabled: this.isLast,
 			command: "do-nextStory"
 		}]
 	});
@@ -485,18 +519,18 @@ FullStoryAssistant.prototype.updateMediaUI = function() {
 };
 
 FullStoryAssistant.prototype.storyTap = function(event) {
-	if(this.story.url.length == 1) {
-		this.openURL(this.story.url[0].href);
-	} else if(this.story.url.length > 1) {
+	if(this.urls.length == 1) {
+		this.openURL(this.urls[0].href);
+	} else if(this.urls.length > 1) {
 		var subMenu = {
 			onChoose:  this.openURL,
-			placeNear: event.target,
+			placeNear: event.originalEvent.target,
 			items: []
 		};
-		for(var i = 0; i < this.story.url.length; i++) {
+		for(var i = 0; i < this.urls.length; i++) {
 			subMenu.items.push({
-				label:		this.story.url[i].title,
-				command:	this.story.url[i].href
+				label:		this.urls[i].title,
+				command:	this.urls[i].href
 			});
 		}
 		
@@ -537,15 +571,15 @@ FullStoryAssistant.prototype.handleCommand = function(event) {
 				this.controller.stageController.swapScene({
 					name: "fullStory",
 					transition: Mojo.Transition.crossFade
-				}, this.feeds, this.feedIndex, this.storyList, this.storyIndex - 1);
+				}, this.feeds, this.feed, this.storyList[this.storyIndex - 1]);
 				break;
 				
 			case "do-nextStory":
-				this.feeds.markStoryRead(this.origin.feedIndex, this.origin.storyIndex);
+				this.feeds.markStoryRead(this.story);
 				this.controller.stageController.swapScene({
 					name: "fullStory",
 					transition: Mojo.Transition.crossFade
-				}, this.feeds, this.feedIndex, this.storyList, this.storyIndex + 1);
+				}, this.feeds, this.feed, this.storyList[this.storyIndex + 1]);
 				break;
 			
 			case "do-togglePlay":
