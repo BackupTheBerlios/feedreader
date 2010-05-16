@@ -186,13 +186,13 @@ AddfeedAssistant.prototype.updateFeed = function() {
 	this.feed.title = this.titleModel.value;
 	this.feed.enabled = this.enabledModel.value;
 	this.feed.showListSummary = (this.listModeModel.value === 0) ||
-								(this.listModeModel.value == 2)
+								(this.listModeModel.value == 2);
 	this.feed.showListCaption = (this.listModeModel.value === 0) ||
-								(this.listModeModel.value == 1)
+								(this.listModeModel.value == 1);
 	this.feed.showDetailSummary = (this.detailModeModel.value === 0) ||
-								  (this.detailModeModel.value == 2)
+								  (this.detailModeModel.value == 2);
 	this.feed.showDetailCaption = (this.detailModeModel.value === 0) ||
-								  (this.detailModeModel.value == 1)
+								  (this.detailModeModel.value == 1);
 	this.feed.showPicture = this.showPictureModel.value;
 	this.feed.showMedia = this.showMediaModel.value;
 	this.feed.sortMode = this.sortModeModel.value;

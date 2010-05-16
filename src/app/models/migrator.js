@@ -144,7 +144,6 @@ var migrator = Class.create ({
 		Mojo.Log.warn("FEEDS> unable to retrieve feedlist");
 		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-loaded" });
 	},
-
 	
 	/** @private
 	 *

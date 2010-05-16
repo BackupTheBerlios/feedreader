@@ -24,7 +24,7 @@ var mediaModes = {
 	mdNoMedia:	0,
 	mdAudio:	1,
 	mdVideo:	2
-}
+};
 
 function FullStoryAssistant(feeds, feed, storyID) {
 	this.feeds = feeds;

@@ -37,7 +37,6 @@ var feedProto = Class.create({
 
 var feeds = Class.create ({
 	list: [],			// contains the individual feeds
-	loaded: false,		// indicates if list is successfully loaded
 
 	db: {},				// takes the feed database
 	connStatus: {},		// takes the connection state service

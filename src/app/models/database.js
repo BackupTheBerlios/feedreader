@@ -140,6 +140,9 @@ var database = Class.create({
 			if(this.migrator) {
 				delete this.migrator;
 			}
+			if(FeedReader.prefs.updateOnStart) {
+				FeedReader.feeds.enqueueUpdateAll();
+			}
 		}
 	},
 	
@@ -181,6 +184,9 @@ var database = Class.create({
 		}
 		if(this.ready && !this.loading) {
 			Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-loaded" });
+			if(FeedReader.prefs.updateOnStart) {
+				FeedReader.feeds.enqueueUpdateAll();
+			}
 		}
 	},
 	
@@ -742,7 +748,7 @@ var database = Class.create({
 						onSuccess(feed, story, urls);
 					}
 				}, onFail);
-		}
+		};
 		
 		var getFeedData = function(transaction) {
 			transaction.executeSql("SELECT *" +
@@ -756,9 +762,8 @@ var database = Class.create({
 						getURLs(transaction);
 					}
 				}, onFail);
-		}
-
-
+		};
+		
 		this.transaction(function(transaction) {
 			transaction.executeSql("SELECT * FROM stories WHERE id = ?",
 				[id],
