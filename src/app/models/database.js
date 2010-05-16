@@ -87,8 +87,7 @@ var database = Class.create({
 			var initDBHandler = this.initDB.bind(this);
 			this.transaction(function(transaction) {
 				transaction.executeSql("SELECT MAX(version) AS version FROM system",
-									   [], initDBHandler, initDBHandler);
-//									   [], checkVersionHandler, initDBHandler);
+									   [], checkVersionHandler, initDBHandler);
 			});
 		} catch(e) {
 			Mojo.Log.logException(e, "DB");
@@ -155,7 +154,7 @@ var database = Class.create({
 			// At first, check the properties cookie.
 			var props = new Mojo.Model.Cookie("comtegi-stuffAppFeedReaderProps");
 			var data = props.get();
-			//props.remove();	// delete te cookie
+			props.remove();	// Delete the cookie.
 			var ver = data ? data.version : 1;
 			
 			if(ver == 1) {
@@ -177,7 +176,7 @@ var database = Class.create({
 				this.loading = false;
 			}
 		} else {
-			Mojo.Log.info("DB> No migrating needed");
+			Mojo.Log.info("DB> No migration needed");
 			this.loading = false;
 		}
 		if(this.ready && !this.loading) {
@@ -196,15 +195,6 @@ var database = Class.create({
 			this.migrateFromDepot = true;
 			Mojo.Log.info("DB> initializing database");
 			
-			transaction.executeSql('DROP TABLE storyurls',
-								   [], this.nullDataHandler, this.errorHandler);
-			transaction.executeSql('DROP TABLE stories',
-								   [], this.nullDataHandler, this.errorHandler);
-			transaction.executeSql('DROP TABLE feeds',
-								   [], this.nullDataHandler, this.errorHandler);
-			transaction.executeSql('DROP TABLE system',
-								   [], this.nullDataHandler, this.errorHandler);
-
 			// Create the feed table.
 			transaction.executeSql('CREATE TABLE feeds (' +
 								   '  id INTEGER PRIMARY KEY,' +

@@ -131,6 +131,9 @@ var migrator = Class.create ({
 		}
 		delete this.list;
 		Mojo.Log.info("MIGRATOR> migration complete");
+		
+		this.depot.removeAll();	// Delete the depot database.
+		Mojo.Log.info("MIGRATOR> deleted depot");
 	},
 	
 	/** @private
