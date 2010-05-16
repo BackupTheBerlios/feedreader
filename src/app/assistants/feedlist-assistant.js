@@ -189,9 +189,11 @@ FeedlistAssistant.prototype.showFeed = function(event) {
 	        {label: $L("Mark all read"),	command: "feed-read"}
 		];
 		if(this.popupItem.feedType >= feedTypes.ftUnknown) {
-	        items.push({label: $L("Edit"),	command: "feed-edit"});
+	        items.push({label: $L("Edit"), command: "feed-edit"});
 		}
-		items.push({label: $L("Update"),	command: "feed-update"});
+		if(this.popupItem.feedType != feedTypes.ftStarred) {
+			items.push({label: $L("Update"), command: "feed-update"});
+		}
 	    items.push({label: $L("Show"),		command: "feed-show"});
 		
 	    this.controller.popupSubmenu({
@@ -298,6 +300,13 @@ FeedlistAssistant.prototype.handleCommand = function(event) {
 FeedlistAssistant.prototype.considerForNotification = function(params){
 	if(params) {
 		switch(params.type) {
+			case "feedlist-changed":
+				if(this.feeds.isReady()) {
+					this.refreshList();
+					params = undefined;
+				}
+				break;
+			
 			case "feedlist-loaded":
 				if(this.feedListWidget) {
 					Mojo.Log.info("FEEDLIST> db ready; setup completed");
@@ -305,13 +314,6 @@ FeedlistAssistant.prototype.considerForNotification = function(params){
 						this.filter = "";
 						this.refreshList();
 					}
-				}
-				break;
-				
-			case "feedlist-editedfeed":
-				if(this.feeds.isReady()) {
-					this.refreshList();
-					params = undefined;
 				}
 				break;
 				

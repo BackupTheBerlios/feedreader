@@ -513,7 +513,9 @@ var feeds = Class.create ({
 	 * @param {Object}	feed		feed object
 	 */
 	markAllRead: function(feed) {
-		this.db.markAllRead(feed.id);
+		this.db.markAllRead(feed, 1, function() {
+			Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-changed" });
+		});
 	},
 	
 	/**
@@ -531,7 +533,9 @@ var feeds = Class.create ({
 	 * @param {Object} feed		feed object
 	 */
 	markAllUnRead: function(feed) {
-		this.db.markAllUnRead(feed);
+		this.db.markAllRead(feed, 0, function() {
+			Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-changed" });
+		});
 	},
 
 	/**
@@ -574,7 +578,7 @@ var feeds = Class.create ({
 	 * @param	url		{String}	url of the edited feed
 	 */
 	onAddOrEditFeedSuccess: function(url) {
-		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-editedfeed" });			
+		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-changed" });			
 		this.changingFeed = true;
 		this.enqueueUpdate(url);
 	},

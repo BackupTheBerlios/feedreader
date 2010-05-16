@@ -40,8 +40,8 @@ var feedTypes = {
 
 /** @private
  *
+ * Common SQL statements.
  */
-
 var commonSQL = {
 	csGetFeedIDByURL:	"SELECT id FROM feeds WHERE url = ?",
 	csGetFeedData:		"SELECT COALESCE(SUM(isNew), 0) AS numNew, COALESCE((COUNT(uuid) - SUM(isRead)), 0) AS numUnRead, feeds.*" +
@@ -929,5 +929,31 @@ var database = Class.create({
 			transaction.executeSql("UPDATE stories SET isRead = 1, isNew = 0 WHERE id = ?",
 								   [story.id], onSuccess, onFail);
 		});
+	},
+	
+	markAllRead: function(feed, state, onSuccess, onFail) {
+		onSuccess = onSuccess || this.nullDataHandler;
+		onFail = onFail || this.errorHandler;
+		
+		state = state ? 1 : 0;
+		
+		this.transaction(function(transaction) {
+			switch(feed.feedType) {
+				case feedTypes.ftAllItems:
+					transaction.executeSql("UPDATE stories SET isRead = ?",
+										   [state], onSuccess, onFail);
+					break;
+				
+				case feedTypes.ftStarred:
+					transaction.executeSql("UPDATE stories SET isRead = ? WHERE isStarred = 1",
+										   [state], onSuccess, onFail);
+					break;
+				
+				default:
+					transaction.executeSql("UPDATE stories SET isRead = ? WHERE fid = ?",
+										   [state, feed.id], onSuccess, onFail);
+					break;
+			}			
+		});		
 	}
 });
