@@ -30,14 +30,15 @@ function StorylistAssistant(feeds, feed) {
 	this.viewMode = feed.sortMode;
 	this.commandModel = {};
 	
-	this.listFindHandler = this.listFind.bind(this);
+	this.listFindHandler = this.listFindHandler.bind(this);
 
-	this.updateItemsHandler = this.updateItems.bind(this);
-	this.setListLengthHandler = this.setListLength.bind(this);
+	this.updateItems = this.updateItems.bind(this);
+	this.setListLength = this.setListLength.bind(this);
 
-	this.sortModeTapHandler = this.sortModeTap.bindAsEventListener(this);
-	this.sortModeChooseHandler = this.sortModeChoose.bind(this);
-	this.sendChooseHandler = this.sendChoose.bind(this);
+	this.sortModeTap = this.sortModeTap.bindAsEventListener(this);
+	this.sortModeChoose = this.sortModeChoose.bind(this);
+	this.sendChoose = this.sendChoose.bind(this);
+	this.feedDataHandler = this.feedDataHandler.bind(this);
 	
 	this.setupComplete = false;	
 	this.wasActiveBefore = false;
@@ -49,6 +50,7 @@ StorylistAssistant.prototype.setup = function() {
 	
 	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feed));
 	this.controller.get("appIcon").className += " " + this.feeds.getFeedIconClass(this.feed, true, true);
+	this.feedDataHandler(this.feed);
 
 	this.controller.setDefaultTransition(Mojo.Transition.defaultTransition);
 
@@ -78,7 +80,7 @@ StorylistAssistant.prototype.setup = function() {
 	
 	this.controller.listen("storyList", Mojo.Event.listTap,
 					       this.showStory.bindAsEventListener(this));
-    this.controller.listen("sortIcon", Mojo.Event.tap, this.sortModeTapHandler);
+    this.controller.listen("sortIcon", Mojo.Event.tap, this.sortModeTap);
 
 	// Setup command menu.
 	this.initCommandModel();
@@ -136,15 +138,14 @@ StorylistAssistant.prototype.activate = function(event) {
 		this.controller.modelChanged(this.commandModel);
 	}
 	this.wasActiveBefore = true;
-	this.controller.get("new-count").update(this.feed.numNew);
-	this.controller.get("unread-count").update(this.feed.numUnRead);
 };
 
 StorylistAssistant.prototype.cleanup = function(event) {
 };
 
 StorylistAssistant.prototype.refreshList = function() {
-	this.feeds.getStoryCount(this.feed, this.filter, this.setListLengthHandler);
+	this.feeds.getStoryCount(this.feed, this.filter, this.setListLength);
+	this.feeds.getFeed(this.feed.id, this.feedDataHandler);
 };
 
 /* List formatters */
@@ -180,13 +181,13 @@ StorylistAssistant.prototype.listFormatter = function(attribute, property, model
 };
 
 /* List related functions */
-StorylistAssistant.prototype.listFind = function(filterString, listWidget, offset, count) {
+StorylistAssistant.prototype.listFindHandler = function(filterString, listWidget, offset, count) {
 	if(this.feeds.isReady()) {
 		if(this.filter != filterString) {
 			this.filter = filterString;
-			this.feeds.getStoryCount(this.feed, this.filter, this.setListLengthHandler);
+			this.feeds.getStoryCount(this.feed, this.filter, this.setListLength);
 		} else {
-			this.feeds.getStories(this.feed, this.filter, offset, count, this.updateItemsHandler);
+			this.feeds.getStories(this.feed, this.filter, offset, count, this.updateItems);
 		}
 	}
 };
@@ -209,6 +210,12 @@ StorylistAssistant.prototype.setListLength = function(count) {
 	}
 };
 
+StorylistAssistant.prototype.feedDataHandler = function(feed) {
+	this.feed = feed;
+	this.controller.get("new-count").update(this.feed.numNew);
+	this.controller.get("unread-count").update(this.feed.numUnRead);
+};
+
 /* various event handlers */
 StorylistAssistant.prototype.showStory = function(event) {
 	if(event.originalEvent.target.id == "starIcon") {
@@ -227,7 +234,7 @@ StorylistAssistant.prototype.showStory = function(event) {
 
 StorylistAssistant.prototype.sortModeTap = function(event) {
 	var subMenu = {
-		onChoose:  this.sortModeChooseHandler,
+		onChoose:  this.sortModeChoose,
 		placeNear: event.target,
 		items: [
 			{ label: $L("Show all items"),		command: "sort-all",	chosen: (this.feed.sortMode & 0xFF) === 0 },
@@ -311,7 +318,7 @@ StorylistAssistant.prototype.handleCommand = function(event) {
 			
 			case "do-send":
 				this.controller.popupSubmenu({
-					onChoose:  this.sendChooseHandler,
+					onChoose:  this.sendChoose,
 					placeNear: event.originalEvent.target,
 					items: [
 						{ label: $L("Send via SMS/IM"),	command: "send-sms" },
