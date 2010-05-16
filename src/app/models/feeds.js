@@ -643,12 +643,15 @@ var feeds = Class.create ({
 		this.db.getStoryCount(feed, filter, onSuccess);
 	},
 	
+	getStory: function(id, onSuccess) {
+		this.db.getStory(id, onSuccess);
+	},
+	
 	isReady: function() {
 		return (this.db.ready && (!this.db.loading));
 	},
 	
 	isUpdating: function() {
-		Mojo.Log.info("FEEDLIST> spooler has", this.spooler.list.length, "entries");
 		return this.spooler.hasWork();
 	}
 });

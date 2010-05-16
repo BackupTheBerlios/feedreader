@@ -81,8 +81,8 @@ var database = Class.create({
 			var initDBHandler = this.initDB.bind(this);
 			this.transaction(function(transaction) {
 				transaction.executeSql("SELECT MAX(version) AS version FROM system",
-//									   [], initDBHandler, initDBHandler);
-									   [], checkVersionHandler, initDBHandler);
+									   [], initDBHandler, initDBHandler);
+//									   [], checkVersionHandler, initDBHandler);
 			});
 		} catch(e) {
 			Mojo.Log.logException(e, "DB");
@@ -232,6 +232,9 @@ var database = Class.create({
 								   '  uuid TEXT,' +
 								   '  title TEXT,' +
 								   '  summary TEXT,' +
+								   '  picture TEXT,' +
+								   '  audio TEXT,' +
+								   '  video TEXT,' +
 								   '  isRead BOOL NOT NULL DEFAULT 0,' +
 								   '  isNew BOOL NOT NULL DEFAULT 1,' +
 								   '  isStarred BOOL NOT NULL DEFAULT 0,' +
@@ -627,20 +630,58 @@ var database = Class.create({
 	/**
 	 * Retrieve a story.
 	 *
-	 * @param	story		{function}		story object
+	 * @param	story		{Integer}		story id
 	 * @param	onSuccess	{function}		function to be called on success
 	 * @param	onFail		{function}		function to be called on failure
 	 */
-	getStory: function(story, onSuccess, onFail) {
+	getStory: function(id, onSuccess, onFail) {
 		Mojo.assert(onSuccess, "DB> getStory needs data handler");
 		onFail = onFail || this.errorHandler;
 		
-		this.transaction(function(transaction) {
-			transaction.executeSql("SELECT * FROM stories WHERE id = ?",
-				[story.id],
+		var urls = [];
+		var feed = null;
+		var story = null;
+		
+		var getURLs = function(transaction) {
+			transaction.executeSql("SELECT title, href" +
+								   "  FROM storyurls" +
+								   "  WHERE sid = ?",
+								   [id],
 				function(transaction, result) {
 					if(result.rows.length > 0) {
-						onSuccess(result.rows.items(0));
+						for(var i = 0; i < result.rows.length; i++) {
+							urls.push({
+								title:	result.rows.item(i).title,
+								href:	result.rows.item(i).href
+							});
+						}
+						onSuccess(feed, story, urls);
+					}
+				}, onFail);
+		}
+		
+		var getFeedData = function(transaction) {
+			transaction.executeSql("SELECT *" +
+								   "  FROM feeds" +
+								   "  WHERE id = (" +
+								   "    SELECT fid FROM stories WHERE id = ?)",
+								   [id],
+				function(transaction, result) {
+					if(result.rows.length > 0) {
+						feed = result.rows.item(0);
+						getURLs(transaction);
+					}
+				}, onFail);
+		}
+
+
+		this.transaction(function(transaction) {
+			transaction.executeSql("SELECT * FROM stories WHERE id = ?",
+				[id],
+				function(transaction, result) {
+					if(result.rows.length > 0) {
+						story = result.rows.item(0);
+						getFeedData(transaction);
 					}
 				}, onFail);
 		});
@@ -755,12 +796,16 @@ var database = Class.create({
 							transaction.executeSql("UPDATE stories" +
 												   "  SET title = ?," +
 												   "    summary = ?," +
+												   "    picture = ?," +
+												   "    audio = ?," +
+												   "    video = ?," +
 												   "    pubdate = ?," +
 												   "    isStarred = ?," +
 												   "    flag = 0" +
 												   "  WHERE id = ?",
 												   [story.title, story.summary,
-													story.pubdate,
+													story.picture, story.audio,
+													story.video, story.pubdate,
 													story.isStarred ? 1 : 0, sid],
 												   onSuccess, onFail);
 							transaction.executeSql("DELETE FROM storyurls WHERE sid = ?", [sid],
@@ -768,16 +813,15 @@ var database = Class.create({
 							insertURLs(transaction, { insertId: sid });
 						} else {
 							transaction.executeSql("INSERT INTO stories" +
-												   "  (fid, uuid, title, summary, pubdate, isRead, isNew, isStarred, flag)" +
-												   "  VALUES((" + commonSQL.csGetFeedIDByURL + "), ?, ?, ?, ?, 0, 1, 0, 0)",
-												   [url, story.uuid, story.title, story.summary,
-													story.pubdate],
+												   "  (fid, uuid, title, summary, picture, audio, video, pubdate, isRead, isNew, isStarred, flag)" +
+												   "  VALUES((" + commonSQL.csGetFeedIDByURL + "), ?, ?, ?, ?, ?, ?, ?, 0, 1, 0, 0)",
+												   [url, story.uuid, story.title, story.summary, story.picture,
+													story.audio, story.video, story.pubdate],
 												   insertURLs, onFail);
 						}
 					},
 					onFail);
 			});
-			
 	},
 	
 	markStarred: function(story, onSuccess, onFail) {
@@ -786,6 +830,15 @@ var database = Class.create({
 		this.transaction(function(transaction) {
 			transaction.executeSql("UPDATE stories SET isStarred = ? WHERE id = ?",
 								   [story.isStarred ? 1 : 0, story.id], onSuccess, onFail);
+		});
+	},
+	
+	markStoryRead: function(story, onSuccess, onFail) {
+		onSuccess = onSuccess || this.nullDataHandler;
+		onFail = onFail || this.errorHandler;
+		this.transaction(function(transaction) {
+			transaction.executeSql("UPDATE stories SET isRead = 1, isNew = 0 WHERE id = ?",
+								   [story.id], onSuccess, onFail);
 		});
 	}
 });

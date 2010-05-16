@@ -106,7 +106,7 @@ StorylistAssistant.prototype.initCommandModel = function() {
 			items: [
 				{
 					icon: "refresh",
-					disabled: this.feeds.updateInProgress,
+					disabled: this.feeds.isUpdating(),
 					command: "do-feedUpdate"
 				}
 			]
@@ -220,9 +220,8 @@ StorylistAssistant.prototype.showStory = function(event) {
 		this.feeds.markStarred(item);
 		this.refreshList();
 	} else {
-		this.controller.stageController.pushScene("fullStory", 
-												  this.feeds, this.feedIndex,
-												  this.storyList, storyIndex);
+		this.controller.stageController.pushScene("fullStory", this.feeds,
+												  this.feed, event.item.id);
 	}
 };
 
@@ -303,7 +302,11 @@ StorylistAssistant.prototype.handleCommand = function(event) {
 			case "do-feedUpdate":
 				event.stopPropagation();
 				this.feeds.interactiveUpdate = true;
-				this.feeds.enqueueUpdate(this.feedIndex);	
+				if(this.feed.feedType < feedTypes.ftUnknown) {
+					this.feeds.enqueueUpdateAll();
+				} else {
+					this.feeds.enqueueUpdate(this.feed.url);
+				}
 				break;
 			
 			case "do-send":

@@ -166,8 +166,14 @@ FeedlistAssistant.prototype.cleanup = function(event) {
 };
 
 FeedlistAssistant.prototype.refreshList = function() {
-	Mojo.Log.info("FEEDLIST> Refreshing list");
 	this.feeds.getFeedCount(this.filter, this.setListLengthHandler);
+	this.refreshUpdateLock();
+};
+
+FeedlistAssistant.prototype.refreshUpdateLock = function () {
+	var updateIndex = FeedReader.prefs.leftHanded ? 1 : 0;
+	this.commandModel.items[updateIndex].disabled = this.feeds.isUpdating();
+	this.controller.modelChanged(this.commandModel);
 };
 
 FeedlistAssistant.prototype.showFeed = function(event) {
@@ -302,7 +308,6 @@ FeedlistAssistant.prototype.considerForNotification = function(params){
 				}
 				break;
 				
-			case "feedlist-deletedfeed":
 			case "feedlist-editedfeed":
 				if(this.feeds.isReady()) {
 					this.refreshList();
@@ -312,14 +317,6 @@ FeedlistAssistant.prototype.considerForNotification = function(params){
 				
 			case "feed-update":
 				if(this.setupComplete) {
-					var updateIndex = FeedReader.prefs.leftHanded ? 1 : 0;
-					if(this.commandModel.items[updateIndex].disabled != this.feeds.isUpdating()) {
-						this.commandModel.items[updateIndex].disabled = this.feeds.isUpdating();
-						this.controller.modelChanged(this.commandModel);
-					}
-					if(!this.feeds.isUpdating()) {
-						this.refreshList();
-					}
 					var node = this.feedListWidget.mojo.getNodeByIndex(params.feedOrder);
 					var item = this.feedListWidget.mojo.getItemByNode(node);
 					if(item) {
@@ -329,6 +326,11 @@ FeedlistAssistant.prototype.considerForNotification = function(params){
 						this.feedListWidget.mojo.noticeUpdatedItems(params.feedOrder, items);
 						this.feeds.getFeeds(this.filter, params.feedOrder, 1, this.updateItemsHandler);
 						params = undefined;
+					}
+					if(!this.feeds.isUpdating()) {
+						this.refreshList();
+					} else {
+						this.refreshUpdateLock();
 					}
 				}
 				break;

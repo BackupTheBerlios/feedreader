@@ -20,117 +20,51 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-function FullStoryAssistant(feeds, feedIndex, storyList, storyIndex) {
-	this.feeds = feeds;
-	this.storyList = storyList;
-	this.storyIndex = storyIndex;
-	this.feedIndex = feedIndex;
-	
-	this.origin = this.storyList[storyIndex];
-	this.feed = this.feeds.list[this.origin.feedIndex];
-	this.story = this.feed.stories[this.origin.storyIndex];
+var mediaModes = {
+	mdNoMedia:	0,
+	mdAudio:	1,
+	mdVideo:	2
+}
 
-	this.doShowMedia = this.feeds.list[this.origin.feedIndex].showMedia &&
-					   ((this.story.audio.length > 0) ||
-					    (this.story.video.length > 0));
-	this.doShowPicture = this.feeds.list[this.origin.feedIndex].showPicture;
+function FullStoryAssistant(feeds, feed, storyID) {
+	this.feeds = feeds;
+	this.feed = feed;
+	this.storyID = storyID;
 	
-	if(this.story.video.length > 0) {
-		this.mediaURL = this.story.video;
-		this.mediaMode = 2;
-	} else if(this.story.audio.length > 0) {
-		this.mediaURL = this.story.audio;
-		this.mediaMode = 1;
-	} else {
-		this.mediaURL = "";
-		this.mediaMode = 0;
-	}
-	
-	this.commandModel = {};
 	this.setupComplete = false;
-	
+	this.commandModel = {
+		label:	"",
+		items:	[]
+	};
+	this.media = null;
+	this.mediaReady = false;
+	this.playState = 0;
+	this.seeking = false;	
 	this.pictureSpinnerModel = {
 		spinning: false
 	};
-	
-	this.media = undefined;
-	this.mediaReady = false;
-	this.playState = 0;
-	this.seeking = false;
 
 	/* pre bind handlers */	
-	if(this.doShowMedia) {
-		this.mediaCanPlayHandler = this.mediaCanPlay.bindAsEventListener(this);
-		this.mediaPlayingHandler = this.mediaPlaying.bindAsEventListener(this);
-		this.mediaSeekingHandler = this.mediaSeeking.bindAsEventListener(this);
-		this.mediaSeekedHandler = this.mediaSeeked.bindAsEventListener(this);
-		this.mediaStoppedHandler = this.mediaStopped.bindAsEventListener(this);
-		this.mediaErrorHandler = this.mediaError.bindAsEventListener(this);
-		this.mediaProgressHandler = this.mediaProgress.bind(this);
-	}
-	this.startSeekingHandler = this.startSeeking.bindAsEventListener(this);
-	this.doSeekHandler = this.doSeek.bindAsEventListener(this);
-	this.stopSeekingHandler = this.stopSeeking.bindAsEventListener(this);
-	this.sendChooseHandler = this.sendChoose.bind(this);
+	this.startSeeking = this.startSeeking.bindAsEventListener(this);
+	this.doSeek = this.doSeek.bindAsEventListener(this);
+	this.stopSeeking = this.stopSeeking.bindAsEventListener(this);
+	this.sendChoose = this.sendChoose.bind(this);
 	
-	this.storyTapHandler = this.storyTap.bindAsEventListener(this);
-	this.openURLHandler = this.openURL.bind(this);
-	this.pictureLoadedHandler = this.pictureLoaded.bind(this);
+	this.storyTap = this.storyTap.bindAsEventListener(this);
+	this.openURL = this.openURL.bind(this);
+	this.pictureLoaded = this.pictureLoaded.bind(this);
+
+	this.feeds.getStory(this.storyID, this.dataHandler.bind(this));
 }
 
 FullStoryAssistant.prototype.setup = function() {
 	FeedReader.beginSceneSetup(this, true);
 	
-	var video = {};
-
+	// Set the default transition.
 	this.controller.setDefaultTransition(Mojo.Transition.defaultTransition);
-
-	this.controller.get("appIcon").className += " " + this.feeds.getFeedHeaderIcon(this.feeds.list[this.feedIndex]);
-	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feeds.list[this.origin.feedIndex]));
-	this.controller.get("story-date").update(this.feeds.dateConverter.dateToLocalTime(this.story.intDate));
 	
-	if(this.story.url.length > 1) {
-		this.controller.get("followLink-title").update($L("Web links"));
-	} else {
-		this.controller.get("followLink-title").update($L("Open Web link"));		
-	}
-
-	if(this.feeds.showCaption(this.feeds.list[this.origin.feedIndex], true)) {
-		this.controller.get("story-title").update(this.story.title);
-		this.controller.listen("story-title", Mojo.Event.tap, this.storyTapHandler);
-	}
-	
-	if(this.feeds.showSummary(this.feeds.list[this.origin.feedIndex], true)) {
-		if(this.feed.allowHTML) {
-			this.controller.get("story-content").update(this.story.summary);
-		} else {
-			this.controller.get("story-content").update(FeedReader.stripHTML(this.story.summary));
-		}
-	}
-	
-	// Setup the story's picture.
-	this.controller.setupWidget("picture-spinner", { spinnerSize: "small" },
-								this.pictureSpinnerModel);
-	if(this.doShowPicture && (this.story.picture.length > 0)) {
-		this.controller.get("story-picture").src = this.story.picture;
-		this.pictureSpinnerModel.spinning = true;
-		this.controller.get("story-picture").onload = this.pictureLoadedHandler;
-	} else {
-		this.controller.get("img-container").className = "hidden";		
-	}
-	
-	// Setup player controls.
-	if(this.mediaMode == 2) {
-		// Re-order the DOM nodes.
-		var wrapper = this.controller.get("media-controls-wrapper");
-		var content = this.controller.get("fullStoryScene");
-		video = this.controller.get("media-video");
-		content.appendChild(video);
-		content.appendChild(wrapper);
-		wrapper.className = "video";
-	}
-	
-	// The controls should be intialized even if no audio is to be played.
+	// The controls should be intialized even if no audio is to be played
+	// as Mojo will log a warning otherwise.
 	this.controller.setupWidget("media-progress", this.mediaProgressAttribs = {
 		sliderProperty: "value",
 		round: true,
@@ -143,13 +77,97 @@ FullStoryAssistant.prototype.setup = function() {
 		maxValue: 1000,
 		disabled: true
 	});
-	this.controller.listen("media-progress", Mojo.Event.propertyChange, this.doSeekHandler);
-	this.controller.listen("media-progress", Mojo.Event.sliderDragStart, this.startSeekingHandler);
-	this.controller.listen("media-progress", Mojo.Event.sliderDragEnd, this.stopSeekingHandler);
+	this.controller.listen("media-progress", Mojo.Event.propertyChange, this.doSeek);
+	this.controller.listen("media-progress", Mojo.Event.sliderDragStart, this.startSeeking);
+	this.controller.listen("media-progress", Mojo.Event.sliderDragEnd, this.stopSeeking);
+	
+	// Handle a story click.
+    this.controller.listen("followLink", Mojo.Event.tap, this.storyTap);
+    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel);
+};
 
+FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
+	this.originFeed = feed;
+	this.story = story;
+	this.urls = urls;
+	
+	Mojo.Log.info("FS> Got feed data");
+
+	if(this.doShowMedia) {
+		this.mediaCanPlay = this.mediaCanPlay.bindAsEventListener(this);
+		this.mediaPlaying = this.mediaPlaying.bindAsEventListener(this);
+		this.mediaSeeking = this.mediaSeeking.bindAsEventListener(this);
+		this.mediaSeeked = this.mediaSeeked.bindAsEventListener(this);
+		this.mediaStopped = this.mediaStopped.bindAsEventListener(this);
+		this.mediaError = this.mediaError.bindAsEventListener(this);
+		this.mediaProgress = this.mediaProgress.bind(this);
+	}
+	
+	this.doShowMedia = this.originFeed.showMedia &&
+					   ((this.story.audio.length > 0) ||
+					    (this.story.video.length > 0));
+	this.doShowPicture = this.originFeed.showPicture;
+	
+	if(this.story.video.length > 0) {
+		this.mediaURL = this.story.video;
+		this.mediaMode = mediaModes.mdAudio;
+	} else if(this.story.audio.length > 0) {
+		this.mediaURL = this.story.audio;
+		this.mediaMode = mediaModes.mdAudio;
+	} else {
+		this.mediaURL = "";
+		this.mediaMode = mediaModes.mdNoMedia;
+	}
+
+	var video = null;
+	this.controller.get("appIcon").className += " " + this.feeds.getFeedIconClass(this.feed, true, true);
+	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feed));
+	this.controller.get("story-date").update(this.feeds.dateConverter.dateToLocalTime(this.story.pubdate));
+	
+	if(this.urls.length > 1) {
+		this.controller.get("followLink-title").update($L("Web links"));
+	} else {
+		this.controller.get("followLink-title").update($L("Open Web link"));		
+	}
+
+	if(this.originFeed.showDetailCaption) {
+		this.controller.get("story-title").update(this.story.title);
+		this.controller.listen("story-title", Mojo.Event.tap, this.storyTap);
+	}
+	
+	if(this.originFeed.showDetailSummary) {
+		if(this.originFeed.allowHTML) {
+			this.controller.get("story-content").update(this.story.summary);
+		} else {
+			this.controller.get("story-content").update(FeedReader.stripHTML(this.story.summary));
+		}
+	}
+	
+	// Setup the story's picture.
+	this.controller.setupWidget("picture-spinner",
+								{ spinnerSize: "small" },
+								this.pictureSpinnerModel);
+	if(this.doShowPicture && (this.story.picture.length > 0)) {
+		this.controller.get("story-picture").src = this.story.picture;
+		this.pictureSpinnerModel.spinning = true;
+		this.controller.get("story-picture").onload = this.pictureLoaded;
+	} else {
+		this.controller.get("img-container").className = "hidden";		
+	}
+
+	// Setup player controls.
+	if(this.mediaMode == mediaModes.mdVideo) {
+		// Re-order the DOM nodes.
+		var wrapper = this.controller.get("media-controls-wrapper");
+		var content = this.controller.get("fullStoryScene");
+		video = this.controller.get("media-video");
+		content.appendChild(video);
+		content.appendChild(wrapper);
+		wrapper.className = "video";
+	}
 	// Setup command menu.
 	this.initCommandModel();
-    this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel);
+    this.controller.modelChanged(this.commandModel);
 
 	if(!this.doShowMedia) {
 		// Hide the player.
@@ -157,26 +175,26 @@ FullStoryAssistant.prototype.setup = function() {
 	} else {	
 		// Setup media player.
 		switch(this.mediaMode) {
-			case 1:
+			case mediaModes.mdAudio:
 				this.media = new Audio();
 				// Remove the video element.
 				video = this.controller.get("media-video");
 				video.parentNode.removeChild(video);
 				break;
 			
-			case 2:			
+			case mediaModes.mdAudio:			
 				this.media = this.controller.get("media-video");
-			    this.controller.listen("media-video", Mojo.Event.tap, this.storyTapHandler);
+			    this.controller.listen("media-video", Mojo.Event.tap, this.storyTap);
 				break;
 		}
 		this.media.autoPlay = false;
-		this.media.addEventListener("canplay", this.mediaCanPlayHandler, false);
-		this.media.addEventListener("play", this.mediaPlayingHandler, false);
-		this.media.addEventListener("seeking", this.mediaSeekingHandler, false);
-		this.media.addEventListener("seeked", this.mediaSeekedHandler, false);
-		this.media.addEventListener("abort", this.mediaStoppedHandler, false);
-		this.media.addEventListener("ended", this.mediaStoppedHandler, false);
-		this.media.addEventListener("error", this.mediaErrorHandler, false);
+		this.media.addEventListener("canplay", this.mediaCanPlay, false);
+		this.media.addEventListener("play", this.mediaPlaying, false);
+		this.media.addEventListener("seeking", this.mediaSeeking, false);
+		this.media.addEventListener("seeked", this.mediaSeeked, false);
+		this.media.addEventListener("abort", this.mediaStopped, false);
+		this.media.addEventListener("ended", this.mediaStopped, false);
+		this.media.addEventListener("error", this.mediaError, false);
 		this.controller.get("media-playState").update($L("Waiting for data"));		
 		this.media.src = this.mediaURL;
 		this.media.load();
@@ -185,11 +203,8 @@ FullStoryAssistant.prototype.setup = function() {
 	// Setup story view.
 	this.controller.get("story-title").className += " " + FeedReader.prefs.titleColor + (FeedReader.prefs.largeFont ? " large" : "");
 	this.controller.get("story-content").className += (FeedReader.prefs.largeFont ? " large" : "");
-		
-	// Handle a story click.
-    this.controller.listen("followLink", Mojo.Event.tap, this.storyTapHandler);
 
-	if(this.mediaMode == 2) {
+	if(this.mediaMode == mediaModes.mdVideo) {
 		var header = this.controller.get("page-header");
 		header.parentNode.removeChild(header);
 		var fade = this.controller.get("top-fade");
@@ -212,8 +227,8 @@ FullStoryAssistant.prototype.activate = function(event) {
 		this.controller.modelChanged(this.pictureSpinnerModel);
 	}
 
-	var unReadCount = this.feeds.list[this.feedIndex].numUnRead - (this.story.isRead ? 0 : 1);
-	var newCount = this.feeds.list[this.feedIndex].numNew - (this.story.isNew ? 1 : 0);
+	var unReadCount = this.feed.numUnRead - (this.story.isRead ? 0 : 1);
+	var newCount = this.feed.numNew - (this.story.isNew ? 1 : 0);
 	this.controller.get("new-count").update(newCount);
 	this.controller.get("unread-count").update(unReadCount);
 };
@@ -223,13 +238,13 @@ FullStoryAssistant.prototype.deactivate = function(event) {
 
 FullStoryAssistant.prototype.cleanup = function(event) {
 	if(this.media) {
-		this.media.removeEventListener("canplay", this.mediaCanPlayHandler);
-		this.media.removeEventListener("play", this.mediaPlayingHandler);
-		this.media.removeEventListener("seeking", this.mediaSeekingHandler);
-		this.media.removeEventListener("seeked", this.mediaSeekedHandler);
-		this.media.removeEventListener("abort", this.mediaStoppedHandler);
-		this.media.removeEventListener("ended", this.mediaStoppedHandler);
-		this.media.removeEventListener("error", this.mediaErrorHandler);
+		this.media.removeEventListener("canplay", this.mediaCanPlay);
+		this.media.removeEventListener("play", this.mediaPlaying);
+		this.media.removeEventListener("seeking", this.mediaSeeking);
+		this.media.removeEventListener("seeked", this.mediaSeeked);
+		this.media.removeEventListener("abort", this.mediaStopped);
+		this.media.removeEventListener("ended", this.mediaStopped);
+		this.media.removeEventListener("error", this.mediaError);
 		try {
 			this.setMediaTimer(false);
 			this.media.src = "";
@@ -239,23 +254,23 @@ FullStoryAssistant.prototype.cleanup = function(event) {
 		delete this.media;
 	}
 	if(!this.story.isRead) {
-		this.feeds.markStoryRead(this.origin.feedIndex, this.origin.storyIndex);
+		this.feeds.markStoryRead(this.story);
 	}
 };
 
 FullStoryAssistant.prototype.initCommandModel = function() {
-	this.commandModel.label = "";
-    this.commandModel.items = [{
+	this.commandModel.items.splice(0, this.commandModel.items.length);
+    this.commandModel.items.push({
 		items: [{
 			icon: "back",
-			disabled: this.storyIndex === 0,
+			//disabled: this.storyIndex === 0,
 			command: "do-previousStory"
 		}, {
 			icon: "forward",
-			disabled: this.storyIndex === (this.storyList.length - 1),
+			//disabled: this.storyIndex === (this.storyList.length - 1),
 			command: "do-nextStory"
 		}]
-	}];
+	});
 	
 	if(this.doShowMedia) {
 		this.commandModel.items.push({
@@ -427,7 +442,7 @@ FullStoryAssistant.prototype.stopSeeking = function(event) {
 FullStoryAssistant.prototype.setMediaTimer = function(active) {
 	if(active && (this.playState == 1)) {
 		if(!this.timer) {
-			this.timer = this.controller.window.setInterval(this.mediaProgressHandler, 200);
+			this.timer = this.controller.window.setInterval(this.mediaProgress, 200);
 		}
 	} else if(this.timer) {
 		this.controller.window.clearInterval(this.timer);
@@ -474,7 +489,7 @@ FullStoryAssistant.prototype.storyTap = function(event) {
 		this.openURL(this.story.url[0].href);
 	} else if(this.story.url.length > 1) {
 		var subMenu = {
-			onChoose:  this.openURLHandler,
+			onChoose:  this.openURL,
 			placeNear: event.target,
 			items: []
 		};
@@ -518,7 +533,7 @@ FullStoryAssistant.prototype.handleCommand = function(event) {
 	if(event.type === Mojo.Event.command) {
 		switch(event.command) {
 			case "do-previousStory":
-				this.feeds.markStoryRead(this.origin.feedIndex, this.origin.storyIndex);
+				this.feeds.markStoryRead(this.story);
 				this.controller.stageController.swapScene({
 					name: "fullStory",
 					transition: Mojo.Transition.crossFade
@@ -543,7 +558,7 @@ FullStoryAssistant.prototype.handleCommand = function(event) {
 			
 			case "do-send":
 				this.controller.popupSubmenu({
-					onChoose:  this.sendChooseHandler,
+					onChoose:  this.sendChoose,
 					placeNear: event.originalEvent.target,
 					items: [
 						{ label: $L("Send via SMS/IM"),	command: "send-sms" },
