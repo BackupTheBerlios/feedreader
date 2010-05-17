@@ -219,6 +219,7 @@ var feeds = Class.create ({
 		var enclosures = {}, story = {};
 		var url = "", enc = 0, type = "", title = "";
 		var el = 0;
+		var contentType = transport.getHeader("Content-Type");
 		
 		var atomItems = transport.responseXML.getElementsByTagName("entry");
 		var l = atomItems.length;
@@ -237,11 +238,11 @@ var feeds = Class.create ({
 				
 				if(atomItems[i].getElementsByTagName("title") &&
 				   atomItems[i].getElementsByTagName("title").item(0)) {
-					story.title = unescape(atomItems[i].getElementsByTagName("title").item(0).textContent);
+					story.title = this.cpConverter.convert(contentType, unescape(atomItems[i].getElementsByTagName("title").item(0).textContent));
 				}
 				if (atomItems[i].getElementsByTagName("summary") &&
 					atomItems[i].getElementsByTagName("summary").item(0)) {
-					story.summary = this.reformatSummary(atomItems[i].getElementsByTagName("summary").item(0).textContent);
+					story.summary = this.reformatSummary(this.cpConverter.convert(contentType, atomItems[i].getElementsByTagName("summary").item(0).textContent));
 				}
 				
 				// Analyse the enclosures.
@@ -263,7 +264,7 @@ var feeds = Class.create ({
 									title = "Weblink";
 								}
 								story.url.push({
-									title:	title,
+									title:	this.cpConverter.convert(contentType, title),
 									href:	url
 								});
 							} else if(rel && rel.match(/enclosure/i)) {
@@ -320,6 +321,7 @@ var feeds = Class.create ({
 		var enclosures = {}, story = {};
 		var url = "", type = "", enc = 0;
 		var el = 0;
+		var contentType = transport.getHeader("Content-Type");
 		
 		var rssItems = transport.responseXML.getElementsByTagName("item");
 		var l = rssItems.length;
@@ -338,11 +340,11 @@ var feeds = Class.create ({
 				
 				if(rssItems[i].getElementsByTagName("title") &&
 				   rssItems[i].getElementsByTagName("title").item(0)) {
-					story.title = unescape(rssItems[i].getElementsByTagName("title").item(0).textContent);
+					story.title = this.cpConverter.convert(contentType, unescape(rssItems[i].getElementsByTagName("title").item(0).textContent));
 				}
 				if(rssItems[i].getElementsByTagName("description") &&
 				   rssItems[i].getElementsByTagName("description").item(0)) {
-					story.summary = this.reformatSummary(rssItems[i].getElementsByTagName("description").item(0).textContent);
+					story.summary = this.reformatSummary(this.cpConverter.convert(contentType, rssItems[i].getElementsByTagName("description").item(0).textContent));
 				}
 				if(rssItems[i].getElementsByTagName("link") &&
 				   rssItems[i].getElementsByTagName("link").item(0)) {
