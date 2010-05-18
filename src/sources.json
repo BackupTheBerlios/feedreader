@@ -5,7 +5,6 @@
 	{"source": "app/models/database.js"},
     {"source": "app/models/codepages.js"},
     {"source": "app/models/date.js"},
-    {"source": "app/models/Math.uuid.js"},
 	{"source": "app/models/migrator.js"},
     {"source": "app/models/feeds.js"},
     {"source": "app/models/prefs.js"},

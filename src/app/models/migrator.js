@@ -226,7 +226,6 @@ var migrator = Class.create ({
 		var j;
 		
 		for(var i = 0; i < data.length; i++) {
-			data[i].uid = Math.uuid(15);
 			data[i].showPicture = true;
 			data[i].showMedia = true;
 			for(j = 0; j < data[i].stories.length; j++) {
