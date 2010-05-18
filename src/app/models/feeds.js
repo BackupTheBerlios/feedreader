@@ -32,7 +32,32 @@ var feedProto = Class.create({
 	showListCaption:	1,
 	showDetailCaption:	1,
 	sortMode:			0,
-	allowHTML:			1
+	allowHTML:			1,
+	
+	/**
+	 * Constructor.
+	 *
+	 * @param	proto		{object}		feed object to clone
+	 */
+	initialize: function(proto) {
+		if(proto) {
+			this.title = proto.title || this.title;
+			this.url = proto.url || this.url;
+			this.feedOrder = proto.feedOrder;
+			this.enabled = proto.enabled;
+			this.showPicture = proto.showPicture;
+			this.showMedia = proto.showMedia;
+			this.showListSummary = proto.showListSummary;
+			this.showListCaption = proto.showListCaption;
+			this.showListSummary = proto.showListSummary;
+			this.showListCaption = proto.showListCaption;
+			this.sortMode = proto.sortMode;
+			this.allowHTML = proto.allowHTML;
+			if(proto.id !== null) {
+				this.id = proto.id;
+			}
+		}
+	}
 });
 
 var feeds = Class.create ({
@@ -48,9 +73,8 @@ var feeds = Class.create ({
 	changingFeed: false,			// true if a feed is changed
 	updateWhenReady: true,
 
-	/** @private
-	 *
-	 * Initializing.
+	/**
+	 * Constructor.
 	 */	
 	initialize: function() {
 		this.spooler = new spooler();
@@ -661,6 +685,17 @@ var feeds = Class.create ({
 		this.db.getStory(id, onSuccess);
 	},
 	
+	setSortMode: function(feed) {
+		this.db.setSortMode(feed, function() {
+			Mojo.Log.info("FEEDS> feedOrder", feed.feedOrder);
+			Mojo.Controller.getAppController().sendToNotificationChain({
+				type: 		"feed-update",
+				inProgress: 0,
+				feedOrder:	feed.feedOrder
+			});
+		});
+	},
+
 	isReady: function() {
 		return (this.db.ready && (!this.db.loading));
 	},

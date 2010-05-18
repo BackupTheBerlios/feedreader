@@ -152,7 +152,7 @@ var database = Class.create({
 	 */
 	dbReady: function() {
 		Mojo.Log.info("DB> Database schema ready");
-		
+			
 		if(this.migrateFromDepot) {
 			// At first, check the properties cookie.
 			var props = new Mojo.Model.Cookie("comtegi-stuffAppFeedReaderProps");
@@ -365,6 +365,23 @@ var database = Class.create({
 	},
 	
 	/**
+	 * Set the sort mode of a feed.
+	 *
+	 * @param	feed		{object}		feed object
+	 * @param	onSuccess	{function}		function to be called on success
+	 * @param	onFail		{function}		function to be called on failure
+	 */
+	setSortMode: function(feed, onSuccess, onFail) {
+		onSuccess = onSuccess || this.nullDataHandler;
+		onFail = onFail || this.errorHandler;
+		
+		this.transaction(function(transaction) {
+			transaction.executeSql("UPDATE feeds SET sortMode = ? WHERE id = ?",
+								   [feed.sortMode, feed.id], onSuccess, onFail);
+		});
+	},
+	
+	/**
 	 * Disable a feed.
 	 *
 	 * @param	url			{String}		url of the feed to disable
@@ -553,8 +570,8 @@ var database = Class.create({
 						 "  FROM stories" +
 						 "  WHERE (title LIKE '%' || ? || '%')";
 		switch(feed.sortMode & 0xFF) {
-			case 1:	selectStmt += " AND s.isRead = 0";	break;
-			case 2: selectStmt += " AND s.isNew = 1";	break;
+			case 1:	selectStmt += " AND isRead = 0";	break;
+			case 2: selectStmt += " AND isNew = 1";	break;
 		}
 		
 		switch(feed.feedType) {
@@ -619,7 +636,7 @@ var database = Class.create({
 		
 		// Build the ORDER clause.
 		var orderAndLimit = " ORDER BY ";
-		if((feed.sortMode & 0xFF00) == 0x0100) {
+		if((feed.sortMode & 0xFF00) != 0x0100) {
 			orderAndLimit += "f.feedOrder, ";
 		}
 		orderAndLimit += "s.pubdate DESC LIMIT ? OFFSET ?";

@@ -39,6 +39,7 @@ function StorylistAssistant(feeds, feed) {
 	this.sortModeChoose = this.sortModeChoose.bind(this);
 	this.sendChoose = this.sendChoose.bind(this);
 	this.feedDataHandler = this.feedDataHandler.bind(this);
+	this.showStory = this.showStory.bindAsEventListener(this);
 	
 	this.setupComplete = false;	
 	this.wasActiveBefore = false;
@@ -79,7 +80,7 @@ StorylistAssistant.prototype.setup = function() {
 	}, {});
 	
 	this.controller.listen("storyList", Mojo.Event.listTap,
-					       this.showStory.bindAsEventListener(this));
+					       this.showStory);
     this.controller.listen("sortIcon", Mojo.Event.tap, this.sortModeTap);
 
 	// Setup command menu.
@@ -144,7 +145,6 @@ StorylistAssistant.prototype.cleanup = function(event) {
 };
 
 StorylistAssistant.prototype.refreshList = function() {
-	this.feeds.getStoryCount(this.feed, this.filter, this.setListLength);
 	this.feeds.getFeed(this.feed.id, this.feedDataHandler);
 };
 
@@ -214,6 +214,8 @@ StorylistAssistant.prototype.feedDataHandler = function(feed) {
 	this.feed = feed;
 	this.controller.get("new-count").update(this.feed.numNew);
 	this.controller.get("unread-count").update(this.feed.numUnRead);
+
+	this.feeds.getStoryCount(this.feed, this.filter, this.setListLength);
 };
 
 /* various event handlers */
@@ -257,23 +259,27 @@ StorylistAssistant.prototype.starTap = function(event) {
 };
 
 StorylistAssistant.prototype.sortModeChoose = function(command) {
+	var feed = new feedProto(this.feed);
+	
 	switch(command) {
 		case "sort-all":
-			this.feed.sortMode = (this.feed.sortMode & 0xFF00) | 0;
+			feed.sortMode = (feed.sortMode & 0xFF00) | 0;
 			break;
 			
 		case "sort-unread":
-			this.feed.sortMode = (this.feed.sortMode & 0xFF00) | 1;
+			feed.sortMode = (feed.sortMode & 0xFF00) | 1;
 			break;
 			
 		case "sort-new":
-			this.feed.sortMode = (this.feed.sortMode & 0xFF00) | 2;
+			feed.sortMode = (feed.sortMode & 0xFF00) | 2;
 			break;
 		
 		case "sort-date":
-			this.feed.sortMode = this.feed.sortMode ^ 0x0100;
+			feed.sortMode = feed.sortMode ^ 0x0100;
 			break;
 	}
+	this.feeds.setSortMode(feed);
+	Mojo.Log.info("SL> setting sortMode to", feed.sortMode);
 };
 
 StorylistAssistant.prototype.sendChoose = function(command) {
@@ -334,8 +340,10 @@ StorylistAssistant.prototype.considerForNotification = function(params){
 	if(params) {
 		switch(params.type) {
 			case "feed-update":
-				if(this.feedOrder == params.feedOrder) {
+				Mojo.Log.info("SL> feed update received");
+				if(this.feed.feedOrder == params.feedOrder) {
 					this.refreshList();
+					Mojo.Log.info("SL> refreshing list");
 				}
 				this.initCommandModel();
 				this.controller.modelChanged(this.commandModel);
