@@ -692,15 +692,15 @@ var database = Class.create({
 						 "  FROM stories AS s" +
 						 "  INNER JOIN feeds AS f ON (f.id = s.fid)";
 		
-		var whereClausAddOn = null;
+		var whereClauseAddOn = null;
 		switch(feed.sortMode & 0xFF) {
-			case 1:	whereClausAddOn = " s.isRead = 0";	break;
-			case 2: whereClausAddOn = " s.isNew = 1";	break;
+			case 1:	whereClauseAddOn = " s.isRead = 0";	break;
+			case 2: whereClauseAddOn = " s.isNew = 1";	break;
 		}
 		
 		// Build the ORDER clause.
 		var orderAndLimit = " ORDER BY ";
-		if((feed.sortMode & 0xFF00) == 0x0100) {
+		if((feed.sortMode & 0xFF00) != 0x0100) {
 			orderAndLimit += "f.feedOrder, ";
 		}
 		orderAndLimit += "s.pubdate DESC";
@@ -709,7 +709,7 @@ var database = Class.create({
 			case feedTypes.ftAllItems:
 				this.transaction(function(transaction) {
 					transaction.executeSql(selectStmt +
-										   (whereClausAddOn ? " WHERE" + whereClausAddOn : "") +
+										   (whereClauseAddOn ? " WHERE" + whereClauseAddOn : "") +
 										   orderAndLimit, [],
 										   handleResult, onFail);
 				});
@@ -718,7 +718,7 @@ var database = Class.create({
 			case feedTypes.ftStarred:
 				this.transaction(function(transaction) {
 					transaction.executeSql(selectStmt + " WHERE s.isStarred = 1" +
-										   (whereClausAddOn ? " AND" + whereClausAddOn : "") +
+										   (whereClauseAddOn ? " AND" + whereClauseAddOn : "") +
 										   orderAndLimit,
 										   [], handleResult, onFail);
 				});
@@ -727,7 +727,7 @@ var database = Class.create({
 			default:
 				this.transaction(function(transaction) {
 					transaction.executeSql(selectStmt + " WHERE s.fid = ?" +
-										   (whereClausAddOn ? " AND" + whereClausAddOn : "") +
+										   (whereClauseAddOn ? " AND" + whereClauseAddOn : "") +
 										   orderAndLimit, [feed.id],
 										   handleResult, onFail);
 				});
