@@ -184,7 +184,8 @@ var database = Class.create({
 		}
 		if(this.ready && !this.loading) {
 			Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-loaded" });
-			if(FeedReader.prefs.updateOnStart) {
+			if(FeedReader.prefs.updateOnStart || FeedReader.feeds.updateWhenReady) {
+				FeedReader.feeds.updateWhenReady = false;
 				FeedReader.feeds.enqueueUpdateAll();
 			}
 		}

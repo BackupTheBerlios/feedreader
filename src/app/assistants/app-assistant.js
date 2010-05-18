@@ -324,6 +324,8 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 				FeedReader.prefs.setTimer();
 				if(FeedReader.feeds.isReady() && !FeedReader.feeds.isUpdating()) {
 					FeedReader.feeds.enqueueUpdateAll();
+				} else {
+					FeedReader.feeds.updateWhenReady = true;
 				}
 				break;
         

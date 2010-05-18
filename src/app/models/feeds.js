@@ -46,6 +46,7 @@ var feeds = Class.create ({
 
 	interactiveUpdate: false,		// true if the update is interactive
 	changingFeed: false,			// true if a feed is changed
+	updateWhenReady: true,
 
 	/** @private
 	 *
