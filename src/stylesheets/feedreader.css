@@ -55,6 +55,22 @@ div.hidden {
 	display: none;
 }
 
+div.floatcontainer {
+	width: 100%;
+	overflow: auto;	
+}
+
+div.floatright {
+	float: right;
+	margin-left: 4px;
+}
+
+p.floater {
+	margin: 0;
+	padding: 0;
+	clear: none;
+}
+
 span.bold {
 	font-weight: bold;
 }

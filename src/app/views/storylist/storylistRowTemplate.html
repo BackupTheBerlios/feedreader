@@ -1,20 +1,14 @@
 <div class="palm-row" x-mojo-tap-highlight="momentary">
  	<div class="palm-row-wrapper textfield-group">
-		<table>
-			<tr>
-				<td>
-					<div class="story-date truncating-text">#{date} #{origin}</div>
-					<div class="story-title #{titleStyle} #{titleColor} #{large} multiline">#{-title}</div>   
-				</td>
-				<td>
-					<div class="list-star-icon #{starClass} icon" id="starIcon" x-mojo-tap-highlight="momentary"></div>
-				</td>
-			</tr>
-			<tr>
-				<td colspan="2">
-					<div class="story-content #{contentStyle} #{large} condensed multiline">#{-shortSummary}</div>
-				</td>
-			</tr>
-		</table>
+		<div class="floatcontainer">
+			<div class="floatright">
+				<div class="list-star-icon #{starClass} icon" id="starIcon" x-mojo-tap-highlight="momentary"></div>
+			</div>
+			<p class="floater">
+				<span class="story-date truncating-text">#{date} #{origin}<br></span>
+				<span class="story-title #{titleStyle} #{titleColor} #{large} multiline">#{-title}<br></span>
+				<span class="story-content #{contentStyle} #{large} condensed multiline">#{-shortSummary}</span>
+			</p>
+		</div>
 	</div>
 </div>
