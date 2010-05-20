@@ -28,6 +28,7 @@ function AddfeedAssistant(feeds, feed) {
 		this.feed = new feedProto();
 		this.isAdd = true;
 	} else {
+		this.feed = new feedProto(feed)
 		this.isAdd = false;
 	}
 	

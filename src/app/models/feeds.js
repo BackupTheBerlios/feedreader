@@ -602,12 +602,15 @@ var feeds = Class.create ({
 	 *
 	 * Called when editing a feed succeeds.
 	 *
+	 * @param	enabled	{bool}		wether the feed is enabled or not
 	 * @param	url		{String}	url of the edited feed
 	 */
-	onAddOrEditFeedSuccess: function(url) {
-		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-changed" });			
-		this.changingFeed = true;
-		this.enqueueUpdate(url);
+	onAddOrEditFeedSuccess: function(enabled, url) {
+		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-changed" });
+		if(enabled) {
+			this.changingFeed = true;
+			this.enqueueUpdate(url);
+		}
 	},
 	
 	/**
@@ -616,7 +619,7 @@ var feeds = Class.create ({
 	 * @param feed		{Object} 	feed object
 	 */
 	addOrEditFeed: function(feed) {
-		this.db.addOrEditFeed(feed, this.onAddOrEditFeedSuccess.bind(this, feed.url));
+		this.db.addOrEditFeed(feed, this.onAddOrEditFeedSuccess.bind(this, feed.enabled, feed.url));
 	},
 	
 	getFeedTitle: function(feed) {
