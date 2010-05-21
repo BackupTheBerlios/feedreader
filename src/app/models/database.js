@@ -907,13 +907,12 @@ var database = Class.create({
 												   "    audio = ?," +
 												   "    video = ?," +
 												   "    pubdate = ?," +
-												   "    isStarred = ?," +
 												   "    flag = 0" +
 												   "  WHERE id = ?",
 												   [story.title, story.summary,
 													story.picture, story.audio,
 													story.video, story.pubdate,
-													story.isStarred ? 1 : 0, sid],
+													sid],
 												   onSuccess, onFail);
 							transaction.executeSql("DELETE FROM storyurls WHERE sid = ?", [sid],
 												   this.nullDataHandler, this.errorHandler);
