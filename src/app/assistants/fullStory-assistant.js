@@ -241,7 +241,7 @@ FullStoryAssistant.prototype.listDataHandler = function(ids) {
 		}
 	}
 	this.isFirst = this.storyIndex <= 0;
-	this.isLast = this.storyIndex >= this.storyList.length;
+	this.isLast = this.storyIndex >= this.storyList.length - 1;
 
 	// Setup command menu.
 	this.initCommandModel();
