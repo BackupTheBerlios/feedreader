@@ -47,8 +47,9 @@ FeedReader = {
     	]
 	},
 	
-	feeds: {},
-	prefs: {},
+	feeds: null,
+	prefs: null,
+	mediaExtension: null,
 	
 	controller: {},
 	
@@ -269,6 +270,21 @@ FeedReader = {
 	 */
 	stripHTML: function(text) {
         return text.replace(/(<([^>]+)>)/ig, "");
+	},
+	
+	/**
+	 * Get media extension library.
+	 *
+	 * @return	{Object}			media extension library
+	 */
+	getMediaExtensionLib: function() {
+		if(!this.mediaExtensionLib) {
+			this.mediaExtensionLib = MojoLoader.require({
+				name: 		"mediaextension",
+				version:	"1.0"
+			});
+		}
+		return this.mediaExtensionLib;
 	}
 };
 

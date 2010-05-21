@@ -37,6 +37,7 @@ function FullStoryAssistant(feeds, feed, storyID) {
 		items:	[]
 	};
 	this.media = null;
+	this.mediaExtension = null;
 	this.mediaReady = false;
 	this.playState = 0;
 	this.seeking = false;	
@@ -173,7 +174,14 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 	if(!this.doShowMedia) {
 		// Hide the player.
 		this.controller.get("media-controls-wrapper").className = "hidden";
-	} else {	
+
+		// Remove the video element.
+		video = this.controller.get("media-video");
+		video.parentNode.removeChild(video);
+	} else {
+		// Load the extension library.
+		var mediaExtensionLib = FeedReader.getMediaExtensionLib();
+		
 		// Setup media player.
 		switch(this.mediaMode) {
 			case mediaModes.mdAudio:
@@ -188,6 +196,10 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 			    this.controller.listen("media-video", Mojo.Event.tap, this.storyTap);
 				break;
 		}
+		
+		this.mediaExtension = mediaExtensionLib.MediaExtension.getInstance(this.media);
+		this.mediaExtension.audioClass = "media";
+		
 		this.media.autoPlay = false;
 		this.media.addEventListener("canplay", this.mediaCanPlay, false);
 		this.media.addEventListener("play", this.mediaPlaying, false);
@@ -279,6 +291,7 @@ FullStoryAssistant.prototype.cleanup = function(event) {
 			this.media.load();
 		} catch(e) {
 		}
+		delete this.mediaExtension;
 		delete this.media;
 	}
 	if(!this.story.isRead) {
