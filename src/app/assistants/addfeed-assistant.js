@@ -26,9 +26,11 @@ function AddfeedAssistant(feeds, feed) {
 
 	if(!this.feed) {
 		this.feed = new feedProto();
+		this.feed.feedType = feedTypes.ftRSS;
 		this.isAdd = true;
 	} else {
 		this.feed = new feedProto(feed)
+		this.feed.feedType = feed.feedType;
 		this.isAdd = false;
 	}
 	
@@ -47,6 +49,9 @@ function AddfeedAssistant(feeds, feed) {
 	} else if(this.feed.showDetailSummary) {
 		this.detailMode = 2;
 	}
+	
+	this.feedUpdateFailed = this.feedUpdateFailed.bind(this);
+	this.feedUpdateSuccess = this.feedUpdateSuccess.bind(this);
 }
 
 AddfeedAssistant.prototype.setup = function() {
@@ -214,7 +219,21 @@ AddfeedAssistant.prototype.updateFeed = function() {
 	this.controller.modelChanged(this.okButtonModel);
 
 	// Save the feed.
-	this.feeds.addOrEditFeed(this.feed);
+	this.feeds.addOrEditFeed(this.feed, this.feedUpdateSuccess, this.feedUpdateFailed);
+};
+
+AddfeedAssistant.prototype.feedUpdateFailed = function() {
+	this.okButton.mojo.deactivate();
+	
+	var errorMsg = new Template($L("Editing the Feed '#{title}' failed."));
+	FeedReader.showError(errorMsg, { title: this.feed.url } );
+};
+
+AddfeedAssistant.prototype.feedUpdateSuccess = function() {
+	if(this.feed.enabled) {
+		this.feeds.changingFeed = true;
+		this.feeds.enqueueUpdate(this.feed.url);
+	}
 	this.okButton.mojo.deactivate();
 	this.controller.stageController.popScene();
-}; 
+};

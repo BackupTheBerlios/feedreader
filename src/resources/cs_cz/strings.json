@@ -114,5 +114,6 @@
 	"Filter": "Filtr",
 	"Allow HTML": "Povolit HTML",
 	"Contributors": "Spolupracovníci",
-	"Feeds": "Kanály"
+	"Feeds": "Kanály",
+	"Editing the Feed '#{title}' failed.": "Ändern des Feeds '#{title}' ist fehlgeschlagen."
 }

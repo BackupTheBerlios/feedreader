@@ -114,5 +114,6 @@
 	"Filter": "Filter",
 	"Allow HTML": "HTML erlauben",
 	"Contributors": "Mitwirkende",
-	"Feeds": "Feeds"
+	"Feeds": "Feeds",
+	"Editing the Feed '#{title}' failed.": "Ändern des Feeds '#{title}' ist fehlgeschlagen."
 }

@@ -617,9 +617,12 @@ var feeds = Class.create ({
 	 * Add a new feed or edit an existing one.
 	 * 
 	 * @param feed		{Object} 	feed object
+	 * @param onSuccess	{function}	called on success
+	 * @param onFail	{function}	called on failure
 	 */
-	addOrEditFeed: function(feed) {
-		this.db.addOrEditFeed(feed, this.onAddOrEditFeedSuccess.bind(this, feed.enabled, feed.url));
+	addOrEditFeed: function(feed, onSuccess, onFail) {
+		onSuccess = onSuccess || this.onAddOrEditFeedSuccess.bind(this, feed.enabled, feed.url);
+		this.db.addOrEditFeed(feed, onSuccess, onFail);
 	},
 	
 	getFeedTitle: function(feed) {
