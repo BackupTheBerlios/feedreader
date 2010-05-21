@@ -177,14 +177,12 @@ var spooler = new Class.create({
 	nextAction: function() {
 		try {
 			if(this.list.length >= 1) {
-				Mojo.Log.info("SPOOLER> Next action");
-				var action = this.list.shift();
+^				var action = this.list.shift();
 				this.actionRunning = true;
 				this.actionIdent = action.ident;
 				this.enterActivity();
 				action.execute();
 			} else {
-				Mojo.Log.info("SPOOLER> Next action; have no");
 				this.actionRunning = false;
 				this.actionIdent = "";
 				FeedReader.removeUpdateDashboard();
