@@ -671,6 +671,10 @@ var feeds = Class.create ({
 		this.db.getFeed(id, onSuccess);
 	},
 	
+	getFeedIDList: function(onSuccess) {
+		this.db.getFeedIDList(onSuccess);
+	},
+	
 	getFeedCount: function(filter, onSuccess) {
 		this.db.getFeedCount(filter, onSuccess);
 	},

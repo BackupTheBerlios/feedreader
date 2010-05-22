@@ -58,6 +58,8 @@ function FullStoryAssistant(feeds, feed, storyID) {
 	this.storyTap = this.storyTap.bindAsEventListener(this);
 	this.openURL = this.openURL.bind(this);
 	this.pictureLoaded = this.pictureLoaded.bind(this);
+	
+	this.listDataHandler = this.listDataHandler.bind(this);
 }
 
 FullStoryAssistant.prototype.setup = function() {
@@ -270,7 +272,7 @@ FullStoryAssistant.prototype.activate = function(event) {
 		this.controller.modelChanged(this.pictureSpinnerModel);
 	}
 	
-	this.feeds.getStoryIDList(this.feed, this.listDataHandler.bind(this));
+	this.feeds.getStoryIDList(this.feed, this.listDataHandler);
 };
 
 FullStoryAssistant.prototype.deactivate = function(event) {
@@ -301,7 +303,7 @@ FullStoryAssistant.prototype.cleanup = function(event) {
 
 FullStoryAssistant.prototype.refreshAll = function() {
 	this.feeds.getStory(this.storyID, this.dataHandler.bind(this));
-	this.feeds.getStoryIDList(this.feed, this.listDataHandler.bind(this));
+	this.feeds.getStoryIDList(this.feed, this.listDataHandler);
 	this.feeds.getFeed(this.feed.id, this.feedDataHandler.bind(this));
 };
 

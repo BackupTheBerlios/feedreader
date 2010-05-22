@@ -522,6 +522,31 @@ var database = Class.create({
 	},
 	
 	/**
+	 * Get a list of all feed IDs.
+	 *
+	 * @param	onSuccess	{function}		called on success
+	 * @param	onFail		{function}		called on failure
+	 */
+	getFeedIDList: function(onSuccess, onFail) {
+		Mojo.assert(onSuccess, "DB> getFeedIDList needs data handler");
+		onFail = onFail || this.errorHandler;
+		
+		// This function will assemble the result set.
+		var handleResult = function(transaction, result) {
+			var list = [];
+			for(var i = 0; i < result.rows.length; i++) {
+				list.push(result.rows.item(i).id);
+			}
+			onSuccess(list);
+		};
+		
+		this.transaction(function(transaction) {
+			transaction.executeSql("SELECT id FROM feeds ORDER BY feedOrder", [],
+								   handleResult, onFail);
+		});
+	},
+	
+	/**
 	 * Retrieve a feed.
 	 *
 	 * @param	id			{Integer}		feed id
@@ -529,7 +554,7 @@ var database = Class.create({
 	 * @param	onFail		{function}		function to be called on failure
 	 */
 	getFeed: function(id, onSuccess, onFail) {
-		Mojo.assert(onSuccess, "DB> getFeed needs data handler");		
+		Mojo.assert(onSuccess, "DB> getFeed needs data handler");
 		onFail = onFail || this.errorHandler;
 		this.transaction(
 			function(transaction) {

@@ -29,6 +29,8 @@ function StorylistAssistant(feeds, feed) {
 	this.filter = "dummyFilter";
 	this.viewMode = feed.sortMode;
 	this.commandModel = {};
+	this.feedList = null;
+	this.feedIndex = -1;
 	
 	this.listFindHandler = this.listFindHandler.bind(this);
 
@@ -40,10 +42,15 @@ function StorylistAssistant(feeds, feed) {
 	this.sendChoose = this.sendChoose.bind(this);
 	this.feedDataHandler = this.feedDataHandler.bind(this);
 	this.showStory = this.showStory.bindAsEventListener(this);
+	this.listDataHandler = this.listDataHandler.bind(this);
+	this.changeFeed = this.changeFeed.bind(this);
 	
 	this.setupComplete = false;	
 	this.wasActiveBefore = false;
 	this.listRefreshNeeded = true;
+	
+	this.isFirst = true;
+	this.isLast = true;
 }
 
 StorylistAssistant.prototype.setup = function() {
@@ -52,6 +59,7 @@ StorylistAssistant.prototype.setup = function() {
 	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feed));
 	this.controller.get("appIcon").className += " " + this.feeds.getFeedIconClass(this.feed, true, true);
 	this.feedDataHandler(this.feed);
+	this.feeds.getFeedIDList(this.listDataHandler);
 
 	this.controller.setDefaultTransition(Mojo.Transition.defaultTransition);
 
@@ -95,12 +103,12 @@ StorylistAssistant.prototype.initCommandModel = function() {
 			items: [
 				{
 					icon: "back",
-					disabled: this.feedIndex === 0,
+					disabled: this.isFirst,
 					command: "do-previousFeed"
 				},
 				{
 					icon: "forward",
-					disabled: this.feedIndex === (this.feeds.list.length - 1),
+					disabled: this.isLast,
 					command: "do-nextFeed"
 				}
 			]
@@ -135,8 +143,11 @@ StorylistAssistant.prototype.aboutToActivate = function(callback) {
 StorylistAssistant.prototype.activate = function(event) {
 	if(this.wasActiveBefore) {
 		this.refreshList();
-		this.initCommandModel();
-		this.controller.modelChanged(this.commandModel);
+		
+		if(this.feedIndex >= 0) {
+			this.initCommandModel();
+			this.controller.modelChanged(this.commandModel);
+		}
 	}
 	this.wasActiveBefore = true;
 };
@@ -190,6 +201,23 @@ StorylistAssistant.prototype.listFindHandler = function(filterString, listWidget
 			this.feeds.getStories(this.feed, this.filter, offset, count, this.updateItems);
 		}
 	}
+};
+
+StorylistAssistant.prototype.listDataHandler = function(ids) {
+	this.feedList = ids;
+	
+	for(var i = 0; i < this.feedList.length; i++) {
+		if(this.feedList[i] == this.feed.id) {
+			this.feedIndex = i;
+			break;
+		}
+	}
+		
+	this.isFirst = this.feedIndex <= 0;
+	this.isLast = this.feedIndex >= this.feedList.length - 1;
+	
+	this.initCommandModel();
+	this.controller.modelChanged(this.commandModel);
 };
 
 StorylistAssistant.prototype.updateItems = function(offset, items) {
@@ -295,21 +323,22 @@ StorylistAssistant.prototype.sendChoose = function(command) {
 	}
 };
 
+StorylistAssistant.prototype.changeFeed = function(feed) {
+	this.controller.stageController.swapScene({
+		name: "storylist",
+		transition: Mojo.Transition.crossFade
+	}, this.feeds, feed);
+};
+
 StorylistAssistant.prototype.handleCommand = function(event) {
 	if(event.type === Mojo.Event.command) {
 		switch(event.command) {
 			case "do-previousFeed":
-				this.controller.stageController.swapScene({
-					name: "storylist",
-					transition: Mojo.Transition.crossFade
-				}, this.feeds, this.feedIndex - 1);
+				this.feeds.getFeed(this.feedList[this.feedIndex - 1], this.changeFeed);
 				break;
 				
 			case "do-nextFeed":
-				this.controller.stageController.swapScene({
-					name: "storylist",
-					transition: Mojo.Transition.crossFade
-				}, this.feeds, this.feedIndex + 1);
+				this.feeds.getFeed(this.feedList[this.feedIndex + 1], this.changeFeed);
 				break;
 			
 			case "do-feedUpdate":
@@ -345,8 +374,10 @@ StorylistAssistant.prototype.considerForNotification = function(params){
 					this.refreshList();
 					Mojo.Log.info("SL> refreshing list");
 				}
-				this.initCommandModel();
-				this.controller.modelChanged(this.commandModel);
+				if(this.feedIndex >= 0) {
+					this.initCommandModel();
+					this.controller.modelChanged(this.commandModel);
+				}
 				break;
 			
 			case "app-activate":
