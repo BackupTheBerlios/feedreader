@@ -426,6 +426,19 @@ h3 {
 	width: 32px;
 }
 
+#starIcon {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+    background: url(../images/lists/star-icon.png) center center no-repeat;
+	height: 32px;
+	width: 32px;
+}
+
+#starIcon.starred {
+    background: url(../images/lists/starred-icon.png) center center no-repeat;
+}
+
 .webImage {
 	position:relative;
 	left: 8px;

@@ -248,7 +248,7 @@ StorylistAssistant.prototype.feedDataHandler = function(feed) {
 
 /* various event handlers */
 StorylistAssistant.prototype.showStory = function(event) {
-	if(event.originalEvent.target.id == "starIcon") {
+	if(event.originalEvent.target.id == "starStory") {
 		// Toggle the flag.
 		var item = {
 			id:			event.item.id,

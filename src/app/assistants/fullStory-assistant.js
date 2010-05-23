@@ -58,8 +58,12 @@ function FullStoryAssistant(feeds, feed, storyID) {
 	this.storyTap = this.storyTap.bindAsEventListener(this);
 	this.openURL = this.openURL.bind(this);
 	this.pictureLoaded = this.pictureLoaded.bind(this);
+	this.starIconTap = this.starIconTap.bindAsEventListener(this);
 	
+	this.dataHandler = this.dataHandler.bind(this);
 	this.listDataHandler = this.listDataHandler.bind(this);
+	this.feedDataHandler = this.feedDataHandler.bind(this);
+	this.storyUpdate = this.storyUpdate.bind(this);
 }
 
 FullStoryAssistant.prototype.setup = function() {
@@ -91,10 +95,12 @@ FullStoryAssistant.prototype.setup = function() {
 								{ spinnerSize: "small" },
 								this.pictureSpinnerModel);
 	
+    this.controller.listen("starIcon", Mojo.Event.tap, this.starIconTap);	
+	
 	// Handle a story click.
     this.controller.listen("followLink", Mojo.Event.tap, this.storyTap);
     this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel);
-
+	
 	this.refreshAll();
 };
 
@@ -228,6 +234,8 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 		this.controller.hideWidgetContainer("scene-main");
 	}
 
+	this.controller.get("starIcon").className = "right" + (this.story.isStarred ? " starred" : "");
+
 	this.feedDataHandler(this.feed);
 	FeedReader.endSceneSetup(this);
 };
@@ -302,9 +310,9 @@ FullStoryAssistant.prototype.cleanup = function(event) {
 };
 
 FullStoryAssistant.prototype.refreshAll = function() {
-	this.feeds.getStory(this.storyID, this.dataHandler.bind(this));
+	this.feeds.getStory(this.storyID, this.dataHandler);
 	this.feeds.getStoryIDList(this.feed, this.listDataHandler);
-	this.feeds.getFeed(this.feed.id, this.feedDataHandler.bind(this));
+	this.feeds.getFeed(this.feed.id, this.feedDataHandler);
 };
 
 FullStoryAssistant.prototype.initCommandModel = function() {
@@ -551,6 +559,21 @@ FullStoryAssistant.prototype.storyTap = function(event) {
 		
 		this.controller.popupSubmenu(subMenu);
 	}
+};
+
+FullStoryAssistant.prototype.storyUpdate = function(feed, story, urls) {
+	this.story = story;
+	this.controller.get("starIcon").className = "right" + (this.story.isStarred ? " starred" : "");
+};
+
+FullStoryAssistant.prototype.starIconTap = function(event) {
+	// Toggle the flag.
+	var item = {
+		id:			this.story.id,
+		isStarred:	this.story.isStarred ? 0 : 1
+	};	
+	this.feeds.markStarred(item);
+	this.feeds.getStory(this.storyID, this.storyUpdate);
 };
 
 FullStoryAssistant.prototype.openURL = function(url) {
