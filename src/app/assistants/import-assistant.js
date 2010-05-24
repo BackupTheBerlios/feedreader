@@ -164,6 +164,7 @@ ImportAssistant.prototype.ajaxRequestSuccess = function(transport) {
 	if(transport.responseText && transport.responseText.length > 0) {
 		Mojo.Log.info("Got response from web!");
 		try {
+			this.inHeader = true;
 			this.htmlparser.parse(transport.responseText.replace("/<script.*<\/script>/ig"), this.parserHandler);
 		} catch(e) {
 			Mojo.Log.logException(e);
