@@ -589,14 +589,25 @@ FullStoryAssistant.prototype.openURL = function(url) {
 };
 
 FullStoryAssistant.prototype.sendChoose = function(command) {
+	var i = 0;
+	var text = "";
 	switch(command) {
 		case "send-sms":
-			FeedReader.sendSMS($L("Check out this story") + ": " + this.story.url);
+			text = $L("Check out this story") + ": ";
+			for(i = 0; i < this.urls.length; i++) {
+				text += (i > 0 ? ", " : "") + this.urls[i].href;
+			}
+			FeedReader.sendSMS(text);
 			break;
 		
 		case "send-email":
-			FeedReader.sendEMail($L("Check out this story"), this.story.summary +
-								 '<br><br><a href="' + this.story.url + '">' + this.story.url + '</a>');
+			text = this.story.summary + "<br><br>";
+			for(i = 0; i < this.urls.length; i++) {
+				text += (i > 0 ? "<br>" : "") +
+				        '<a href="' + this.urls[i].href + '">' +
+						this.urls[i].title + '</a>';
+			}
+			FeedReader.sendEMail($L("Check out this story"), text);
 			break;
 	}
 };

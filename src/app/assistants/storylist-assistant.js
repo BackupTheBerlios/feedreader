@@ -124,7 +124,7 @@ StorylistAssistant.prototype.initCommandModel = function() {
 		}
 	];
 	
-	if(!this.isAllItems) {
+	if(this.feed.feedType >= feedTypes.ftUnknown) {
 		this.commandModel.items[1].items.unshift({
 			icon: "send",
 			command: "do-send"
