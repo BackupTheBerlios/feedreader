@@ -29,7 +29,7 @@ function AddfeedAssistant(feeds, feed) {
 		this.feed.feedType = feedTypes.ftRSS;
 		this.isAdd = true;
 	} else {
-		this.feed = new feedProto(feed)
+		this.feed = new feedProto(feed);
 		this.feed.feedType = feed.feedType;
 		this.isAdd = false;
 	}
