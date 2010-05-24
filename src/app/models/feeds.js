@@ -111,6 +111,7 @@ var feeds = Class.create ({
 			for(var i = 0; i < urls.length; i++) {
 				this.enqueueUpdate(urls[i]);
 			}
+			this.spooler.addAction(this.getNewCount.bind(this), "getNewCount", true);
 			this.spooler.endUpdate();
 		}
 	},
@@ -532,6 +533,30 @@ var feeds = Class.create ({
 		}
 		this.db.endStoryUpdate(url, false);	// Don't delete old storys.
 		this.spooler.nextAction();
+	},
+	
+	/** @private
+	 *
+	 * Get the count of new stories and post a notification.
+	 */
+	getNewCount: function() {
+		this.db.getNewStoryCount(this.postNotification.bind(this));
+		this.spooler.nextAction();
+	},
+	
+	/** @private
+	 *
+	 * Post a notification about new story count.
+	 *
+	 * @param	count	{integer}		count of new stories
+	 */
+	postNotification: function(count) {
+		if(count > 0) {		
+			if((!FeedReader.isActive) && (!this.interactiveUpdate) && (FeedReader.prefs.notificationEnabled)) {
+				Mojo.Log.info("FEEDS> About to post notification for new items; count =", count);
+				FeedReader.postNotification(count);
+			}
+		}
 	},
 	
 	/**

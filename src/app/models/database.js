@@ -624,6 +624,28 @@ var database = Class.create({
 	},
 	
 	/**
+	 * Get the count of new stories.
+	 *
+	 * @param	onSuccess	{function}		function to be called on success
+	 * @param	onFail		{function}		function to be called on failure
+	 */
+	getNewStoryCount: function(onSuccess, onFail) {
+		Mojo.assert(onSuccess, "DB> getStories needs data handler");
+		onFail = onFail || this.errorHandler;
+		
+		this.transaction(function(transaction) {
+			transaction.executeSql("SELECT COUNT(*) AS newCount FROM stories WHERE isNew = 1", [],
+				function(transaction, result) {
+					if(result.rows.length > 0) {
+						onSuccess(result.rows.item(0).newCount);
+					} else {
+						onSuccess(0);
+					}
+				}, onFail);
+		});
+	},
+	
+	/**
 	 * Retrieve a list of stories matching a filter string.
 	 *
 	 * @param	feed		{Object}		feed object
@@ -887,6 +909,7 @@ var database = Class.create({
 			if(successful) {
 				transaction.executeSql("DELETE FROM stories" +
 									   "  WHERE flag = 1" +
+									   "    AND isStarred = 0" +
 									   '    AND fid = (' + commonSQL.csGetFeedIDByURL + ')',
 									   [url], onSuccess, onFail);
 			} else {
