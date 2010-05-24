@@ -143,10 +143,13 @@ var dateConverter = Class.create({
 	},
 	
 	dateToLocalTime: function(date) {
-		var d = new Date();
-		d.setTime(date);
-		
-		return Mojo.Format.formatDate(d, "medium");		
+		if(date > 0) {		
+			var d = new Date();
+			d.setTime(date);
+			return Mojo.Format.formatDate(d, "medium");
+		} else {
+			return $L("No date provided");
+		}
 	},
 	
 	formatTimeString: function(secs) {

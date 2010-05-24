@@ -115,5 +115,6 @@
 	"Allow HTML": "HTML erlauben",
 	"Contributors": "Mitwirkende",
 	"Feeds": "Feeds",
-	"Editing the Feed '#{title}' failed.": "Ändern des Feeds '#{title}' ist fehlgeschlagen."
+	"Editing the Feed '#{title}' failed.": "Ändern des Feeds '#{title}' ist fehlgeschlagen.",
+	"No date provided": "Kein Datum angegeben"
 }
