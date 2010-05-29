@@ -261,7 +261,7 @@ img {
 }
 
 .feed-icon.unknown.disabled {
-	background: url(../images/lists/icon-unknown.png) center no-repeat;
+	background: url(../images/lists/icon-unknown-disabled.png) center no-repeat;
 }
 
 /* item badges */
