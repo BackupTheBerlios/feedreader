@@ -203,9 +203,6 @@ AddfeedAssistant.prototype.updateFeed = function() {
 	this.feed.sortMode = this.sortModeModel.value;
 	this.feed.allowHTML = this.allowHTMLModel.value;
 	
-	Mojo.Log.info("Modes", this.listModeModel.value, this.detailModeModel.value);
-	Mojo.Log.info("sl summary", (!this.listModeModel.value) ? 1 : 0);
-	
     if(/^[a-z]{1,5}:/.test(this.feed.url) === false) {
         this.feed.url = this.feed.url.replace(/^\/{1,2}/, "");                                
         this.feed.url = "http://" + this.feed.url;
