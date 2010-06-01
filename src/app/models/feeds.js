@@ -49,8 +49,8 @@ var feedProto = Class.create({
 			this.showMedia = proto.showMedia;
 			this.showListSummary = proto.showListSummary;
 			this.showListCaption = proto.showListCaption;
-			this.showListSummary = proto.showListSummary;
-			this.showListCaption = proto.showListCaption;
+			this.showDetailSummary = proto.showDetailSummary;
+			this.showDetailCaption = proto.showDetailCaption;
 			this.sortMode = proto.sortMode;
 			this.allowHTML = proto.allowHTML;
 			if(proto.id !== null) {
@@ -647,6 +647,9 @@ var feeds = Class.create ({
 	 */
 	addOrEditFeed: function(feed, onSuccess, onFail) {
 		onSuccess = onSuccess || this.onAddOrEditFeedSuccess.bind(this, feed.enabled, feed.url);
+		if(feed.title === "") {
+			feed.title = "RSS Feed";
+		}
 		this.db.addOrEditFeed(feed, onSuccess, onFail);
 	},
 	

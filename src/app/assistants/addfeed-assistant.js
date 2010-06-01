@@ -191,24 +191,26 @@ AddfeedAssistant.prototype.updateFeed = function() {
     this.feed.url = this.urlModel.value;
 	this.feed.title = this.titleModel.value;
 	this.feed.enabled = this.enabledModel.value;
-	this.feed.showListSummary = (this.listModeModel.value === 0) ||
-								(this.listModeModel.value == 2);
-	this.feed.showListCaption = (this.listModeModel.value === 0) ||
-								(this.listModeModel.value == 1);
-	this.feed.showDetailSummary = (this.detailModeModel.value === 0) ||
-								  (this.detailModeModel.value == 2);
-	this.feed.showDetailCaption = (this.detailModeModel.value === 0) ||
-								  (this.detailModeModel.value == 1);
+
+	this.feed.showListCaption = (this.listModeModel.value == 0) || ((this.listModeModel.value % 2) == 1);
+	this.feed.showListSummary = (this.listModeModel.value % 2) == 0;
+
+	this.feed.showDetailCaption = (this.detailModeModel.value == 0) || ((this.detailModeModel.value % 2) == 1);
+	this.feed.showDetailSummary = (this.detailModeModel.value % 2) == 0;
+
 	this.feed.showPicture = this.showPictureModel.value;
 	this.feed.showMedia = this.showMediaModel.value;
 	this.feed.sortMode = this.sortModeModel.value;
 	this.feed.allowHTML = this.allowHTMLModel.value;
 	
+	Mojo.Log.info("Modes", this.listModeModel.value, this.detailModeModel.value);
+	Mojo.Log.info("sl summary", (!this.listModeModel.value) ? 1 : 0);
+	
     if(/^[a-z]{1,5}:/.test(this.feed.url) === false) {
         this.feed.url = this.feed.url.replace(/^\/{1,2}/, "");                                
         this.feed.url = "http://" + this.feed.url;
     }
-    
+	
     // Update the entered URL & model.
     this.urlModel.value = this.feed.url;
     this.controller.modelChanged(this.urlModel);
@@ -222,8 +224,12 @@ AddfeedAssistant.prototype.updateFeed = function() {
 	this.feeds.addOrEditFeed(this.feed, this.feedUpdateSuccess, this.feedUpdateFailed);
 };
 
-AddfeedAssistant.prototype.feedUpdateFailed = function() {
+AddfeedAssistant.prototype.feedUpdateFailed = function(transaction, error) {
+	this.okButtonModel.label = $LL("OK");
+	this.controller.modelChanged(this.okButtonModel);
 	this.okButton.mojo.deactivate();
+
+	Mojo.Log.error("DB>", error.message);
 	
 	var errorMsg = new Template($L("Editing the Feed '#{title}' failed."));
 	FeedReader.showError(errorMsg, { title: this.feed.url } );
