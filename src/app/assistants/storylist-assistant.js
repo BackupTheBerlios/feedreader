@@ -282,10 +282,6 @@ StorylistAssistant.prototype.sortModeTap = function(event) {
 	this.controller.popupSubmenu(subMenu);
 };
 
-StorylistAssistant.prototype.starTap = function(event) {
-	Mojo.Log.info(Object.toJSON(event.item));
-};
-
 StorylistAssistant.prototype.sortModeChoose = function(command) {
 	var feed = new feedProto(this.feed);
 	
