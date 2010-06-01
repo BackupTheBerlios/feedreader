@@ -32,6 +32,7 @@ var prefs = Class.create({
 	largeFont: false,
 	showChanges: false,
 	leftHanded: true,
+	enabledRoation: true,
 	
 	timer: {},
 	
@@ -64,6 +65,7 @@ var prefs = Class.create({
 			if(settings.version > 6) {
 				this.blinkingEnabled = settings.blinkingEnabled;
 				this.notifyWhileRunning = settings.notifyWhileRunning;
+				this.enableRotation = settings.enableRotation;
 			}
 			
 			if(settings.version < FeedReader.versionInt) {
@@ -85,7 +87,8 @@ var prefs = Class.create({
 			summaryLength: 			this.summaryLength,
 			titleColor: 			this.titleColor,
 			largeFont:				this.largeFont,
-			leftHanded:				this.leftHanded
+			leftHanded:				this.leftHanded,
+			enableRotation:			this.enableRotation
 		});
 		this.setTimer();
 	},

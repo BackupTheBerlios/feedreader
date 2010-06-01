@@ -38,11 +38,15 @@ PreferencesAssistant.prototype.setup = function() {
 	this.controller.get("updateOnStart-title").update($L("Update on start"));
 	this.controller.get("wake-device-title").update($L("Wake device"));
 	this.controller.get("left-handed-title").update($L("Navigation on left side"));
+	this.controller.get("enableRotation-title").update($L("Auto-rotate screen"));
 	this.controller.get("largeFont-title").update($L("Use large fonts"));
 
 	this.controller.setupWidget("leftHanded",
     							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
          						this.leftHandedModel = {value: this.prefs.leftHanded, disabled: false});
+	this.controller.setupWidget("enableRotation",
+    							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
+         						this.enableRotationModel = {value: this.prefs.enableRotation, disabled: false});
 
 	this.controller.setupWidget("notificationEnabled",
     							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
@@ -117,6 +121,16 @@ PreferencesAssistant.prototype.cleanup = function(event) {
 	this.prefs.summaryLength = this.summaryLengthModel.value;
 	this.prefs.largeFont = this.largeFontModel.value;
 	this.prefs.leftHanded = this.leftHandedModel.value;
+	this.prefs.enableRotation = this.enableRotationModel.value;
 	
 	this.prefs.save();
+	
+    var cardStageController = Mojo.Controller.getAppController().getStageController(FeedReader.mainStageName);
+	if(cardStageController) {
+		if(this.prefs.enableRotation) {
+			cardStageController.setWindowOrientation("free");
+		} else {
+			cardStageController.setWindowOrientation("up");
+		}
+	}
 };

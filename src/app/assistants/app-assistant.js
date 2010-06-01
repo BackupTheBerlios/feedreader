@@ -330,14 +330,18 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
     
     if (!launchParams) {
         if (cardStageController) {
-			cardStageController.setWindowOrientation("free");
+			if(FeedReader.prefs.enableRotation) {
+				cardStageController.setWindowOrientation("free");
+			}
             cardStageController.popScenesTo("feedlist");    
             cardStageController.activate();
         } else {
             this.controller.createStageWithCallback({name: FeedReader.mainStageName, lightweight: true}, 
                 									function(stageController) {
 														stageController.enableManualSplashScreenMode();
-														stageController.setWindowOrientation("free");
+														if(FeedReader.prefs.enableRotation) {
+															stageController.setWindowOrientation("free");
+														}
 														stageController.pushScene("feedlist", FeedReader.feeds);
 													},
 													"card");
@@ -356,7 +360,9 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
         
 			case "bannerPressed":
 				if (cardStageController) {
-					cardStageController.setWindowOrientation("free");
+					if(FeedReader.prefs.enableRotation) {
+						cardStageController.setWindowOrientation("free");
+					}
 					if(cardStageController.topScene().sceneName != "feedlist") {
 						cardStageController.popScenesTo("feedlist");
 					}
@@ -367,7 +373,9 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 						lightweight: true
 					}, function(stageController) {
 						stageController.enableManualSplashScreenMode();
-						stageController.setWindowOrientation("free");
+						if(FeedReader.prefs.enableRotation) {
+							stageController.setWindowOrientation("free");
+						}
 	                	stageController.pushScene("feedlist", FeedReader.feeds);
 	                }, "card");        
 	            }
