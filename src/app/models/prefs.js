@@ -24,6 +24,8 @@ var prefs = Class.create({
 	updateInterval:	30,
 	updateOnStart: true,
 	notificationEnabled: true,
+	blinkingEnabled: true,
+	notifyWhileRunning: true,
 	wakingEnabled: false,
 	titleColor: "red",
 	summaryLength: 120,
@@ -59,6 +61,10 @@ var prefs = Class.create({
 			if(settings.version > 5) {
 				this.updateOnStart = settings.updateOnStart;
 			}
+			if(settings.version > 6) {
+				this.blinkingEnabled = settings.blinkingEnabled;
+				this.notifyWhileRunning = settings.notifyWhileRunning;
+			}
 			
 			if(settings.version < FeedReader.versionInt) {
 				this.showChanges = true;
@@ -73,6 +79,8 @@ var prefs = Class.create({
 			updateInterval: 		this.updateInterval,
 			updateOnStart:			this.updateOnStart,
 			notificationEnabled: 	this.notificationEnabled,
+			blinkingEnabled:		this.blinkingEnabled,
+			notifyWhileRunning:		this.notifyWhileRunning,
 			wakingEnabled: 			this.wakingEnabled,
 			summaryLength: 			this.summaryLength,
 			titleColor: 			this.titleColor,

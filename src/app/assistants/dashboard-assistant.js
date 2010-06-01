@@ -57,7 +57,10 @@ DashboardAssistant.prototype.renderDashboard = function() {
 	}));
 	
 	if(this.count > 0) {
-		this.controller.stageController.indicateNewContent(true);
+		if(this.prefs.blinkingEnabled) {
+			Mojo.Log.info("DASHBOARD> making the core navi button blink");
+			this.controller.stageController.indicateNewContent(true);
+		}
 	} else if(!this.inUpdate) {
 		this.closeDashboard();
 	}

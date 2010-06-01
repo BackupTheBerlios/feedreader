@@ -140,9 +140,18 @@ FeedReader = {
 		if(!count) {	// nothing new or undefined.
 			return;
 		}
-		var appController = Mojo.Controller.getAppController();
-		var dashboardStageController = appController.getStageProxy(this.dashboardStageName);
 		
+		// Check if the main stage exists.
+		var appController = Mojo.Controller.getAppController();
+		if(!FeedReader.prefs.notifyWhileRunning) {
+			if(appController.getStageProxy(this.mainStageName)) {
+				return;
+			}
+			
+		}
+		
+		// Now create/update the dashboard.
+		var dashboardStageController = appController.getStageProxy(this.dashboardStageName);
 		if(!dashboardStageController) {
 			appController.createStageWithCallback({
 				name: this.dashboardStageName,

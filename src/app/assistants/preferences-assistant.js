@@ -28,9 +28,13 @@ PreferencesAssistant.prototype.setup = function() {
 	this.controller.get("prefs-title").update($L("FeedReader Preferences"));
 	this.controller.get("prefs-general-group-title").update($L("General"));
 	this.controller.get("prefs-updating-group-title").update($L("Automatic updating"));
+	this.controller.get("prefs-notify-group-title").update($L("Notifications"));
 	this.controller.get("prefs-appearance-group-title").update($L("Summary appearance"));
 	
 	this.controller.get("notify-title").update($L("Show notification"));
+	this.controller.get("blinking-title").update($L("Blink on new stories"));
+	this.controller.get("notifyRunning-title").update($L("Notify when running, but not in main scene"));
+	
 	this.controller.get("updateOnStart-title").update($L("Update on start"));
 	this.controller.get("wake-device-title").update($L("Wake device"));
 	this.controller.get("left-handed-title").update($L("Navigation on left side"));
@@ -39,9 +43,17 @@ PreferencesAssistant.prototype.setup = function() {
 	this.controller.setupWidget("leftHanded",
     							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
          						this.leftHandedModel = {value: this.prefs.leftHanded, disabled: false});
+
 	this.controller.setupWidget("notificationEnabled",
     							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
          						this.notificationModel = {value: this.prefs.notificationEnabled, disabled: false});
+	this.controller.setupWidget("blinkingEnabled",
+    							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
+         						this.blinkingModel = {value: this.prefs.blinkingEnabled, disabled: false});
+	this.controller.setupWidget("notifyWhileRunning",
+    							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
+         						this.notifyWhileRunningModel = {value: this.prefs.notifyWhileRunning, disabled: false});
+
 	this.controller.setupWidget("updateOnStart",
     							{ property: "value", trueLabel: $L("Yes"), falseLabel: $L("No")}, 
          						this.updateOnStartModel = {value: this.prefs.updateOnStart, disabled: false});
@@ -96,6 +108,8 @@ PreferencesAssistant.prototype.setup = function() {
 
 PreferencesAssistant.prototype.cleanup = function(event) {
 	this.prefs.notificationEnabled = this.notificationModel.value;
+	this.prefs.blinkingEnabled = this.blinkingModel.value;
+	this.prefs.notifyWhileRunning = this.notifyWhileRunningModel.value;
 	this.prefs.wakingEnabled = this.wakingModel.value;
 	this.prefs.updateInterval = this.updateIntervalModel.value;
 	this.prefs.updateOnStart = this.updateOnStartModel.value;
