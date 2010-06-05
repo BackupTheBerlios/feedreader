@@ -496,7 +496,7 @@ var database = Class.create({
 		onFail = onFail || this.errorHandler;
 		
 		this.transaction(function(transaction) {
-			transaction.executeSql("SELECT url FROM feeds WHERE feedType > 0 AND enabled = 1", [],
+			transaction.executeSql("SELECT url FROM feeds WHERE feedType >= ? AND enabled = 1 ORDER BY feedOrder", [feedTypes.ftUnknown],
 				function(transaction, result) {
 					var list = [];
 					for(var i = 0; i < result.rows.length; i++) {
