@@ -145,6 +145,7 @@ FeedReader = {
 		var appController = Mojo.Controller.getAppController();
 		if(!FeedReader.prefs.notifyWhileRunning) {
 			if(appController.getStageProxy(this.mainStageName)) {
+				Mojo.Log.info("FEEDREADER> Ignoring notification as app is running");
 				return;
 			}
 			

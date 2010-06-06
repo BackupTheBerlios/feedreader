@@ -80,7 +80,8 @@ var feeds = Class.create ({
 		this.spooler = new spooler();
 		this.cpConverter = new codepageConverter();
 		this.dateConverter = new dateConverter();
-		this.db = new database();	
+		this.db = new database();
+		this.updateWhenReady = FeedReader.prefs.updateOnStart;
 	},
 	
 	/**
@@ -543,7 +544,6 @@ var feeds = Class.create ({
 	 */
 	getNewCount: function() {
 		this.db.getNewStoryCount(this.postNotification.bind(this));
-		this.spooler.nextAction();
 	},
 	
 	/** @private
@@ -559,6 +559,7 @@ var feeds = Class.create ({
 				FeedReader.postNotification(count);
 			}
 		}
+		this.spooler.nextAction();
 	},
 	
 	/**
@@ -609,11 +610,11 @@ var feeds = Class.create ({
 	deleteFeed: function(feed) {
 		var onSuccess = function() {
 			Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-changed" });
-		}
+		};
 		var onFail = function() {
 			Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-changed" });
 			Mojo.Log.error("FEEDS> Deleting feed failed.");
-		}
+		};
 		this.db.deleteFeed(feed, onSuccess, onFail);
 	},
 	
@@ -648,7 +649,7 @@ var feeds = Class.create ({
 	/**
 	 * Add a new feed or edit an existing one.
 	 * 
-	 * @param feed		{Object} 	feed object
+	 * @param feed		{object} 	feed object
 	 * @param onSuccess	{function}	called on success
 	 * @param onFail	{function}	called on failure
 	 */
@@ -660,6 +661,12 @@ var feeds = Class.create ({
 		this.db.addOrEditFeed(feed, onSuccess, onFail);
 	},
 	
+	/**
+	 * Get the effective title of a feed.
+	 * 
+	 * @param		feed		{object} 	feed object
+	 * @returns					{string}	title
+	 */
 	getFeedTitle: function(feed) {
 		switch(feed.feedType) {
 			case feedTypes.ftStarred:	return $L("Starred items");
@@ -668,6 +675,12 @@ var feeds = Class.create ({
 		return feed.title;
 	},
 	
+	/**
+	 * Get the effective url of a feed.
+	 * 
+	 * @param		feed		{object} 	feed object
+	 * @returns					{string}	url
+	 */
 	getFeedURL: function(feed) {
 		switch(feed.feedType) {
 			case feedTypes.ftStarred:	return $L("All starred items");
@@ -730,6 +743,11 @@ var feeds = Class.create ({
 		this.db.getStory(id, onSuccess);
 	},
 	
+	/**
+	 * Set the sort mode of a feed.
+	 * 
+	 * @param		feed		{object} 	feed object
+	 */
 	setSortMode: function(feed) {
 		this.db.setSortMode(feed, function() {
 			Mojo.Log.info("FEEDS> feedOrder", feed.feedOrder);
@@ -741,10 +759,20 @@ var feeds = Class.create ({
 		});
 	},
 
+	/**
+	 * Returns true, if initialization is complete.
+	 * 
+	 * @returns		{bool}	readyness state
+	 */
 	isReady: function() {
 		return (this.db.ready && (!this.db.loading));
 	},
 	
+	/**
+	 * Returns true, if an update is in progress.
+	 * 
+	 * @returns		{bool}		update state
+	 */
 	isUpdating: function() {
 		return this.spooler.hasWork();
 	}

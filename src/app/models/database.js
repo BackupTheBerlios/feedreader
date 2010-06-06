@@ -398,7 +398,7 @@ var database = Class.create({
 						onSuccess(f);
 					}
 				}, onFail);
-		}
+		};
 		
 		var doInsert = function(transaction) {
 			Mojo.Log.info("DB> inserting new feed");
