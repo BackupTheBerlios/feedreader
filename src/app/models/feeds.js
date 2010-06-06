@@ -86,11 +86,11 @@ var feeds = Class.create ({
 	/**
 	 * Updates a feed.
 	 * 
-	 * @param url	{String} 	URL of the feed to update.
+	 * @param feed	{Object} 	feed to update
 	 */
-	enqueueUpdate: function(url) {
+	enqueueUpdate: function(feed) {
 		this.updateInProgress = true;
-		this.spooler.addAction(this.doUpdateFeed.bind(this, url), url, true);
+		this.spooler.addAction(this.doUpdateFeed.bind(this, feed), feed.id, true);
 	},
 	
 	/**
@@ -105,11 +105,11 @@ var feeds = Class.create ({
 	 *
 	 * Called from the database with a list of all updatable feeds.
 	 */
-	enqueueUpdateList: function(urls) {
-		if(urls.length > 0) {
+	enqueueUpdateList: function(feeds) {
+		if(feeds.length > 0) {
 			this.spooler.beginUpdate();
-			for(var i = 0; i < urls.length; i++) {
-				this.enqueueUpdate(urls[i]);
+			for(var i = 0; i < feeds.length; i++) {
+				this.enqueueUpdate(feeds[i]);
 			}
 			this.spooler.addAction(this.getNewCount.bind(this), "getNewCount", true);
 			this.spooler.endUpdate();
@@ -119,13 +119,15 @@ var feeds = Class.create ({
 	/** @private
 	 *
 	 * Called by the spooler to update a feed.
+	 *
+	 * @param	feed	{object}	feed object to update
 	 */
-	doUpdateFeed: function(url) {
+	doUpdateFeed: function(feed) {
 		this.connStatus = new Mojo.Service.Request('palm://com.palm.connectionmanager', {
 			method: 'getstatus',
 			parameters: {},
-			onSuccess: this.getConnStatusSuccess.bind(this, url),
-			onFailure: this.getConnStatusFailed.bind(this, url)
+			onSuccess: this.getConnStatusSuccess.bind(this, feed),
+			onFailure: this.getConnStatusFailed.bind(this, feed)
 		});		
 	},
 
@@ -133,19 +135,19 @@ var feeds = Class.create ({
 	 * 
 	 * Called when the connection status could be retrieved.
 	 *
-	 * @param {int} url			Feed url to be updated
-	 * @param {Object} result	Information about the connection status
+	 * @param feed		{object}	feed object to be updated
+	 * @param result	{object}	information about the connection status
 	 */	
-	getConnStatusSuccess: function(url, result) {
+	getConnStatusSuccess: function(feed, result) {
 		if(result.isInternetConnectionAvailable) {
 			this.updateInProgress = true;
-			this.db.beginStoryUpdate(url);
-			var request = new Ajax.Request(url, {
+			this.db.beginStoryUpdate(feed);
+			var request = new Ajax.Request(feed.url, {
 	    	        method: "get",
 					evalJS: "false",
 	        	    evalJSON: "false",
-	            	onSuccess: this.updateFeedSuccess.bind(this, url),
-	            	onFailure: this.updateFeedFailed.bind(this, url)});
+	            	onSuccess: this.updateFeedSuccess.bind(this, feed),
+	            	onFailure: this.updateFeedFailed.bind(this, feed)});
 		} else {
 			Mojo.Log.info("FEEDS> No internet connection available");
 			this.spooler.nextAction();
@@ -156,10 +158,10 @@ var feeds = Class.create ({
 	 * 
 	 * Called when the connection status could not be retrieved.
 	 *
-	 * @param {int} url			Feed url to be updated
-	 * @param {Object} result	Information about the connection status
+	 * @param feed		{object}	feed object to be updated
+	 * @param result	{object}	information about the connection status
 	 */	
-	getConnStatusFailed: function(url, result) {
+	getConnStatusFailed: function(feed, result) {
 		Mojo.Log.warn("FEEDS> Unable to determine connection status");
 		this.spooler.nextAction();
 	},
@@ -168,8 +170,8 @@ var feeds = Class.create ({
 	 * 
 	 * Reformat a story's summary.
 	 * 
-	 * @param {String} summary		string containing the summary to reformat
-	 * @return {String}				reformatted summary
+	 * @param 	summary		{string}		string containing the summary to reformat
+	 * @return 				{string}		reformatted summary
 	 */
 	reformatSummary: function(summary) {
 		summary = FeedReader.stripCDATA(summary);
@@ -195,40 +197,40 @@ var feeds = Class.create ({
 	 * 
 	 * Determine the type of the given feed.
 	 * 
-	 * @param {int} url				feed url
-	 * @param {Object} transport	Ajax transport
-	 * @return {Boolean}			true if type is supported
+	 * @param 	feed		{object}	feed object
+	 * @param 	transport	{object}	AJAX transport
+	 * @return 				{boolean}	true if type is supported
 	 */
-	determineFeedType: function(url, transport) {
+	determineFeedType: function(feed, transport) {
 		var feedType = transport.responseXML.getElementsByTagName("rss");
 		var errorMsg = {};
 		
 		if(transport.responseText.length === 0) {
 			if(this.changingFeed) {
 				errorMsg = new Template($L("The Feed '#{title}' does not return data."));
-				FeedReader.showError(errorMsg, { title: url });
+				FeedReader.showError(errorMsg, { title: feed.url });
 			}
-			Mojo.Log.info("FEEDS> Empty responseText in", url);
-			return this.db.setFeedType(url, feedTypes.ftUnknown);
+			Mojo.Log.info("FEEDS> Empty responseText in", feed.url);
+			return this.db.setFeedType(feed, feedTypes.ftUnknown);
 		}
 
 		if(feedType.length > 0) {
-			return this.db.setFeedType(url, feedTypes.ftRSS);
+			return this.db.setFeedType(feed, feedTypes.ftRSS);
 		} else {    
 			feedType = transport.responseXML.getElementsByTagName("RDF");
 			if (feedType.length > 0) {
-				return this.db.setFeedType(url, feedTypes.ftRDF);
+				return this.db.setFeedType(feed, feedTypes.ftRDF);
 			} else {
 				feedType = transport.responseXML.getElementsByTagName("feed");
 				if (feedType.length > 0) {
-					return this.db.setFeedType(url, feedTypes.ftATOM);
+					return this.db.setFeedType(feed, feedTypes.ftATOM);
 				} else {
 					if (this.changingFeed) {
 						errorMsg = new Template($L("The format of Feed '#{title}' is unsupported."));
-						FeedReader.showError(errorMsg, { title: url });
+						FeedReader.showError(errorMsg, { title: feed.url });
 					}
-					Mojo.Log.info("FEEDS> Unsupported feed format in", url);
-					return this.db.setFeedType(url, feedTypes.ftUnknown);
+					Mojo.Log.info("FEEDS> Unsupported feed format in", feed.url);
+					return this.db.setFeedType(feed.url, feedTypes.ftUnknown);
 				}
 			}
 		}
@@ -238,10 +240,10 @@ var feeds = Class.create ({
 	 *
 	 * Parse RDF Feed data.
 	 *
-	 * @param {String} URL of the feed to be parsed
-	 * @param {Object} transport
+	 * @param 	feed		{object}	feed object
+	 * @param 	transport	{object} 	AJAX transport
 	 */
-	parseAtom: function(feedUrl, transport) {
+	parseAtom: function(feed, transport) {
 		var enclosures = {}, story = {};
 		var url = "", enc = 0, type = "", title = "";
 		var el = 0;
@@ -329,7 +331,7 @@ var feeds = Class.create ({
 					story.uuid = story.url;
 				}
 				
-				this.db.addOrEditStory(feedUrl, story);
+				this.db.addOrEditStory(feed, story);
 			} catch(e) {
 				Mojo.Log.logException(e);
 			}
@@ -340,10 +342,10 @@ var feeds = Class.create ({
 	 *
 	 * Parse RSS Feed data.
 	 *
-	 * @param {String} URL of the feed to be parsed
-	 * @param {Object} transport
+	 * @param 	feed		{object}	feed object
+	 * @param 	transport	{object} 	AJAX transport
 	 */
-	parseRSS: function(feedUrl, transport) {
+	parseRSS: function(feed, transport) {
 		var enclosures = {}, story = {};
 		var url = "", type = "", enc = 0;
 		var el = 0;
@@ -429,7 +431,7 @@ var feeds = Class.create ({
 					story.uuid = story.title;
 				}
 				
-				this.db.addOrEditStory(feedUrl, story);
+				this.db.addOrEditStory(feed, story);
 			} catch(e) {
 				Mojo.Log.logException(e);
 			}
@@ -440,47 +442,47 @@ var feeds = Class.create ({
 	 *
 	 * Parse RDF Feed data.
 	 *
-	 * @param {String} URL of the feed to be parsed
-	 * @param {Object} transport
+	 * @param 	feed		{object}	feed object
+	 * @param 	transport	{object} 	AJAX transport
 	 */
-	parseRDF: function(feedUrl, transport) {
-		// Currently we do the same as for RSS.
-		this.parseRSS(feedUrl, transport);
+	parseRDF: function(feed, transport) {
+		this.parseRSS(feed, transport);		// Currently we do the same as for RSS.
 	},
 	
 	/** @private
 	 * 
 	 * Called when an Ajax request succeeds.
 	 * 
-	 * @param {String} URL of the feed to be parsed
-	 * @param {Object} transport
+	 * @param 	feed		{object}	feed object
+	 * @param 	transport	{object} 	AJAX transport
 	 */
-	updateFeedSuccess: function(feedUrl, transport) {
+	updateFeedSuccess: function(feed, transport) {
+		Mojo.Log.info("FEEDS> Got new content from", feed.url);
 		try {
 			if((transport.responseXML === null) && (transport.responseText !== null)) {
-				Mojo.Log.info("FEEDS> Manually converting feed info to xml");
+				Mojo.Log.info("FEEDS> Manually converting feed info to xml for", feed.url);
 				transport.responseXML = new DOMParser().parseFromString(transport.responseText, "text/xml");
 				Mojo.Log.info(transport.responseText);
 			}
 			
-			var type = this.determineFeedType(feedUrl, transport);
+			var type = this.determineFeedType(feed, transport);
 			switch(type) {
 				case feedTypes.ftRDF:
-					this.parseRDF(feedUrl, transport);
+					this.parseRDF(feed, transport);
 					break;
 					
 				case feedTypes.ftRSS:
-					this.parseRSS(feedUrl, transport);
+					this.parseRSS(feed, transport);
 					break;
 					
 				case feedTypes.ftATOM:
-					this.parseAtom(feedUrl, transport);
+					this.parseAtom(feed, transport);
 					break;
 			}				
-			this.db.endStoryUpdate(feedUrl, type != feedTypes.ftUnknown);
+			this.db.endStoryUpdate(feed, type != feedTypes.ftUnknown);
 		} catch(e) {
 			Mojo.Log.logException(e);
-			this.db.endStoryUpdate(feedUrl, false);
+			this.db.endStoryUpdate(feed, false);
 		}
 		this.spooler.nextAction();
 	},
@@ -489,8 +491,8 @@ var feeds = Class.create ({
 	 * 
 	 * Called when an Ajax request fails.
 	 * 
-	 * @param {Object} url
-	 * @param {Object} transport
+	 * @param 	feed		{object}	feed object
+	 * @param 	transport	{object} 	AJAX transport
 	 */
 	updateFeedFailed: function(url, transport) {
 		try {
@@ -522,16 +524,16 @@ var feeds = Class.create ({
 					}
 					break;
 			}	
-			Mojo.Log.warn("FEEDS> Feed", url, "is defect; disabling feed; error:", error);
+			Mojo.Log.warn("FEEDS> Feed", feed.url, "is defect; disabling feed; error:", error);
 			if (this.changingFeed) {
-				this.db.disableFeed(url);
+				this.db.disableFeed(feed);
 				var errorMsg = new Template($L("The Feed '#{title}' could not be retrieved. The server responded: #{err}. The Feed was automatically disabled."));
-				FeedReader.showError(errorMsg, { title: url, err: error} );
+				FeedReader.showError(errorMsg, { title: feed.url, err: error} );
 			}
 		} catch(e) {
 			Mojo.Log.logException(e);
 		}
-		this.db.endStoryUpdate(url, false);	// Don't delete old storys.
+		this.db.endStoryUpdate(feed, false);	// Don't delete old storys.
 		this.spooler.nextAction();
 	},
 	
@@ -602,11 +604,17 @@ var feeds = Class.create ({
 	/**
 	 * Delete a given feed.
 	 *
-	 * @param id	{int} id		ID of the feed to delete
+	 * @param 	feed	{object}		feed object
 	 */
-	deleteFeed: function(id) {
-		this.db.deleteFeed(id);
-		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-deletedfeed" });
+	deleteFeed: function(feed) {
+		var onSuccess = function() {
+			Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-changed" });
+		}
+		var onFail = function() {
+			Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-changed" });
+			Mojo.Log.error("FEEDS> Deleting feed failed.");
+		}
+		this.db.deleteFeed(feed, onSuccess, onFail);
 	},
 	
 	/**
@@ -627,14 +635,13 @@ var feeds = Class.create ({
 	 *
 	 * Called when editing a feed succeeds.
 	 *
-	 * @param	enabled	{bool}		wether the feed is enabled or not
-	 * @param	url		{String}	url of the edited feed
+	 * @param	feed	{object}	feed object
 	 */
-	onAddOrEditFeedSuccess: function(enabled, url) {
+	onAddOrEditFeedSuccess: function(feed) {
 		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-changed" });
-		if(enabled) {
+		if(feed.enabled) {
 			this.changingFeed = true;
-			this.enqueueUpdate(url);
+			this.enqueueUpdate(feed);
 		}
 	},
 	
@@ -646,7 +653,7 @@ var feeds = Class.create ({
 	 * @param onFail	{function}	called on failure
 	 */
 	addOrEditFeed: function(feed, onSuccess, onFail) {
-		onSuccess = onSuccess || this.onAddOrEditFeedSuccess.bind(this, feed.enabled, feed.url);
+		onSuccess = onSuccess || this.onAddOrEditFeedSuccess.bind(this);
 		if(feed.title === "") {
 			feed.title = "RSS Feed";
 		}

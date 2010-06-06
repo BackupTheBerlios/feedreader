@@ -260,11 +260,13 @@ FullStoryAssistant.prototype.listDataHandler = function(ids) {
 
 FullStoryAssistant.prototype.feedDataHandler = function(feed) {
 	this.feed = feed;
-
-	var unReadCount = this.feed.numUnRead - (this.story.isRead ? 0 : 1);
-	var newCount = this.feed.numNew - (this.story.isNew ? 1 : 0);
-	this.controller.get("new-count").update(newCount);
-	this.controller.get("unread-count").update(unReadCount);
+	
+	if(this.story) {
+		var unReadCount = this.feed.numUnRead - (this.story.isRead ? 0 : 1);
+		var newCount = this.feed.numNew - (this.story.isNew ? 1 : 0);
+		this.controller.get("new-count").update(newCount);
+		this.controller.get("unread-count").update(unReadCount);
+	}
 };
 
 FullStoryAssistant.prototype.aboutToActivate = function(callback) {
@@ -332,7 +334,7 @@ FullStoryAssistant.prototype.initCommandModel = function() {
 	if(this.doShowMedia) {
 		this.commandModel.items.push({
 			items :[{
-				icon: "send",
+				icon: "forward-email",
 				command: "do-send"
 			}, {
 				iconPath: "images/player/icon-play.png",
@@ -361,7 +363,7 @@ FullStoryAssistant.prototype.initCommandModel = function() {
 		}
 	} else {
 		this.commandModel.items.push({
-			icon: "send",
+			icon: "forward-email",
 			command: "do-send"
 		});
 	}

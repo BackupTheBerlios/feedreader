@@ -43,13 +43,12 @@ var feedTypes = {
  * Common SQL statements.
  */
 var commonSQL = {
-	csGetFeedIDByURL:	"SELECT id FROM feeds WHERE url = ?",
-	csGetFeedData:		"SELECT COALESCE(SUM(isNew), 0) AS numNew, COALESCE((COUNT(uuid) - SUM(isRead)), 0) AS numUnRead, feeds.*" +
-						"  FROM feeds" +
-						"  LEFT JOIN stories" +
-						"    ON (stories.fid = feeds.id) OR (feeds.feedType = ? AND stories.isStarred = 1) OR (feeds.feedType = ?) ",
-	csGetStoryIDs:		"SELECT id" +
-						"  FROM stories"
+	csGetFeedData:	"SELECT COALESCE(SUM(isNew), 0) AS numNew, COALESCE((COUNT(uuid) - SUM(isRead)), 0) AS numUnRead, feeds.*" +
+					"  FROM feeds" +
+					"  LEFT JOIN stories" +
+					"    ON (stories.fid = feeds.id) OR (feeds.feedType = ? AND stories.isStarred = 1) OR (feeds.feedType = ?) ",
+	csGetStoryIDs:	"SELECT id" +
+					"  FROM stories"
 };
 
 /**
@@ -85,6 +84,7 @@ var database = Class.create({
 			
 			var checkVersionHandler = this.checkVersion.bind(this);
 			var initDBHandler = this.initDB.bind(this);
+			
 			this.transaction(function(transaction) {
 				transaction.executeSql("SELECT MAX(version) AS version FROM system",
 									   [], checkVersionHandler, initDBHandler);
@@ -219,19 +219,13 @@ var database = Class.create({
 								   '  sortMode INTEGER NOT NULL,' +
 								   '  allowHTML BOOL NOT NULL)',
 								   [], this.nullDataHandler, this.errorHandler);
-			transaction.executeSql('CREATE UNIQUE INDEX idx_feeds_title' +
-								   '  ON feeds (title COLLATE RTRIM)',
-								   [], this.nullDataHandler, this.errorHandler);
-			transaction.executeSql('CREATE UNIQUE INDEX idx_feeds_url' +
-								   '  ON feeds (url COLLATE RTRIM)',
-								   [], this.nullDataHandler, this.errorHandler);
-
+			
 			// Create the story table.
 			transaction.executeSql('CREATE TABLE stories (' +
 								   '  id INTEGER PRIMARY KEY,' +
 								   '  fid INT NOT NULL CONSTRAINT fk_stories_fid' +
 								   '    REFERENCES feeds(id)' +
-								   '    ON DELETE CASCADE ON UPDATE CASCADE MATCH SIMPLE DEFERRABLE,' +
+								   '    ON DELETE CASCADE ON UPDATE CASCADE,' +
 								   '  uuid TEXT,' +
 								   '  title TEXT,' +
 								   '  summary TEXT,' +
@@ -253,10 +247,32 @@ var database = Class.create({
 								   '  id INTEGER PRIMARY KEY,' +
 								   '  sid INT NOT NULL CONSTRAINT fk_storyurls_sid' +
 								   '    REFERENCES stories(id)' +
-								   '    ON DELETE CASCADE ON UPDATE CASCADE MATCH SIMPLE DEFERRABLE,' +
+								   '    ON DELETE CASCADE ON UPDATE CASCADE,' +
 								   '  title TEXT,' +
 								   '  href TEXT)',
 								   [], this.nullDataHandler, this.errorHandler);
+			
+			// Create triggers.
+			transaction.executeSql("CREATE TRIGGER feeds_after_insert AFTER INSERT ON feeds" +
+								   "  BEGIN" +
+								   "    UPDATE feeds" +
+								   "      SET feedOrder = (SELECT MAX(feedOrder) + 1 FROM feeds)" +
+								   "      WHERE id = NEW.id" +
+								   "        AND feedOrder = -1;" +
+								   "  END", [], this.nullDataHandler, this.errorHandler);
+			transaction.executeSql("CREATE TRIGGER feeds_after_delete AFTER DELETE ON feeds" +
+								   "  BEGIN" +
+								   "    UPDATE feed SET feedOrder = feedOrder - 1 WHERE feedOrder > old.feedOrder;" +
+								   "    DELETE FROM storys WHERE fid = old.id;" +
+								   "  END", [], this.nullDataHandler, this.errorHandler);
+			transaction.executeSql("CREATE TRIGGER stories_after_delete AFTER DELETE ON stories" +
+								   "  BEGIN" +
+								   "    DELETE FROM storyurls WHERE sid = old.id;" +
+								   "  END", [], this.nullDataHandler, this.errorHandler);
+			transaction.executeSql("CREATE TRIGGER stories_after_update AFTER UPDATE ON stories" +
+								   "  BEGIN" +
+								   "    DELETE FROM storyurls WHERE sid = old.id;" +
+								   "  END", [], this.nullDataHandler, this.errorHandler);
 			
 			// Create the system table. It currently contains nothing but the version.
 			transaction.executeSql('CREATE TABLE system (version INTEGER)',
@@ -293,6 +309,33 @@ var database = Class.create({
 	checkVersion: function(transaction, result) {
 		var version = result.rows.item(0).version;
 		Mojo.Log.info("DB> Database already exists, version is:", version);			
+		
+		/*transaction.executeSql("DROP INDEX idx_feeds_title",  [], this.nullDataHandler, this.errorHandler);
+		transaction.executeSql("DROP INDEX idx_feeds_url",  [], this.nullDataHandler, this.errorHandler);
+		transaction.executeSql("CREATE TRIGGER IF NOT EXISTS feeds_after_insert AFTER INSERT ON feeds" +
+							   "  BEGIN" +
+							   "    UPDATE feeds" +
+							   "      SET feedOrder = (SELECT MAX(feedOrder) + 1 FROM feeds)" +
+							   "      WHERE id = NEW.id" +
+							   "        AND feedOrder = -1;" +
+							   "  END", [], this.nullDataHandler, this.errorHandler);
+		transaction.executeSql("CREATE TRIGGER IF NOT EXISTS feeds_after_delete AFTER DELETE ON feeds" +
+							   "  BEGIN" +
+							   "    UPDATE feeds SET feedOrder = feedOrder - 1 WHERE feedOrder > old.feedOrder;" +
+							   "    DELETE FROM stories WHERE fid = old.id;" +
+							   "  END", [], this.nullDataHandler, this.errorHandler);
+		transaction.executeSql("CREATE TRIGGER IF NOT EXISTS stories_after_delete AFTER DELETE ON stories" +
+							   "  BEGIN" +
+							   "    DELETE FROM storyurls WHERE sid = old.id;" +
+							   "  END", [], this.nullDataHandler, this.errorHandler);
+		transaction.executeSql("CREATE TRIGGER IF NOT EXISTS stories_after_update AFTER UPDATE ON stories" +
+							   "  BEGIN" +
+							   "    DELETE FROM storyurls WHERE sid = old.id;" +
+							   "  END", [], this.nullDataHandler, this.errorHandler);
+		
+		transaction.executeSql("DELETE FROM storyurls WHERE NOT sid IN (SELECT id FROM stories)");
+		transaction.executeSql("DELETE FROM stories WHERE NOT fid IN (SELECT id FROM feeds)");*/
+		
 		this.dbReady();
 	},
 	
@@ -328,11 +371,7 @@ var database = Class.create({
 		onSuccess = onSuccess || this.nullDataHandler;
 		onFail = onFail || this.errorHandler;
 		
-		var feedOrder = feed.feedOrder || "(SELECT MAX(feedOrder) + 1 FROM feeds)";
 		var id = feed.id || null;
-		
-		Mojo.Log.info("DB>", feed.showListSummary ? 1 : 0, feed.showListCaption ? 1 : 0,
-					  feed.showDetailSummary ? 1 : 0, feed.showDetailCaption ? 1 : 0);
 		
 		var doUpdate = function(transaction) {
 			Mojo.Log.info("DB> Updating feed, id is", id);
@@ -341,14 +380,25 @@ var database = Class.create({
 								   '    showListCaption = ?, showDetailSummary = ?, showDetailCaption = ?,' +
 								   '    sortMode = ?, allowHTML = ?' +
 								   '  WHERE id = ?',
-								   [feed.title, feed.url, feed.feedType, feedOrder,
+								   [feed.title, feed.url, feed.feedType, feed.feedOrder,
 									feed.enabled ? 1 : 0,
 									feed.showPicture ? 1 : 0, feed.showMedia ? 1 : 0,
 									feed.showListSummary ? 1 : 0, feed.showListCaption ? 1 : 0,
 									feed.showDetailSummary ? 1 : 0, feed.showDetailCaption ? 1 : 0,
 									feed.sortMode, feed.allowHTML ? 1 : 0, id],
-								   onSuccess, onFail);
+								   onSuccess.bind(feed), onFail);
 		};
+		
+		var getID = function(transaction, result) {
+			var f = new feedProto(feed);
+			transaction.executeSql("SELECT last_insert_rowid() AS id", [],
+				function(transaction, result) {
+					if(result.rows.length > 0) {
+						f.id = result.rows.item(0).id;
+						onSuccess(f);
+					}
+				}, onFail);
+		}
 		
 		var doInsert = function(transaction) {
 			Mojo.Log.info("DB> inserting new feed");
@@ -356,29 +406,20 @@ var database = Class.create({
 								   '    showMedia, showListSummary, showListCaption,'+
 								   '    showDetailSummary, showDetailCaption, sortMode, allowHTML)' +
 								   '  VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-								   [feed.title, feed.url, feed.feedType, feedOrder,
+								   [feed.title, feed.url, feed.feedType, -1,
 									feed.enabled ? 1 : 0,
 									feed.showPicture ? 1 : 0, feed.showMedia ? 1 : 0,
 									feed.showListSummary ? 1 : 0, feed.showListCaption ? 1 : 0,
 									feed.showDetailSummary ? 1 : 0, feed.showDetailCaption ? 1 : 0,
 									feed.sortMode, feed.allowHTML ? 1 : 0],
-									onSuccess, onFail);
+									getID, onFail);
 		};
 		
 		this.transaction(function(transaction) {
 			if(id !== null) {
 				doUpdate(transaction);
 			} else {
-				transaction.executeSql("SELECT id FROM feeds WHERE url = ?", [feed.url],
-					function(transaction, result) {
-						if(result.rows.length > 0) {
-							Mojo.Log.info("DB> feed id retrieved via url");
-							id = result.rows.item(0).id;
-							doUpdate(transaction);
-						} else {
-							doInsert(transaction);
-						}
-					}, onFail);
+				doInsert(transaction);
 			}
 		});
 	},
@@ -386,18 +427,18 @@ var database = Class.create({
 	/**
 	 * Set the type of a feed.
 	 *
-	 * @param	url			{String}		url of the feed to change
+	 * @param	feed		{object}		feed object
 	 * @param	type		{int}			type of the feed
 	 * @param	onSuccess	{function}		function to be called on success
 	 * @param	onFail		{function}		function to be called on failure
 	 */
-	setFeedType: function(url, type, onSuccess, onFail) {
+	setFeedType: function(feed, type, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullDataHandler;
 		onFail = onFail || this.errorHandler;
 		
 		this.transaction(function(transaction) {
-			transaction.executeSql("UPDATE feeds SET feedType = ? WHERE url = ?",
-								   [type, url], onSuccess, onFail);
+			transaction.executeSql("UPDATE feeds SET feedType = ? WHERE id = ?",
+								   [type, feed.id], onSuccess, onFail);
 		});
 		return type;
 	},
@@ -422,34 +463,35 @@ var database = Class.create({
 	/**
 	 * Disable a feed.
 	 *
+	 * @param 	feed		{object}		feed object
 	 * @param	url			{String}		url of the feed to disable
 	 * @param	onSuccess	{function}		function to be called on success
 	 * @param	onFail		{function}		function to be called on failure
 	 */
-	disableFeed: function(url, onSuccess, onFail) {
+	disableFeed: function(feed, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullDataHandler;
 		onFail = onFail || this.errorHandler;
 		
 		this.transaction(function(transaction) {
-			transaction.executeSql("UPDATE feeds SET feedType = ?, enabled = 0 WHERE url = ?",
-								   [feedTypes.ftUnknown, url], onSuccess, onFail);
+			transaction.executeSql("UPDATE feeds SET feedType = ?, enabled = 0 WHERE id = ?",
+								   [feedTypes.ftUnknown, feed.id], onSuccess, onFail);
 		});		
 	},
 	
 	/**
 	 * Delete a feed.
 	 *
-	 * @param	id			{int}			ID of the feed to delete
+	 * @param	feed		{object}		feed to delete
 	 * @param	onSuccess	{function}		function to be called on success
 	 * @param	onFail		{function}		function to be called on failure
 	 */
-	deleteFeed: function(id, onSuccess, onFail) {
+	deleteFeed: function(feed, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullDataHandler;
 		onFail = onFail || this.errorHandler;
 		
 		this.transaction(function(transaction) {
 			transaction.executeSql("DELETE FROM feeds WHERE ID = ?",
-								   [id], onSuccess, onFail);
+				[feed.id], onSuccess, onFail);
 		});
 	},
 	
@@ -496,11 +538,11 @@ var database = Class.create({
 		onFail = onFail || this.errorHandler;
 		
 		this.transaction(function(transaction) {
-			transaction.executeSql("SELECT url FROM feeds WHERE feedType >= ? AND enabled = 1 ORDER BY feedOrder", [feedTypes.ftUnknown],
+			transaction.executeSql("SELECT id, feedOrder, url FROM feeds WHERE feedType >= ? AND enabled = 1 ORDER BY feedOrder", [feedTypes.ftUnknown],
 				function(transaction, result) {
 					var list = [];
 					for(var i = 0; i < result.rows.length; i++) {
-						list.push(result.rows.item(i).url);
+						list.push(result.rows.item(i));
 					}
 					onSuccess(list);
 				}, onFail);
@@ -882,11 +924,11 @@ var database = Class.create({
 	/**
 	 * Called to indicate a beginning update.
 	 *
-	 * @param	url			{String}		url of the feed
+	 * @param 	feed		{object}		feed object
 	 * @param	onSuccess	{function}		function to be called on success
 	 * @param	onFail		{function}		function to be called on failure
 	 */
-	beginStoryUpdate: function(url, onSuccess, onFail) {
+	beginStoryUpdate: function(feed, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullDataHandler;
 		onFail = onFail || this.errorHandler;
 		var nullData = this.nullDataHandler;
@@ -900,16 +942,16 @@ var database = Class.create({
 								   "  SET isNew = 0" +
 								   "  WHERE (isRead = 1" +
 								   "    OR pubdate < ?)" +
-								   "    AND fid = (" + commonSQL.csGetFeedIDByURL + ')',
-								   [newthreshold, url],
+								   "    AND fid = ?",
+								   [newthreshold, feed.id],
 								   nullData, onFail);
 			transaction.executeSql("UPDATE stories" +
 								   "  SET flag = 1" +
 								   "  WHERE isStarred = 0"+
-								   "    AND fid = (" + commonSQL.csGetFeedIDByURL + ')',
-								   [url], onSuccess, onFail);
-			transaction.executeSql("SELECT feedOrder FROM feeds WHERE url = ?",
-								   [url], onNotify, onFail);
+								   "    AND fid = ?",
+								   [feed.id], onSuccess, onFail);
+			transaction.executeSql("SELECT feedOrder FROM feeds WHERE id = ?",
+								   [feed.id], onNotify, onFail);
 		});
 	},
 	
@@ -933,12 +975,12 @@ var database = Class.create({
 	/**
 	 * Called to indicate a finished update.
 	 *
-	 * @param	url			{String}		url of the feed
+	 * @param 	feed		{object}		feed object
 	 * @param	successful	{bool}			update was successful?
 	 * @param	onSuccess	{function}		function to be called on success
 	 * @param	onFail		{function}		function to be called on failure
 	 */
-	endStoryUpdate: function(url, successful, onSuccess, onFail) {
+	endStoryUpdate: function(feed, successful, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullDataHandler;
 		onFail = onFail || this.errorHandler;
 		var onNotify = this.notifyOfUpdate.bind(this, false);
@@ -948,20 +990,28 @@ var database = Class.create({
 				transaction.executeSql("DELETE FROM stories" +
 									   "  WHERE flag = 1" +
 									   "    AND isStarred = 0" +
-									   '    AND fid = (' + commonSQL.csGetFeedIDByURL + ')',
-									   [url], onSuccess, onFail);
+									   "    AND fid = ?",
+									   [feed.id], onSuccess, onFail);
 			} else {
 				transaction.executeSql("UPDATE stories" +
 									   "  SET flag = 0" +
-									   "  WHERE fid = (" + commonSQL.csGetFeedIDByURL + ')',
-									   [url], onSuccess, onFail);				
+									   "  WHERE fid = ?",
+									   [feed.id], onSuccess, onFail);
 			}
-			transaction.executeSql("SELECT feedOrder FROM feeds WHERE url = ?",
-								   [url], onNotify, onFail);
+			transaction.executeSql("SELECT feedOrder FROM feeds WHERE id = ?",
+								   [feed.id], onNotify, onFail);
 		});
 	},
 	
-	addOrEditStory: function(url, story, onSuccess, onFail) {
+	/**
+	 * Add or edit a story.
+	 *
+	 * @param 	feed		{object}		feed object
+	 * @param	story		{Object}		story object
+	 * @param	onSuccess	{function}		function to be called on success
+	 * @param	onFail		{function}		function to be called on failure
+	 */
+	addOrEditStory: function(feed, story, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullDataHandler;
 		onFail = onFail || this.errorHandler;
 		
@@ -980,9 +1030,9 @@ var database = Class.create({
 			function(transaction) {
 				transaction.executeSql("SELECT id" +
 									   "  FROM stories" +
-									   "  WHERE fid = (" + commonSQL.csGetFeedIDByURL + ")" +
+									   "  WHERE fid = ?" +
 									   "    AND uuid = ?",
-									   [url, story.uuid],
+									   [feed.id, story.uuid],
 					function(transaction, result) {
 						if(result.rows.length > 0) {
 							var sid = result.rows.item(0).id;
@@ -1000,14 +1050,12 @@ var database = Class.create({
 													story.video, story.pubdate,
 													sid],
 												   onSuccess, onFail);
-							transaction.executeSql("DELETE FROM storyurls WHERE sid = ?", [sid],
-												   this.nullDataHandler, this.errorHandler);
 							insertURLs(transaction, { insertId: sid });
 						} else {
 							transaction.executeSql("INSERT INTO stories" +
 												   "  (fid, uuid, title, summary, picture, audio, video, pubdate, isRead, isNew, isStarred, flag)" +
-												   "  VALUES((" + commonSQL.csGetFeedIDByURL + "), ?, ?, ?, ?, ?, ?, ?, 0, 1, 0, 0)",
-												   [url, story.uuid, story.title, story.summary, story.picture,
+												   "  VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, 1, 0, 0)",
+												   [feed.id, story.uuid, story.title, story.summary, story.picture,
 													story.audio, story.video, story.pubdate],
 												   insertURLs, onFail);
 						}
@@ -1015,7 +1063,14 @@ var database = Class.create({
 					onFail);
 			});
 	},
-	
+
+	/**
+	 * Set the starred flag of a story.
+	 *
+	 * @param	story		{Object}		story object
+	 * @param	onSuccess	{function}		function to be called on success
+	 * @param	onFail		{function}		function to be called on failure
+	 */	
 	markStarred: function(story, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullDataHandler;
 		onFail = onFail || this.errorHandler;
@@ -1025,6 +1080,13 @@ var database = Class.create({
 		});
 	},
 	
+	/**
+	 * Mark a story as being read.
+	 *
+	 * @param	story		{Object}		story object
+	 * @param	onSuccess	{function}		function to be called on success
+	 * @param	onFail		{function}		function to be called on failure
+	 */	
 	markStoryRead: function(story, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullDataHandler;
 		onFail = onFail || this.errorHandler;
@@ -1034,6 +1096,14 @@ var database = Class.create({
 		});
 	},
 	
+	/**
+	 * Mark all stories of a feed as being read.
+	 *
+	 * @param	feed		{Object}		feed object
+	 * @param	state		{boolean}		state of the flag
+	 * @param	onSuccess	{function}		function to be called on success
+	 * @param	onFail		{function}		function to be called on failure
+	 */	
 	markAllRead: function(feed, state, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullDataHandler;
 		onFail = onFail || this.errorHandler;

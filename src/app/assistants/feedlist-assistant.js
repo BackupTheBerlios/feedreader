@@ -205,8 +205,7 @@ FeedlistAssistant.prototype.showFeed = function(event) {
 };
 
 FeedlistAssistant.prototype.deleteFeed = function(event) {
-	event.preventDefault();	// Needed, otherwise bad things can happen.
-	this.feeds.deleteFeed(event.item.id);
+	this.feeds.deleteFeed(event.item);
 };
 
 FeedlistAssistant.prototype.listFind = function(filterString, listWidget, offset, count) {
@@ -267,7 +266,7 @@ FeedlistAssistant.prototype.popupHandler = function(command) {
 			if(this.popupItem.feedType == feedTypes.ftAllItems) {
 				this.feeds.enqueueUpdateAll();
 			} else {
-				this.feeds.enqueueUpdate(this.popupItem.url);
+				this.feeds.enqueueUpdate(this.popupItem);
 			}
 			break;
 			

@@ -126,7 +126,7 @@ StorylistAssistant.prototype.initCommandModel = function() {
 	
 	if(this.feed.feedType >= feedTypes.ftUnknown) {
 		this.commandModel.items[1].items.unshift({
-			icon: "send",
+			icon: "forward-email",
 			command: "do-send"
 		});
 	}
@@ -343,7 +343,7 @@ StorylistAssistant.prototype.handleCommand = function(event) {
 				if(this.feed.feedType < feedTypes.ftUnknown) {
 					this.feeds.enqueueUpdateAll();
 				} else {
-					this.feeds.enqueueUpdate(this.feed.url);
+					this.feeds.enqueueUpdate(this.feed);
 				}
 				break;
 			
