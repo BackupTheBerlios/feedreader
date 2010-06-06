@@ -269,10 +269,6 @@ var database = Class.create({
 								   "  BEGIN" +
 								   "    DELETE FROM storyurls WHERE sid = old.id;" +
 								   "  END", [], this.nullDataHandler, this.errorHandler);
-			transaction.executeSql("CREATE TRIGGER stories_after_update AFTER UPDATE ON stories" +
-								   "  BEGIN" +
-								   "    DELETE FROM storyurls WHERE sid = old.id;" +
-								   "  END", [], this.nullDataHandler, this.errorHandler);
 			
 			// Create the system table. It currently contains nothing but the version.
 			transaction.executeSql('CREATE TABLE system (version INTEGER)',
@@ -325,10 +321,6 @@ var database = Class.create({
 							   "    DELETE FROM stories WHERE fid = old.id;" +
 							   "  END", [], this.nullDataHandler, this.errorHandler);
 		transaction.executeSql("CREATE TRIGGER IF NOT EXISTS stories_after_delete AFTER DELETE ON stories" +
-							   "  BEGIN" +
-							   "    DELETE FROM storyurls WHERE sid = old.id;" +
-							   "  END", [], this.nullDataHandler, this.errorHandler);
-		transaction.executeSql("CREATE TRIGGER IF NOT EXISTS stories_after_update AFTER UPDATE ON stories" +
 							   "  BEGIN" +
 							   "    DELETE FROM storyurls WHERE sid = old.id;" +
 							   "  END", [], this.nullDataHandler, this.errorHandler);
@@ -1019,13 +1011,18 @@ var database = Class.create({
 		onSuccess = onSuccess || this.nullDataHandler;
 		onFail = onFail || this.errorHandler;
 		
+		var nullDataHandler = this.nullDataHandler;
+		var errorHandler = this.errorHandler;
+		
 		var insertURLs = function(transaction, result) {
 			var sid = result.insertId;
+			transaction.executeSql("DELETE FROM storyurls WHERE sid = ?",
+								   [sid], nullDataHandler, errorHandler);
 			for(var i = 0; i < story.url.length; i++) {
 				transaction.executeSql("INSERT INTO storyurls (sid, title, href)" +
 									   "  VALUES(?, ?, ?)",
 									   [sid, story.url[i].title, story.url[i].href],
-										this.nullDataHandler, this.errorHandler);
+										nullDataHandler, errorHandler);
 			}
 			onSuccess();
 		};
