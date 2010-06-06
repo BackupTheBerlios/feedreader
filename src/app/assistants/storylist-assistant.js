@@ -54,7 +54,7 @@ function StorylistAssistant(feeds, feed) {
 }
 
 StorylistAssistant.prototype.setup = function() {
-	FeedReader.beginSceneSetup(this);
+	FeedReader.beginSceneSetup(this, true);
 	
 	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feed));
 	this.controller.get("appIcon").className += " " + this.feeds.getFeedIconClass(this.feed, true, true);
