@@ -890,8 +890,8 @@ var database = Class.create({
 								href:	result.rows.item(i).href
 							});
 						}
-						onSuccess(feed, story, urls);
 					}
+					onSuccess(feed, story, urls);
 				}, onFail);
 		};
 		
@@ -905,6 +905,8 @@ var database = Class.create({
 					if(result.rows.length > 0) {
 						feed = result.rows.item(0);
 						getURLs(transaction);
+					} else {
+						Mojo.Log.error("DB> Unable to retrieve feed for story", id);
 					}
 				}, onFail);
 		};
@@ -916,6 +918,8 @@ var database = Class.create({
 					if(result.rows.length > 0) {
 						story = result.rows.item(0);
 						getFeedData(transaction);
+					} else {
+						Mojo.Log.error("DB> Unable to retrieve story data of story", id);
 					}
 				}, onFail);
 		});
