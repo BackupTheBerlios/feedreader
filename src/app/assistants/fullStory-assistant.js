@@ -141,7 +141,12 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 		var video = null;
 		this.controller.get("appIcon").className += " " + this.feeds.getFeedIconClass(this.feed, true, true);
 		this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feed));
-		this.controller.get("story-date").update(this.feeds.dateConverter.dateToLocalTime(this.story.pubdate));
+		
+		var date = this.feeds.dateConverter.dateToLocalTime(this.story.pubdate);
+		if(this.feed.feedType < feedTypes.ftUnknown) {
+			date += ' (' + this.originFeed.title + ')'
+		}
+		this.controller.get("story-date").update(date);
 		
 		if(this.urls.length > 1) {
 			this.controller.get("followLink-title").update($L("Web links"));
