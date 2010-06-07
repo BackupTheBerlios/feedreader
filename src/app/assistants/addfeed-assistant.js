@@ -188,6 +188,11 @@ AddfeedAssistant.prototype.cancelClick = function() {
 };
 
 AddfeedAssistant.prototype.updateFeed = function() {
+	if(!this.urlModel.value) {	// In case no url is entered, simply exit the scene.
+		this.controller.stageController.popScene();
+		return;
+	}
+	
     this.feed.url = this.urlModel.value;
 	this.feed.title = this.titleModel.value;
 	this.feed.enabled = this.enabledModel.value;
