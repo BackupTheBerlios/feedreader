@@ -586,7 +586,7 @@ var database = Class.create({
 					function(transaction, result) {
 						var list = [];
 						for(var i = 0; i < result.rows.length; i++) {
-							list.push(result.rows.item(i));
+							list.push(new feedProto(result.rows.item(i)));
 						}
 						onSuccess(offset, list);
 					}, onFail);
