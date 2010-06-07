@@ -279,6 +279,9 @@ StorylistAssistant.prototype.sortModeTap = function(event) {
 			label: $L("Order by date"),			command: "sort-date",	chosen: (this.feed.sortMode & 0xFF00) == 0x0100
 		});
 	}
+	
+	subMenu.items.push({});
+	subMenu.items.push({label: $L("Unstar all"), command: "unstar-all" });
 	this.controller.popupSubmenu(subMenu);
 };
 
@@ -300,6 +303,11 @@ StorylistAssistant.prototype.sortModeChoose = function(command) {
 		
 		case "sort-date":
 			feed.sortMode = feed.sortMode ^ 0x0100;
+			break;
+		
+		case "unstar-all":
+			this.feeds.markAllUnStarred(this.feed);
+			this.refreshList();
 			break;
 	}
 	this.feeds.setSortMode(feed);

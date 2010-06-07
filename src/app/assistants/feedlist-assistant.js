@@ -185,16 +185,17 @@ FeedlistAssistant.prototype.showFeed = function(event) {
 		this.popupItem = event.item;
 		
 		var items = [
-	        {label: $L("Mark all unread"),	command: "feed-unread"},
-	        {label: $L("Mark all read"),	command: "feed-read"}
+	        { label: $L("Mark all unread"),	command: "feed-unread" },
+	        { label: $L("Mark all read"),	command: "feed-read" },
+			{ label: $L("Unstar all"),		command: "feed-unstar" }
 		];
 		if(this.popupItem.feedType >= feedTypes.ftUnknown) {
-	        items.push({label: $L("Edit"), command: "feed-edit"});
+	        items.push({ label: $L("Edit"), command: "feed-edit" });
 		}
 		if(this.popupItem.feedType != feedTypes.ftStarred) {
-			items.push({label: $L("Update"), command: "feed-update"});
+			items.push({ label: $L("Update"), command: "feed-update" });
 		}
-	    items.push({label: $L("Show"),		command: "feed-show"});
+	    items.push({ label: $L("Show"),		command: "feed-show" });
 		
 	    this.controller.popupSubmenu({
 	      onChoose: 	this.popupHandler,
@@ -259,6 +260,11 @@ FeedlistAssistant.prototype.popupHandler = function(command) {
 			
 		case "feed-unread":
 			this.feeds.markAllUnRead(this.popupItem);
+			break;
+		
+		case "feed-unstar":
+			this.feeds.markAllUnStarred(this.popupItem);
+			this.refreshList();
 			break;
 			
 		case "feed-update":

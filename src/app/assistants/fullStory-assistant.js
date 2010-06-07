@@ -144,7 +144,7 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 		
 		var date = this.feeds.dateConverter.dateToLocalTime(this.story.pubdate);
 		if(this.feed.feedType < feedTypes.ftUnknown) {
-			date += ' (' + this.originFeed.title + ')'
+			date += ' (' + this.originFeed.title + ')';
 		}
 		this.controller.get("story-date").update(date);
 		

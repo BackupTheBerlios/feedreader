@@ -1082,6 +1082,27 @@ var database = Class.create({
 	},
 	
 	/**
+	 * Reset the starred flag all stories of a feed.
+	 *
+	 * @param	story		{Object}		story object
+	 * @param	onSuccess	{function}		function to be called on success
+	 * @param	onFail		{function}		function to be called on failure
+	 */	
+	markAllUnStarred: function(feed, onSuccess, onFail) {
+		onSuccess = onSuccess || this.nullDataHandler;
+		onFail = onFail || this.errorHandler;
+		
+		var sql = "UPDATE stories SET isStarred = 0";
+		if(feed.feedType >= feedTypes.ftUnknown) {
+			sql += " WHERE fid = " + feed.id;
+		}
+		
+		this.transaction(function(transaction) {
+			transaction.executeSql(sql, [], onSuccess, onFail);
+		});
+	},
+	
+	/**
 	 * Mark a story as being read.
 	 *
 	 * @param	story		{Object}		story object

@@ -617,6 +617,15 @@ var feeds = Class.create ({
 	},
 	
 	/**
+	 * Remove the star state from all feeds of a given feed.
+	 *
+	 * @param	feed	{object}	feed object
+	 */
+	markAllUnStarred: function(feed) {
+		this.db.markAllUnStarred(feed);
+	},
+	
+	/**
 	 * Delete a given feed.
 	 *
 	 * @param 	feed	{object}		feed object
