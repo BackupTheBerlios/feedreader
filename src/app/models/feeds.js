@@ -23,6 +23,7 @@
 var feedProto = Class.create({
 	title:				"",
 	url:				"",
+	feedType:			feedTypes.ftRSS,
 	feedOrder:			0,
 	enabled:			1,
 	showPicture:		1,
@@ -33,6 +34,9 @@ var feedProto = Class.create({
 	showDetailCaption:	1,
 	sortMode:			0,
 	allowHTML:			1,
+	numNew:				0,
+	numUnRead:			0,
+	preventDelete:		false,
 	
 	/**
 	 * Constructor.
@@ -43,6 +47,7 @@ var feedProto = Class.create({
 		if(proto) {
 			this.title = proto.title || this.title;
 			this.url = proto.url || this.url;
+			this.feedType = proto.feedType;
 			this.feedOrder = proto.feedOrder;
 			this.enabled = proto.enabled;
 			this.showPicture = proto.showPicture;
@@ -53,8 +58,17 @@ var feedProto = Class.create({
 			this.showDetailCaption = proto.showDetailCaption;
 			this.sortMode = proto.sortMode;
 			this.allowHTML = proto.allowHTML;
+			if(proto.numNew) {
+				this.numNew = proto.numNew;
+			}
+			if(proto.numUnRead) {
+				this.numUnRead = proto.numUnRead;
+			}
 			if(proto.id !== null) {
 				this.id = proto.id;
+			}
+			if(this.feedType < feedTypes.ftUnknown) {
+				this.preventDelete = true;
 			}
 		}
 	}
