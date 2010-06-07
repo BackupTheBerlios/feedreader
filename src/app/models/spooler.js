@@ -53,6 +53,7 @@ var spooler = new Class.create({
 		this.updateCounter--;
 		if(!this.actionRunning && (this.list.length >= 1)) {
 			FeedReader.createUpdateDashboard();
+			Mojo.Controller.getAppController().sendToNotificationChain({ type: "updatestate-changed" });
 			this.nextAction();
 		}
 	},
@@ -97,6 +98,7 @@ var spooler = new Class.create({
 			
 			if((this.updateCounter === 0) && (this.list.length == 1) && !this.actionRunning)  {
 				FeedReader.createUpdateDashboard();
+				Mojo.Controller.getAppController().sendToNotificationChain({ type: "updatestate-changed" });
 				this.nextAction();
 			}
 		} catch(e) {
@@ -143,7 +145,7 @@ var spooler = new Class.create({
 	 *
 	 * Tell the system, that we left our activity phase.
 	 */
-	leaveActivity: function() {
+	leaveActivity: function() {	
 		var request = new Mojo.Service.Request("palm://com.palm.power/com/palm/power", {
 			method: "activityEnd",
 			parameters: {
@@ -187,6 +189,7 @@ var spooler = new Class.create({
 				this.actionIdent = "";
 				FeedReader.removeUpdateDashboard();
 				FeedReader.feeds.interactiveUpdate = false;
+				Mojo.Controller.getAppController().sendToNotificationChain({ type: "updatestate-changed" });
 				this.leaveActivity();
 			}
 		} catch(e) {

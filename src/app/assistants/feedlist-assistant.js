@@ -57,7 +57,7 @@ FeedlistAssistant.prototype.setup = function() {
 			large:		this.listFormatter.bind(this, "large")
 		},
 		preventDeleteProperty:	"preventDelete",
-		uniquenessProperty: 	"uid",
+		uniquenessProperty: 	"id",
         addItemLabel:	$L("Add new Feed..."),
         swipeToDelete:	true,
         renderLimit: 	40,
@@ -328,6 +328,11 @@ FeedlistAssistant.prototype.considerForNotification = function(params){
 						this.feeds.getFeeds(this.filter, params.feedOrder, 1, this.updateItemsHandler);
 						params = undefined;
 					}
+				}
+				break;
+			
+			case "updatestate-changed":
+				if(this.setupComplete) {
 					if(!this.feeds.isUpdating()) {
 						this.refreshList();
 					} else {
