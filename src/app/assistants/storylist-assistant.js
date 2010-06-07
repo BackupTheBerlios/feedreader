@@ -370,10 +370,11 @@ StorylistAssistant.prototype.considerForNotification = function(params){
 					this.refreshList();
 					Mojo.Log.info("SL> refreshing list");
 				}
-				if(this.feedIndex >= 0) {
-					this.initCommandModel();
-					this.controller.modelChanged(this.commandModel);
-				}
+				break;
+			
+			case "updatestate-changed":
+				this.initCommandModel();
+				this.controller.modelChanged(this.commandModel);
 				break;
 			
 			case "app-activate":
