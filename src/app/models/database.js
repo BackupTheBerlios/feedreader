@@ -1135,17 +1135,17 @@ var database = Class.create({
 		this.transaction(function(transaction) {
 			switch(feed.feedType) {
 				case feedTypes.ftAllItems:
-					transaction.executeSql("UPDATE stories SET isRead = ?",
+					transaction.executeSql("UPDATE stories SET isRead = ?, isNew = 0",
 										   [state], onSuccess, onFail);
 					break;
 				
 				case feedTypes.ftStarred:
-					transaction.executeSql("UPDATE stories SET isRead = ? WHERE isStarred = 1",
+					transaction.executeSql("UPDATE stories SET isRead = ?, isNew = 0 WHERE isStarred = 1",
 										   [state], onSuccess, onFail);
 					break;
 				
 				default:
-					transaction.executeSql("UPDATE stories SET isRead = ? WHERE fid = ?",
+					transaction.executeSql("UPDATE stories SET isRead = ?, isNew = 0 WHERE fid = ?",
 										   [state, feed.id], onSuccess, onFail);
 					break;
 			}			
