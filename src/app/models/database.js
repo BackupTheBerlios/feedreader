@@ -787,6 +787,66 @@ var database = Class.create({
 	},
 	
 	/**
+	 * Retrieve a list of urls of stories.
+	 *
+	 * @param	feed		{Object}		feed object
+	 * @param	onSuccess	{function}		function to be called on success
+	 * @param	onFail		{function}		function to be called on failure
+	 */
+	getFeedURLList: function(feed, onSuccess, onFail) {
+		Mojo.assert(onSuccess, "DB> getFeedURLList needs data handler");
+		onFail = onFail || this.errorHandler;
+		
+		// This function will assemble the result set.
+		var handleResult = function(transaction, result) {
+			var list = [];
+			for(var i = 0; i < result.rows.length; i++) {
+				list.push({
+					title:	result.rows.item(i).title,
+					url:	result.rows.item(i).href
+				});
+			}
+			onSuccess(list);
+		};
+
+		// Build the basic SELECT statement.
+		var selectStmt = "SELECT s.title, su.href" +
+						 "  FROM stories AS s" +
+						 "  INNER JOIN storyurls AS su ON (s.id = su.sid)";
+		
+		// Build the ORDER clause.
+		var orderAndLimit = " ORDER BY ";
+		if((feed.sortMode & 0xFF00) != 0x0100) {
+			orderAndLimit += "f.feedOrder, ";
+		}
+		orderAndLimit += "s.pubdate DESC";
+		
+		switch(feed.feedType) {
+			case feedTypes.ftAllItems:
+				this.transaction(function(transaction) {
+					transaction.executeSql(selectStmt + orderAndLimit,
+										   [], handleResult, onFail);
+				});
+				break;
+			
+			case feedTypes.ftStarred:
+				this.transaction(function(transaction) {
+					transaction.executeSql(selectStmt + " WHERE s.isStarred = 1" + orderAndLimit,
+										   [], handleResult, onFail);
+				});
+				break;
+			
+			default:
+				this.transaction(function(transaction) {
+					transaction.executeSql(selectStmt + " WHERE s.fid = ?" + orderAndLimit,
+										   [feed.id],
+										   handleResult, onFail);
+				});
+				break;
+		}
+	},
+
+	/**
 	 * Retrieve a list of story IDs.
 	 *
 	 * @param	feed		{Object}		feed object

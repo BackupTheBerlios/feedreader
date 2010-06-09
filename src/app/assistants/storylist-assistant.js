@@ -116,6 +116,10 @@ StorylistAssistant.prototype.initCommandModel = function() {
 		{
 			items: [
 				{
+					icon:		"forward-email",
+					command:	"do-send"
+				},
+				{
 					icon: "refresh",
 					disabled: this.feeds.isUpdating(),
 					command: "do-feedUpdate"
@@ -123,13 +127,6 @@ StorylistAssistant.prototype.initCommandModel = function() {
 			]
 		}
 	];
-	
-	if(this.feed.feedType >= feedTypes.ftUnknown) {
-		this.commandModel.items[1].items.unshift({
-			icon: "forward-email",
-			command: "do-send"
-		});
-	}
 	
 	if(!FeedReader.prefs.leftHanded) {
 		this.commandModel.items.reverse();
@@ -314,17 +311,35 @@ StorylistAssistant.prototype.sortModeChoose = function(command) {
 	Mojo.Log.info("SL> setting sortMode to", feed.sortMode);
 };
 
-StorylistAssistant.prototype.sendChoose = function(command) {
+StorylistAssistant.prototype.doSendFeed = function(command, urls) {
+	if(urls.length <= 0) {
+		return;
+	}
+	
+	var i = 0;
+	var text = "";
+	
 	switch(command) {
 		case "send-sms":
-			FeedReader.sendSMS($L("Check out this feed") + ": " + this.feed.url);
+			text = $L("Check out these stories") + ': ' + urls[i].url;
+			for(i = 1; i < urls.length; i++) {
+				text += ', ' + urls[i].url;
+			}
+			FeedReader.sendSMS(text);
 			break;
 		
 		case "send-email":
-			FeedReader.sendEMail($L("Check out this feed"),
-								 	'<a href="' + this.feed.url + '">' + this.feed.url + '</a>');
+			for(i = 1; i < urls.length; i++) {
+				text += '<li><a href="' + urls[i].url + '">' + urls[i].title + '</a></li>';
+			}
+			FeedReader.sendEMail($L("Check out these stories"),
+								 	'<ul>' + text + '</ul>');
 			break;
-	}
+	}	
+};
+
+StorylistAssistant.prototype.sendChoose = function(command) {
+	this.feeds.getFeedURLList(this.feed, this.doSendFeed.bind(this, command));
 };
 
 StorylistAssistant.prototype.changeFeed = function(feed) {

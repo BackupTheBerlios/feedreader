@@ -742,6 +742,10 @@ var feeds = Class.create ({
 		this.db.getFeed(id, onSuccess);
 	},
 	
+	getFeedURLList: function(feed, onSuccess) {
+		this.db.getFeedURLList(feed, onSuccess);
+	},
+	
 	getFeedIDList: function(onSuccess) {
 		this.db.getFeedIDList(onSuccess);
 	},
