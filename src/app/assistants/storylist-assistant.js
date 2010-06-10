@@ -329,7 +329,7 @@ StorylistAssistant.prototype.doSendFeed = function(command, urls) {
 			break;
 		
 		case "send-email":
-			for(i = 1; i < urls.length; i++) {
+			for(i = 0; i < urls.length; i++) {
 				text += '<li><a href="' + urls[i].url + '">' + urls[i].title + '</a></li>';
 			}
 			FeedReader.sendEMail($L("Check out these stories"),
