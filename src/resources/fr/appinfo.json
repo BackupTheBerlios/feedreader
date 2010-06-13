@@ -22,11 +22,11 @@
 		},
 		"resources": [{
 			"type": "web",
-			"label": "Homepage",
+			"label": "Page d'accueil",
 			"url": "http://www.tegi-stuff.de/doku.php?id=feedreader"
 		}, {
 			"type": "scene",
-			"label": "Contributors",
+			"label": "Contributeurs",
 			"sceneName": "contributors"
 		}]
 	}
