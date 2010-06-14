@@ -196,7 +196,7 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 			video.parentNode.removeChild(video);
 		} else {
 			// Load the extension library.
-			var mediaExtensionLib = FeedReader.getMediaExtensionLib();
+			var mediaExtensionLib = FeedReader.getMediaExtensionLib().mediaextension;
 			
 			// Setup media player.
 			switch(this.mediaMode) {
@@ -213,8 +213,12 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 					break;
 			}
 			
-			this.mediaExtension = mediaExtensionLib.MediaExtension.getInstance(this.media);
-			this.mediaExtension.audioClass = "media";
+			if(mediaExtensionLib && mediaExtensionLib.MediaExtension) {
+				this.mediaExtension = mediaExtensionLib.MediaExtension.getInstance(this.media);
+				this.mediaExtension.audioClass = "media";
+			} else {
+				Mojo.Log.warn("FULLSTORY> media extension is not available");
+			}
 			
 			this.media.autoPlay = false;
 			this.media.addEventListener("canplay", this.mediaCanPlay, false);

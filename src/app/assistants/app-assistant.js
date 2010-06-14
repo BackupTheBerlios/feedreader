@@ -37,8 +37,8 @@ FeedReader = {
 	isActive: 			false,
 	showChangeLog:		false,
 	
-	menuAttr: {},
-	menuModel: {
+	menuAttr: 			{},
+	menuModel: 			{
     	visible: true,
     	items: [ 
         	{ label: $L("About FeedReader"), command: "do-about" },
@@ -47,11 +47,11 @@ FeedReader = {
     	]
 	},
 	
-	feeds: null,
-	prefs: null,
-	mediaExtension: null,
+	feeds:				null,
+	prefs: 				null,
+	mediaExtensionLib:	null,
 	
-	controller: {},
+	controller:			{},
 	
 	/**
 	 * Show an alert.
