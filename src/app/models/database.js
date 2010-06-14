@@ -287,7 +287,7 @@ var database = Class.create({
 								   '                   showMedia, showListSummary, showListCaption,'+
 								   '                   showDetailSummary, showDetailCaption, sortMode, allowHTML)' +
 								   '  VALUES(?, "allItems", ?, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1)',
-								   [feedTypes.ftAllItems, 'All Items'],
+								   ['All Items', feedTypes.ftAllItems],
 								   this.nullDataHandler, this.errorHandler);
 			this.dbReady();
 		} catch(e) {
@@ -305,28 +305,6 @@ var database = Class.create({
 	checkVersion: function(transaction, result) {
 		var version = result.rows.item(0).version;
 		Mojo.Log.info("DB> Database already exists, version is:", version);			
-		
-		/*transaction.executeSql("DROP INDEX idx_feeds_title",  [], this.nullDataHandler, this.errorHandler);
-		transaction.executeSql("DROP INDEX idx_feeds_url",  [], this.nullDataHandler, this.errorHandler);
-		transaction.executeSql("CREATE TRIGGER IF NOT EXISTS feeds_after_insert AFTER INSERT ON feeds" +
-							   "  BEGIN" +
-							   "    UPDATE feeds" +
-							   "      SET feedOrder = (SELECT MAX(feedOrder) + 1 FROM feeds)" +
-							   "      WHERE id = NEW.id" +
-							   "        AND feedOrder = -1;" +
-							   "  END", [], this.nullDataHandler, this.errorHandler);
-		transaction.executeSql("CREATE TRIGGER IF NOT EXISTS feeds_after_delete AFTER DELETE ON feeds" +
-							   "  BEGIN" +
-							   "    UPDATE feeds SET feedOrder = feedOrder - 1 WHERE feedOrder > old.feedOrder;" +
-							   "    DELETE FROM stories WHERE fid = old.id;" +
-							   "  END", [], this.nullDataHandler, this.errorHandler);
-		transaction.executeSql("CREATE TRIGGER IF NOT EXISTS stories_after_delete AFTER DELETE ON stories" +
-							   "  BEGIN" +
-							   "    DELETE FROM storyurls WHERE sid = old.id;" +
-							   "  END", [], this.nullDataHandler, this.errorHandler);
-		
-		transaction.executeSql("DELETE FROM storyurls WHERE NOT sid IN (SELECT id FROM stories)");
-		transaction.executeSql("DELETE FROM stories WHERE NOT fid IN (SELECT id FROM feeds)");*/
 		
 		this.dbReady();
 	},
