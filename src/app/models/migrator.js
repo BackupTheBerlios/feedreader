@@ -63,6 +63,10 @@ var migrator = Class.create ({
 			var stories = null;
 			var story = {};
 			for(var f = 0; f < this.list.length; f++) {
+				if(this.list[f].type == "allItems") {
+					continue;
+				}
+				
 				this.list[f].viewMode = parseInt(this.list[f].viewMode, 10);
 				var detailViewMode = this.list[f].viewMode >> 24;
 				var listViewMode = this.list[f].viewMode >> 16;
@@ -73,8 +77,8 @@ var migrator = Class.create ({
 					enabled:			this.list[f].enabled,
 					showPicture:		this.list[f].showPicture,
 					showMedia:			this.list[f].showMedia,
-					showListSummary:	(listViewMode === 0 || listViewMode == 2) ? 1 : 0,
-					showDetailSummary:	(detailViewMode === 0 || detailViewMode == 2) ? 1 : 0,
+					showListSummary:	((listViewMode === 0) || (listViewMode == 2)) ? 1 : 0,
+					showDetailSummary:	((detailViewMode === 0) || (detailViewMode == 2)) ? 1 : 0,
 					showListCaption:	(listViewMode < 2) ? 1 : 0,
 					showDetailCaption:	(detailViewMode < 2) ? 1 : 0,
 					sortMode:			this.list[f].sortMode,
@@ -93,12 +97,6 @@ var migrator = Class.create ({
 						feed.feedType = feedTypes.ftATOM;
 						break;
 					
-					case "allItems":
-						feed.feedType = feedTypes.ftAllItems;
-						feed.url = "allItems";
-						feed.title = "All Items";
-						break;
-					
 					default:
 						feed.feedType = feedTypes.ftUnknown;
 						break;
@@ -106,27 +104,6 @@ var migrator = Class.create ({
 				
 				Mojo.Log.info("MIGRATOR> converting feed", feed.title);
 				this.db.addOrEditFeed(feed);
-				
-				stories = this.list[f].stories;
-				this.db.beginStoryUpdate(feed.url);
-				for(s = 0; s < stories.length; s++) {
-					story = {
-						title:		stories[s].title,
-						summary:	stories[s].summary,
-						uuid:		stories[s].uid,
-						picture:	stories[s].picture,
-						audio:		stories[s].audio,
-						video:		stories[s].video,
-						url:		stories[s].url,
-						isRead:		stories[s].isRead,
-						isNew:		stories[s].isNew,
-						isStarred:	false,
-						pubdate:	stories[s].intDate
-					};
-					
-					this.db.addOrEditStory(feed.url, story);
-				}
-				this.db.endStoryUpdate(feed.url);
 			}
 		}
 		delete this.list;
