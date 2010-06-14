@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 Contributors
 ============
  * Milan Roubal <roubal@keyserver.cz>
+ * Yannick LE NY
  * Daniel Razny <daniel.razny@hksinformatik.de>
 
 Changelog
@@ -38,6 +39,7 @@ Version 2.0.0 (feature release)
  * refactored list formatters
  * improved transition control
  * the search function now searches the stories texts too
+ * french locale (thanks to Yannick LE NY)
 
 Version 1.3.0 (feature release)
 -------------------------------
