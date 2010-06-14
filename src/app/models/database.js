@@ -793,11 +793,7 @@ var database = Class.create({
 						 "  INNER JOIN storyurls AS su ON (s.id = su.sid)";
 		
 		// Build the ORDER clause.
-		var orderAndLimit = " ORDER BY ";
-		if((feed.sortMode & 0xFF00) != 0x0100) {
-			orderAndLimit += "f.feedOrder, ";
-		}
-		orderAndLimit += "s.pubdate DESC";
+		var orderAndLimit = " ORDER BY s.pubdate DESC";
 		
 		switch(feed.feedType) {
 			case feedTypes.ftAllItems:
