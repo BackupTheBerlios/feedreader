@@ -112,20 +112,20 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 		this.story = story;
 		this.urls = urls;
 		
-		if(this.doShowMedia) {
-			this.mediaCanPlay = this.mediaCanPlay.bindAsEventListener(this);
-			this.mediaPlaying = this.mediaPlaying.bindAsEventListener(this);
-			this.mediaSeeking = this.mediaSeeking.bindAsEventListener(this);
-			this.mediaSeeked = this.mediaSeeked.bindAsEventListener(this);
-			this.mediaStopped = this.mediaStopped.bindAsEventListener(this);
-			this.mediaError = this.mediaError.bindAsEventListener(this);
-			this.mediaProgress = this.mediaProgress.bind(this);
-		}
-		
 		this.doShowMedia = this.originFeed.showMedia &&
 						   ((this.story.audio.length > 0) ||
 							(this.story.video.length > 0));
 		this.doShowPicture = this.originFeed.showPicture;
+		
+		if(this.doShowMedia) {
+			this.mediaCanPlay = this.mediaCanPlay.bind(this);
+			this.mediaPlaying = this.mediaPlaying.bind(this);
+			this.mediaSeeking = this.mediaSeeking.bind(this);
+			this.mediaSeeked = this.mediaSeeked.bind(this);
+			this.mediaStopped = this.mediaStopped.bind(this);
+			this.mediaError = this.mediaError.bind(this);
+			this.mediaProgress = this.mediaProgress.bind(this);
+		}
 		
 		if(this.story.video.length > 0) {
 			this.mediaURL = this.story.video;
@@ -403,38 +403,37 @@ FullStoryAssistant.prototype.pictureLoaded = function() {
 	this.controller.modelChanged(this.pictureSpinnerModel);	
 };
 
-FullStoryAssistant.prototype.mediaCanPlay = function(event) {
+FullStoryAssistant.prototype.mediaCanPlay = function() {
 	Mojo.Log.info("MEDIA> media can play");
 	this.mediaReady = true;
 	this.updateMediaUI();
 };
 
-FullStoryAssistant.prototype.mediaPlaying = function(event) {
+FullStoryAssistant.prototype.mediaPlaying = function() {
 	Mojo.Log.info("MEDIA> media playing");
 	this.mediaReady = true;
 	this.playState = 1;
 	this.updateMediaUI();
 };
 
-FullStoryAssistant.prototype.mediaSeeking = function(event) {
+FullStoryAssistant.prototype.mediaSeeking = function() {
 	Mojo.Log.info("MEDIA> media seeking");
 	this.controller.get("media-playState").update($L("Seeking"));
 };
 
-
-FullStoryAssistant.prototype.mediaSeeked = function(event) {
+FullStoryAssistant.prototype.mediaSeeked = function() {
 	Mojo.Log.info("MEDIA> media seeked");
 	this.updateMediaUI();
 };
 
-FullStoryAssistant.prototype.mediaStopped = function(event) {
+FullStoryAssistant.prototype.mediaStopped = function() {
 	Mojo.Log.info("MEDIA> media stopped");
 	this.playState = 0;
 	this.currentTime = 0;
 	this.updateMediaUI();
 };
 
-FullStoryAssistant.prototype.mediaError = function(event) {
+FullStoryAssistant.prototype.mediaError = function() {
 	Mojo.Log.info("MEDIA> media error");
 	this.playState = 0;
 	this.updateMediaUI();
