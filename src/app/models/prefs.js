@@ -33,7 +33,7 @@ var prefs = Class.create({
 	largeFont: false,
 	showChanges: false,
 	leftHanded: true,
-	enabledRoation: true,
+	enableRotation: true,
 	
 	timer: {},
 	
