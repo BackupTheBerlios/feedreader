@@ -634,9 +634,9 @@ var feeds = Class.create ({
 		var onSuccess = function() {
 			Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-changed" });
 		};
-		var onFail = function() {
+		var onFail = function(transaction, error) {
 			Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-changed" });
-			Mojo.Log.error("FEEDS> Deleting feed failed.");
+			Mojo.Log.error("FEEDS> Deleting feed failed:", error.message);
 		};
 		this.db.deleteFeed(feed, onSuccess, onFail);
 	},

@@ -262,8 +262,8 @@ var database = Class.create({
 								   "  END", [], this.nullDataHandler, this.errorHandler);
 			transaction.executeSql("CREATE TRIGGER feeds_after_delete AFTER DELETE ON feeds" +
 								   "  BEGIN" +
-								   "    UPDATE feed SET feedOrder = feedOrder - 1 WHERE feedOrder > old.feedOrder;" +
-								   "    DELETE FROM storys WHERE fid = old.id;" +
+								   "    UPDATE feeds SET feedOrder = feedOrder - 1 WHERE feedOrder > old.feedOrder;" +
+								   "    DELETE FROM storiess WHERE fid = old.id;" +
 								   "  END", [], this.nullDataHandler, this.errorHandler);
 			transaction.executeSql("CREATE TRIGGER stories_after_delete AFTER DELETE ON stories" +
 								   "  BEGIN" +
@@ -459,8 +459,10 @@ var database = Class.create({
 		onSuccess = onSuccess || this.nullDataHandler;
 		onFail = onFail || this.errorHandler;
 		
+		Mojo.Log.info("DB> deleting feed", feed.id);
+		
 		this.transaction(function(transaction) {
-			transaction.executeSql("DELETE FROM feeds WHERE ID = ?",
+			transaction.executeSql("DELETE FROM feeds WHERE id = ?",
 				[feed.id], onSuccess, onFail);
 		});
 	},
