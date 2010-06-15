@@ -263,7 +263,7 @@ var database = Class.create({
 			transaction.executeSql("CREATE TRIGGER feeds_after_delete AFTER DELETE ON feeds" +
 								   "  BEGIN" +
 								   "    UPDATE feeds SET feedOrder = feedOrder - 1 WHERE feedOrder > old.feedOrder;" +
-								   "    DELETE FROM storiess WHERE fid = old.id;" +
+								   "    DELETE FROM stories WHERE fid = old.id;" +
 								   "  END", [], this.nullDataHandler, this.errorHandler);
 			transaction.executeSql("CREATE TRIGGER stories_after_delete AFTER DELETE ON stories" +
 								   "  BEGIN" +
@@ -967,7 +967,8 @@ var database = Class.create({
 		var onNotify = this.notifyOfUpdate.bind(this, true);
 		
 		var date = new Date();
-		var newthreshold = date.getTime() - (FeedReader.prefs.storyKeepTime * 60 * 60 * 1000);
+		var keepthreshold = date.getTime() - (FeedReader.prefs.storyKeepTime * 60 * 60 * 1000); 
+		var newthreshold = date.getTime() - (24 * 60 * 60 * 1000);
 		
 		this.transaction(function(transaction) {
 			transaction.executeSql("UPDATE stories" +
@@ -980,9 +981,10 @@ var database = Class.create({
 			transaction.executeSql("UPDATE stories" +
 								   "  SET flag = 1" +
 								   "  WHERE isStarred = 0"+
-								   "    AND isNew = 0" +
+								   "    AND (isRead = 1" +
+								   "    OR pubdate < ?)" +
 								   "    AND fid = ?",
-								   [feed.id], onSuccess, onFail);
+								   [keepthreshold, feed.id], onSuccess, onFail);
 			transaction.executeSql("SELECT feedOrder FROM feeds WHERE id = ?",
 								   [feed.id], onNotify, onFail);
 		});
