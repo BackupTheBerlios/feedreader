@@ -173,7 +173,7 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 			this.pictureSpinnerModel.spinning = true;
 			this.controller.get("story-picture").onload = this.pictureLoaded;
 		} else {
-			this.controller.get("img-container").className = "hidden";		
+			this.controller.get("img-container").hide();		
 		}
 	
 		// Setup player controls.
@@ -189,7 +189,7 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 	
 		if(!this.doShowMedia) {
 			// Hide the player.
-			this.controller.get("media-controls-wrapper").className = "hidden";
+			this.controller.get("media-controls-wrapper").hide();
 	
 			// Remove the video element.
 			video = this.controller.get("media-video");
@@ -242,11 +242,15 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 			header.parentNode.removeChild(header);
 			var fade = this.controller.get("top-fade");
 			fade.parentNode.removeChild(fade);
-			this.controller.get("scene-main").setAttribute("style", "display: hidden");
+			this.controller.get("scene-main").hide();
 			this.controller.hideWidgetContainer("scene-main");
 		}
-	
+		
 		this.controller.get("starIcon").className = "right" + (this.story.isStarred ? " starred" : "");
+		
+		if(this.urls.length <= 0) {
+			this.controller.get("weblink-group").hide();			
+		}
 		
 		this.feedDataHandler(this.feed);
 		if(this.ids) {
