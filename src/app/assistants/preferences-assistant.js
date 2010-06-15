@@ -76,6 +76,18 @@ PreferencesAssistant.prototype.setup = function() {
 			{ label: $L("1 Day"),			value: 1440}
 		]    
 	}, this.updateIntervalModel = { value : this.prefs.updateInterval });
+	this.controller.setupWidget("storyKeepTime", {
+		label: $L("Keep stories"),
+		choices: [
+			{ label: $L("1 Day"),			value: 24},
+			{ label: $L("2 Days"),			value: 24 * 2},    
+			{ label: $L("3 Days"),			value: 24 * 3},
+			{ label: $L("5 Days"),			value: 24 * 5},
+			{ label: $L("1 Week"),			value: 24 * 7},    
+			{ label: $L("2 Weeks"),			value: 24 * 7 * 2},
+			{ label: $L("4 Weeks"),			value: 24 * 7 * 4}
+		]    
+	}, this.storyKeepTimeModel = { value : this.prefs.storyKeepTime });
 	
 	this.controller.setupWidget("feedTitleColor", {
 		label: $L("Title color"),
@@ -122,6 +134,7 @@ PreferencesAssistant.prototype.cleanup = function(event) {
 	this.prefs.largeFont = this.largeFontModel.value;
 	this.prefs.leftHanded = this.leftHandedModel.value;
 	this.prefs.enableRotation = this.enableRotationModel.value;
+	this.prefs.storyKeepTime = this.storyKeepTimeModel.value;
 	
 	this.prefs.save();
 	

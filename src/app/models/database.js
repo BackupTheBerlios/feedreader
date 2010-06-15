@@ -965,7 +965,7 @@ var database = Class.create({
 		var onNotify = this.notifyOfUpdate.bind(this, true);
 		
 		var date = new Date();
-		var newthreshold = date.getTime() - (24 * 60 * 60 * 1000);
+		var newthreshold = date.getTime() - (FeedReader.prefs.storyKeepTime * 60 * 60 * 1000);
 		
 		this.transaction(function(transaction) {
 			transaction.executeSql("UPDATE stories" +

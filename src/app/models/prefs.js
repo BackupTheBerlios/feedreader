@@ -22,6 +22,7 @@
 
 var prefs = Class.create({
 	updateInterval:	30,
+	storyKeepTime: 24,
 	updateOnStart: true,
 	notificationEnabled: true,
 	blinkingEnabled: true,
@@ -67,6 +68,9 @@ var prefs = Class.create({
 				this.notifyWhileRunning = settings.notifyWhileRunning;
 				this.enableRotation = settings.enableRotation;
 			}
+			if(settings.storyKeepTime !== undefined) {
+				this.storyKeepTime = settings.storyKeepTime;
+			}
 			
 			if(settings.version < FeedReader.versionInt) {
 				this.showChanges = true;
@@ -88,7 +92,8 @@ var prefs = Class.create({
 			titleColor: 			this.titleColor,
 			largeFont:				this.largeFont,
 			leftHanded:				this.leftHanded,
-			enableRotation:			this.enableRotation
+			enableRotation:			this.enableRotation,
+			storyKeepTime:			this.storyKeepTime
 		});
 		this.setTimer();
 	},
