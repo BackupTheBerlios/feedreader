@@ -237,10 +237,10 @@ AddfeedAssistant.prototype.feedUpdateFailed = function(transaction, error) {
 	FeedReader.showError(errorMsg, { title: this.feed.url } );
 };
 
-AddfeedAssistant.prototype.feedUpdateSuccess = function() {
+AddfeedAssistant.prototype.feedUpdateSuccess = function(feed) {
+	this.feed.id = feed.id;
 	if(this.feed.enabled) {
-		this.feeds.changingFeed = true;
-		this.feeds.enqueueUpdate(this.feed.url);
+		this.feeds.enqueueUpdate(this.feed);
 	}
 	this.okButton.mojo.deactivate();
 	this.controller.stageController.popScene();
