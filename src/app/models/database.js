@@ -980,6 +980,7 @@ var database = Class.create({
 			transaction.executeSql("UPDATE stories" +
 								   "  SET flag = 1" +
 								   "  WHERE isStarred = 0"+
+								   "    AND isNew = 0" +
 								   "    AND fid = ?",
 								   [feed.id], onSuccess, onFail);
 			transaction.executeSql("SELECT feedOrder FROM feeds WHERE id = ?",
