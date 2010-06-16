@@ -286,6 +286,9 @@ var feeds = Class.create ({
 				if (atomItems[i].getElementsByTagName("summary") &&
 					atomItems[i].getElementsByTagName("summary").item(0)) {
 					story.summary = this.reformatSummary(this.cpConverter.convert(contentType, atomItems[i].getElementsByTagName("summary").item(0).textContent));
+				} else if(atomItems[i].getElementsByTagName("content") &&
+						  atomItems[i].getElementsByTagName("content").item(0)) {
+					story.summary = this.reformatSummary(this.cpConverter.convert(contentType, atomItems[i].getElementsByTagName("content").item(0).textContent));
 				}
 				
 				// Analyse the enclosures.
