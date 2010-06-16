@@ -1092,11 +1092,12 @@ var database = Class.create({
 												   onSuccess, onFail);
 							insertURLs(transaction, { insertId: sid });
 						} else {
+							var isNew = pubdate >= (date.getTime() - (24 * 60 * 60 * 1000));
 							transaction.executeSql("INSERT INTO stories" +
 												   "  (fid, uuid, title, summary, picture, audio, video, pubdate, isRead, isNew, isStarred, flag)" +
-												   "  VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, 1, 0, 0)",
+												   "  VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 0, 0)",
 												   [feed.id, story.uuid, story.title, story.summary, story.picture,
-													story.audio, story.video, story.pubdate],
+													story.audio, story.video, story.pubdate, isNew ? 1 : 0],
 												   insertURLs, onFail);
 						}
 					},
