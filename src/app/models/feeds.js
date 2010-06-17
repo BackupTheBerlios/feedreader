@@ -138,12 +138,18 @@ var feeds = Class.create ({
 	 * @param	feed	{object}	feed object to update
 	 */
 	doUpdateFeed: function(feed) {
-		this.connStatus = new Mojo.Service.Request('palm://com.palm.connectionmanager', {
-			method: 'getstatus',
-			parameters: {},
-			onSuccess: this.getConnStatusSuccess.bind(this, feed),
-			onFailure: this.getConnStatusFailed.bind(this, feed)
-		});		
+		try {
+			Mojo.Log.info("FEEDS> requesting internet connection availability for feed", feed.url);
+			this.connStatus = new Mojo.Service.Request('palm://com.palm.connectionmanager', {
+				method: 'getstatus',
+				parameters: {},
+				onSuccess: this.getConnStatusSuccess.bind(this, feed),
+				onFailure: this.getConnStatusFailed.bind(this, feed)
+			});
+		} catch(e) {
+			Mojo.Log.logException(e, "FEEDS>");
+			this.spooler.nextAction();
+		}
 	},
 
 	/** @private
@@ -154,17 +160,23 @@ var feeds = Class.create ({
 	 * @param result	{object}	information about the connection status
 	 */	
 	getConnStatusSuccess: function(feed, result) {
-		if(result.isInternetConnectionAvailable) {
-			this.updateInProgress = true;
-			this.db.beginStoryUpdate(feed);
-			var request = new Ajax.Request(feed.url, {
-	    	        method: "get",
-					evalJS: "false",
-	        	    evalJSON: "false",
-	            	onSuccess: this.updateFeedSuccess.bind(this, feed),
-	            	onFailure: this.updateFeedFailed.bind(this, feed)});
-		} else {
-			Mojo.Log.info("FEEDS> No internet connection available");
+		try {
+			if(result.isInternetConnectionAvailable) {
+				Mojo.Log.info("FEEDS> Internet connection available, requesting", feed.url);
+				this.updateInProgress = true;
+				this.db.beginStoryUpdate(feed);
+				var request = new Ajax.Request(feed.url, {
+						method: "get",
+						evalJS: "false",
+						evalJSON: "false",
+						onSuccess: this.updateFeedSuccess.bind(this, feed),
+						onFailure: this.updateFeedFailed.bind(this, feed)});
+			} else {
+				Mojo.Log.info("FEEDS> No internet connection available");
+				this.spooler.nextAction();
+			}
+		} catch(e) {
+			Mojo.Log.logException(e, "FEEDS>");
 			this.spooler.nextAction();
 		}
 	},
@@ -189,23 +201,29 @@ var feeds = Class.create ({
 	 * @return 				{string}		reformatted summary
 	 */
 	reformatSummary: function(summary) {
-		summary = FeedReader.stripCDATA(summary);
+		try {
+			summary = FeedReader.stripCDATA(summary);
+			
+			// Remove potentially dangerous tags.
+			summary = summary.replace(/<script[^>]*>(.*?)<\/script>/ig, "");
+			summary = summary.replace(/(<script([^>]*)\/>)/ig, "");
+			summary = summary.replace(/<iframe[^>]*>(.*?)<\/iframe>/ig, "");
+			summary = summary.replace(/(<iframe([^>]+)\/>)/ig, "");
+			
+			summary = summary.replace(/(\{([^\}]+)\})/ig, "");
+			summary = summary.replace(/digg_url .../, "");
+			
+			// Parse some BBCodes.
+			summary = summary.replace(/\[i\](.*)\[\/i\]/ig, '<span class="italic">$1</span>');
+			summary = summary.replace(/\[b\](.*)\[\/b\]/ig, '<span class="bold">$1</span>');
+			summary = summary.replace(/\[u\](.*)\[\/u\]/ig, '<span class="underline">$1</span>');
+			summary = unescape(summary);
 		
-		// Remove potentially dangerous tags.
-		summary = summary.replace(/<script[^>]*>(.*?)<\/script>/ig, "");
-		summary = summary.replace(/(<script([^>]*)\/>)/ig, "");
-		summary = summary.replace(/<iframe[^>]*>(.*?)<\/iframe>/ig, "");
-		summary = summary.replace(/(<iframe([^>]+)\/>)/ig, "");
-		
-        summary = summary.replace(/(\{([^\}]+)\})/ig, "");
-        summary = summary.replace(/digg_url .../, "");
-		
-		// Parse some BBCodes.
-		summary = summary.replace(/\[i\](.*)\[\/i\]/ig, '<span class="italic">$1</span>');
-		summary = summary.replace(/\[b\](.*)\[\/b\]/ig, '<span class="bold">$1</span>');
-		summary = summary.replace(/\[u\](.*)\[\/u\]/ig, '<span class="underline">$1</span>');
-        summary = unescape(summary);
-		return summary;	
+			return summary;
+		} catch(e) {
+			Mojo.Log.logException(e, "FEEDS>");
+		}
+		return "";
 	},
 	
 	/** @private
@@ -217,38 +235,43 @@ var feeds = Class.create ({
 	 * @return 				{boolean}	true if type is supported
 	 */
 	determineFeedType: function(feed, transport) {
-		var feedType = transport.responseXML.getElementsByTagName("rss");
-		var errorMsg = {};
-		
-		if(transport.responseText.length === 0) {
-			if(this.changingFeed) {
-				errorMsg = new Template($L("The Feed '#{title}' does not return data."));
-				FeedReader.showError(errorMsg, { title: feed.url });
+		try {
+			var feedType = transport.responseXML.getElementsByTagName("rss");
+			var errorMsg = {};
+			
+			if(transport.responseText.length === 0) {
+				if(this.changingFeed) {
+					errorMsg = new Template($L("The Feed '#{title}' does not return data."));
+					FeedReader.showError(errorMsg, { title: feed.url });
+				}
+				Mojo.Log.info("FEEDS> Empty responseText in", feed.url);
+				return this.db.setFeedType(feed, feedTypes.ftUnknown);
 			}
-			Mojo.Log.info("FEEDS> Empty responseText in", feed.url);
-			return this.db.setFeedType(feed, feedTypes.ftUnknown);
-		}
-
-		if(feedType.length > 0) {
-			return this.db.setFeedType(feed, feedTypes.ftRSS);
-		} else {    
-			feedType = transport.responseXML.getElementsByTagName("RDF");
-			if (feedType.length > 0) {
-				return this.db.setFeedType(feed, feedTypes.ftRDF);
-			} else {
-				feedType = transport.responseXML.getElementsByTagName("feed");
+	
+			if(feedType.length > 0) {
+				return this.db.setFeedType(feed, feedTypes.ftRSS);
+			} else {    
+				feedType = transport.responseXML.getElementsByTagName("RDF");
 				if (feedType.length > 0) {
-					return this.db.setFeedType(feed, feedTypes.ftATOM);
+					return this.db.setFeedType(feed, feedTypes.ftRDF);
 				} else {
-					if (this.changingFeed) {
-						errorMsg = new Template($L("The format of Feed '#{title}' is unsupported."));
-						FeedReader.showError(errorMsg, { title: feed.url });
+					feedType = transport.responseXML.getElementsByTagName("feed");
+					if (feedType.length > 0) {
+						return this.db.setFeedType(feed, feedTypes.ftATOM);
+					} else {
+						if (this.changingFeed) {
+							errorMsg = new Template($L("The format of Feed '#{title}' is unsupported."));
+							FeedReader.showError(errorMsg, { title: feed.url });
+						}
+						Mojo.Log.info("FEEDS> Unsupported feed format in", feed.url);
+						return this.db.setFeedType(feed.url, feedTypes.ftUnknown);
 					}
-					Mojo.Log.info("FEEDS> Unsupported feed format in", feed.url);
-					return this.db.setFeedType(feed.url, feedTypes.ftUnknown);
 				}
 			}
+		} catch(e) {
+			Mojo.Log.logException(e, "FEEDS>");
 		}
+		return this.db.setFeedType(feed.url, feedTypes.ftUnknown);
 	},
 	
 	/** @private
@@ -259,61 +282,163 @@ var feeds = Class.create ({
 	 * @param 	transport	{object} 	AJAX transport
 	 */
 	parseAtom: function(feed, transport) {
-		var enclosures = {}, story = {};
-		var url = "", enc = 0, type = "", title = "";
-		var el = 0;
-		var contentType = transport.getHeader("Content-Type");
-		
-		var atomItems = transport.responseXML.getElementsByTagName("entry");
-		var l = atomItems.length;
-		for (var i = 0; i < l; i++) {
-			try {
-				story = {
-					title:		"",
-					summary:	"",
-					url:		[],
-					picture:	"",
-					audio:		"",
-					video:		"",
-					pubdate:	0,
-					uuid:		""
-				};
-				
-				if(atomItems[i].getElementsByTagName("title") &&
-				   atomItems[i].getElementsByTagName("title").item(0)) {
-					story.title = this.cpConverter.convert(contentType, unescape(atomItems[i].getElementsByTagName("title").item(0).textContent));
-				}
-				if (atomItems[i].getElementsByTagName("summary") &&
-					atomItems[i].getElementsByTagName("summary").item(0)) {
-					story.summary = this.reformatSummary(this.cpConverter.convert(contentType, atomItems[i].getElementsByTagName("summary").item(0).textContent));
-				} else if(atomItems[i].getElementsByTagName("content") &&
-						  atomItems[i].getElementsByTagName("content").item(0)) {
-					story.summary = this.reformatSummary(this.cpConverter.convert(contentType, atomItems[i].getElementsByTagName("content").item(0).textContent));
-				}
-				
-				// Analyse the enclosures.
-				enclosures = atomItems[i].getElementsByTagName("link");
-				if(enclosures && (enclosures.length > 0)) {
-					el = enclosures.length;
-					for(enc = 0; enc < el; enc++) {
-						rel = enclosures.item(enc).getAttribute("rel");
-						url = enclosures.item(enc).getAttribute("href");
-						type = enclosures.item(enc).getAttribute("type");
-
-						if(!type) {
-							type = "";
-						}
-						if(url && (url.length > 0)) {
-							if(url.match(/.*\.htm(l){0,1}/i)){
-								title = enclosures.item(enc).getAttribute("title");
-								if((title === null) || (title.length === 0)) {
-									title = "Weblink";
+		try {
+			var enclosures = {}, story = {};
+			var url = "", enc = 0, type = "", title = "";
+			var el = 0;
+			var contentType = transport.getHeader("Content-Type");
+			
+			var atomItems = transport.responseXML.getElementsByTagName("entry");
+			var l = atomItems.length;
+			for (var i = 0; i < l; i++) {
+				try {
+					story = {
+						title:		"",
+						summary:	"",
+						url:		[],
+						picture:	"",
+						audio:		"",
+						video:		"",
+						pubdate:	0,
+						uuid:		""
+					};
+					
+					if(atomItems[i].getElementsByTagName("title") &&
+					   atomItems[i].getElementsByTagName("title").item(0)) {
+						story.title = this.cpConverter.convert(contentType, unescape(atomItems[i].getElementsByTagName("title").item(0).textContent));
+					}
+					if (atomItems[i].getElementsByTagName("summary") &&
+						atomItems[i].getElementsByTagName("summary").item(0)) {
+						story.summary = this.reformatSummary(this.cpConverter.convert(contentType, atomItems[i].getElementsByTagName("summary").item(0).textContent));
+					} else if(atomItems[i].getElementsByTagName("content") &&
+							  atomItems[i].getElementsByTagName("content").item(0)) {
+						story.summary = this.reformatSummary(this.cpConverter.convert(contentType, atomItems[i].getElementsByTagName("content").item(0).textContent));
+					}
+					
+					// Analyse the enclosures.
+					enclosures = atomItems[i].getElementsByTagName("link");
+					if(enclosures && (enclosures.length > 0)) {
+						el = enclosures.length;
+						for(enc = 0; enc < el; enc++) {
+							rel = enclosures.item(enc).getAttribute("rel");
+							url = enclosures.item(enc).getAttribute("href");
+							type = enclosures.item(enc).getAttribute("type");
+	
+							if(!type) {
+								type = "";
+							}
+							if(url && (url.length > 0)) {
+								if(url.match(/.*\.htm(l){0,1}/i)){
+									title = enclosures.item(enc).getAttribute("title");
+									if((title === null) || (title.length === 0)) {
+										title = "Weblink";
+									}
+									story.url.push({
+										title:	this.cpConverter.convert(contentType, title),
+										href:	url
+									});
+								} else if(rel && rel.match(/enclosure/i)) {
+									if(url.match(/.*\.jpg/i) ||
+									   url.match(/.*\.jpeg/i) ||
+									   url.match(/.*\.gif/i) ||
+									   url.match(/.*\.png/i)) {
+										story.picture = url;
+									} else if(url.match(/.*\.mp3/i) ||
+											  (url.match(/.*\.mp4/i) && type.match(/audio\/.*/i)) ||
+											  url.match(/.*\.wav/i) ||
+											  url.match(/.*\.aac/i)) {
+										story.audio = url;
+									} else if(url.match(/.*\.mpg/i) ||
+											  url.match(/.*\.mpeg/i) ||
+											  (url.match(/.*\.mp4/i) && type.match(/video\/.*/i)) ||
+											   url.match(/.*\.avi/i)) {
+										story.video = url;
+									}
 								}
-								story.url.push({
-									title:	this.cpConverter.convert(contentType, title),
-									href:	url
-								});
-							} else if(rel && rel.match(/enclosure/i)) {
+							}
+						}
+					}
+					
+					// Set the publishing date.
+					if (atomItems[i].getElementsByTagName("updated") &&
+						atomItems[i].getElementsByTagName("updated").item(0)) {
+						story.pubdate = this.dateConverter.dateToInt(atomItems[i].getElementsByTagName("updated").item(0).textContent);
+					}
+					
+					// Set the unique id.
+					if (atomItems[i].getElementsByTagName("id") &&
+						atomItems[i].getElementsByTagName("id").item(0)) {
+						story.uuid = atomItems[i].getElementsByTagName("id").item(0).textContent;
+					} else {
+						story.uuid = story.url;
+					}
+					
+					this.db.addOrEditStory(feed, story);
+				} catch(e) {
+					Mojo.Log.logException(e, "FEEDS>");
+				}
+			}
+		} catch(ex) {
+			Mojo.Log.logException(ex, "FEEDS>");
+		}
+	},
+	
+	/** @private
+	 *
+	 * Parse RSS Feed data.
+	 *
+	 * @param 	feed		{object}	feed object
+	 * @param 	transport	{object} 	AJAX transport
+	 */
+	parseRSS: function(feed, transport) {
+		try {
+			var enclosures = {}, story = {};
+			var url = "", type = "", enc = 0;
+			var el = 0;
+			var contentType = transport.getHeader("Content-Type");
+			
+			var rssItems = transport.responseXML.getElementsByTagName("item");
+			var l = rssItems.length;
+			for (var i = 0; i < l; i++) {
+				try {
+					story = {
+						title: 		"",
+						summary:	"",
+						url:		[],
+						picture:	"",
+						audio:		"",
+						video:		"",
+						pubdate:	0,
+						uuid:		""
+					};
+					
+					if(rssItems[i].getElementsByTagName("title") &&
+					   rssItems[i].getElementsByTagName("title").item(0)) {
+						story.title = this.cpConverter.convert(contentType, unescape(rssItems[i].getElementsByTagName("title").item(0).textContent));
+					}
+					if(rssItems[i].getElementsByTagName("description") &&
+					   rssItems[i].getElementsByTagName("description").item(0)) {
+						story.summary = this.reformatSummary(this.cpConverter.convert(contentType, rssItems[i].getElementsByTagName("description").item(0).textContent));
+					}
+					if(rssItems[i].getElementsByTagName("link") &&
+					   rssItems[i].getElementsByTagName("link").item(0)) {
+						story.url.push({
+							title:	"Weblink",
+							href:	rssItems[i].getElementsByTagName("link").item(0).textContent
+						});
+					}
+					
+					// Analyse the enclosures.
+					enclosures = rssItems[i].getElementsByTagName("enclosure");
+					if(enclosures && (enclosures.length > 0)) {					
+						el = enclosures.length;
+						for(enc = 0; enc < el; enc++) {
+							url = enclosures.item(enc).getAttribute("url");
+							type = enclosures.item(enc).getAttribute("type");
+							if(!type) {
+								type = "";
+							}
+							if(url && (url.length > 0)) {
 								if(url.match(/.*\.jpg/i) ||
 								   url.match(/.*\.jpeg/i) ||
 								   url.match(/.*\.gif/i) ||
@@ -327,132 +452,38 @@ var feeds = Class.create ({
 								} else if(url.match(/.*\.mpg/i) ||
 										  url.match(/.*\.mpeg/i) ||
 										  (url.match(/.*\.mp4/i) && type.match(/video\/.*/i)) ||
-										   url.match(/.*\.avi/i)) {
+										  url.match(/.*\.avi/i) ||
+										  url.match(/.*\.m4v/i)) {
 									story.video = url;
 								}
 							}
 						}
 					}
-				}
-				
-				// Set the publishing date.
-				if (atomItems[i].getElementsByTagName("updated") &&
-					atomItems[i].getElementsByTagName("updated").item(0)) {
-					story.pubdate = this.dateConverter.dateToInt(atomItems[i].getElementsByTagName("updated").item(0).textContent);
-				}
-				
-				// Set the unique id.
-				if (atomItems[i].getElementsByTagName("id") &&
-					atomItems[i].getElementsByTagName("id").item(0)) {
-					story.uuid = atomItems[i].getElementsByTagName("id").item(0).textContent;
-				} else {
-					story.uuid = story.url;
-				}
-				
-				this.db.addOrEditStory(feed, story);
-			} catch(e) {
-				Mojo.Log.logException(e);
-			}
-		}
-	},
-	
-	/** @private
-	 *
-	 * Parse RSS Feed data.
-	 *
-	 * @param 	feed		{object}	feed object
-	 * @param 	transport	{object} 	AJAX transport
-	 */
-	parseRSS: function(feed, transport) {
-		var enclosures = {}, story = {};
-		var url = "", type = "", enc = 0;
-		var el = 0;
-		var contentType = transport.getHeader("Content-Type");
-		
-		var rssItems = transport.responseXML.getElementsByTagName("item");
-		var l = rssItems.length;
-		for (var i = 0; i < l; i++) {
-			try {
-				story = {
-					title: 		"",
-					summary:	"",
-					url:		[],
-					picture:	"",
-					audio:		"",
-					video:		"",
-					pubdate:	0,
-					uuid:		""
-				};
-				
-				if(rssItems[i].getElementsByTagName("title") &&
-				   rssItems[i].getElementsByTagName("title").item(0)) {
-					story.title = this.cpConverter.convert(contentType, unescape(rssItems[i].getElementsByTagName("title").item(0).textContent));
-				}
-				if(rssItems[i].getElementsByTagName("description") &&
-				   rssItems[i].getElementsByTagName("description").item(0)) {
-					story.summary = this.reformatSummary(this.cpConverter.convert(contentType, rssItems[i].getElementsByTagName("description").item(0).textContent));
-				}
-				if(rssItems[i].getElementsByTagName("link") &&
-				   rssItems[i].getElementsByTagName("link").item(0)) {
-					story.url.push({
-						title:	"Weblink",
-						href:	rssItems[i].getElementsByTagName("link").item(0).textContent
-					});
-				}
-				
-				// Analyse the enclosures.
-				enclosures = rssItems[i].getElementsByTagName("enclosure");
-				if(enclosures && (enclosures.length > 0)) {					
-					el = enclosures.length;
-					for(enc = 0; enc < el; enc++) {
-						url = enclosures.item(enc).getAttribute("url");
-						type = enclosures.item(enc).getAttribute("type");
-						if(!type) {
-							type = "";
-						}
-						if(url && (url.length > 0)) {
-							if(url.match(/.*\.jpg/i) ||
-							   url.match(/.*\.jpeg/i) ||
-							   url.match(/.*\.gif/i) ||
-							   url.match(/.*\.png/i)) {
-								story.picture = url;
-							} else if(url.match(/.*\.mp3/i) ||
-									  (url.match(/.*\.mp4/i) && type.match(/audio\/.*/i)) ||
-									  url.match(/.*\.wav/i) ||
-									  url.match(/.*\.aac/i)) {
-								story.audio = url;
-							} else if(url.match(/.*\.mpg/i) ||
-									  url.match(/.*\.mpeg/i) ||
-									  (url.match(/.*\.mp4/i) && type.match(/video\/.*/i)) ||
-									  url.match(/.*\.avi/i) ||
-									  url.match(/.*\.m4v/i)) {
-								story.video = url;
-							}
-						}
+					
+					// Set the publishing date.
+					if(rssItems[i].getElementsByTagName("pubDate") &&
+					   rssItems[i].getElementsByTagName("pubDate").item(0)) {
+					   story.pubdate = this.dateConverter.dateToInt(rssItems[i].getElementsByTagName("pubDate").item(0).textContent);
+					} else if (rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date") &&
+							   rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0)) {
+						story.pubdate = this.dateConverter.dateToInt(rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0).textContent);
 					}
+					
+					// Set the unique id.
+					if(rssItems[i].getElementsByTagName("guid") &&
+					   rssItems[i].getElementsByTagName("guid").item(0)) {
+						story.uuid = rssItems[i].getElementsByTagName("guid").item(0).textContent;
+					} else {
+						story.uuid = story.title;
+					}
+					
+					this.db.addOrEditStory(feed, story);
+				} catch(e) {
+					Mojo.Log.logException(e, "FEEDS>");
 				}
-				
-				// Set the publishing date.
-				if(rssItems[i].getElementsByTagName("pubDate") &&
-				   rssItems[i].getElementsByTagName("pubDate").item(0)) {
-				   story.pubdate = this.dateConverter.dateToInt(rssItems[i].getElementsByTagName("pubDate").item(0).textContent);
-				} else if (rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date") &&
-						   rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0)) {
-					story.pubdate = this.dateConverter.dateToInt(rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0).textContent);
-				}
-				
-				// Set the unique id.
-				if(rssItems[i].getElementsByTagName("guid") &&
-				   rssItems[i].getElementsByTagName("guid").item(0)) {
-					story.uuid = rssItems[i].getElementsByTagName("guid").item(0).textContent;
-				} else {
-					story.uuid = story.title;
-				}
-				
-				this.db.addOrEditStory(feed, story);
-			} catch(e) {
-				Mojo.Log.logException(e);
 			}
+		} catch(ex) {
+			Mojo.Log.logException(ex, "FEEDS>");
 		}
 	},
 	
@@ -570,11 +601,15 @@ var feeds = Class.create ({
 	 * @param	count	{integer}		count of new stories
 	 */
 	postNotification: function(count) {
-		if(count > 0) {		
-			if((!FeedReader.isActive) && (!this.interactiveUpdate) && (FeedReader.prefs.notificationEnabled)) {
-				Mojo.Log.info("FEEDS> About to post notification for new items; count =", count);
-				FeedReader.postNotification(count);
+		try {
+			if(count > 0) {		
+				if((!FeedReader.isActive) && (!this.interactiveUpdate) && (FeedReader.prefs.notificationEnabled)) {
+					Mojo.Log.info("FEEDS> About to post notification for new items; count =", count);
+					FeedReader.postNotification(count);
+				}
 			}
+		} catch(e) {
+			Mojo.Log.logException(e, "FEEDS>");
 		}
 		this.spooler.nextAction();
 	},
