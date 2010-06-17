@@ -1092,7 +1092,8 @@ var database = Class.create({
 												   onSuccess, onFail);
 							insertURLs(transaction, { insertId: sid });
 						} else {
-							var isNew = pubdate >= (date.getTime() - (24 * 60 * 60 * 1000));
+							var date = new Date();
+							var isNew = story.pubdate >= (date.getTime() - (24 * 60 * 60 * 1000));
 							transaction.executeSql("INSERT INTO stories" +
 												   "  (fid, uuid, title, summary, picture, audio, video, pubdate, isRead, isNew, isStarred, flag)" +
 												   "  VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 0, 0)",
