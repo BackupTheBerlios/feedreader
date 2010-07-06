@@ -37,16 +37,6 @@ FeedReader = {
 	isActive: 			false,
 	showChangeLog:		false,
 	
-	menuAttr: 			{},
-	menuModel: 			{
-    	visible: true,
-    	items: [ 
-        	{ label: $L("About FeedReader"), command: "do-about" },
-			{ label: $L("Import feeds"), command: "do-import" },
-			{ label: $L("License"), command: "do-license" }
-    	]
-	},
-	
 	feeds:				null,
 	prefs: 				null,
 	mediaExtensionLib:	null,
@@ -60,7 +50,8 @@ FeedReader = {
 	 * @param {Hash} 		values
 	 */
 	showError: function(message, values) {
-	    var cardStageController = this.controller.getStageController(this.mainStageName);
+		var appController = Mojo.Controller.getAppController();
+	    var cardStageController = appController.getStageController(this.mainStageName);
 		if (!cardStageController) {
 			return;
 		}
@@ -78,150 +69,6 @@ FeedReader = {
 				label: $LL("OK")
 			}]
 		});
-	},
-	
-	/**
-	 * Called to indicate that a scene is beginning its setup.
-	 * This will initialize the App Menu if desired.
-	 * 
-	 * @param {Object}		Scene assistant
-	 * @parsm {Boolean}		Whether the app menu shall be initialized
-	 */
-	beginSceneSetup: function(caller, initAppMenu) {
-		if(caller.controller) {
-			// Setup application menu.
-			if(initAppMenu) {
-				caller.controller.setupWidget(Mojo.Menu.appMenu, FeedReader.menuAttr, FeedReader.menuModel);
-			}
-		}		
-
-		if(caller.setupComplete !== undefined) {
-			caller.setupComplete = false;
-		}
-	},
-	
-	/**
-	 * Called to indicate that a scene has finished its setup.
-	 * 
-	 * @param {Object}		Scene assistant
-	 */
-	endSceneSetup: function(caller) {
-		if(caller.setupComplete !== undefined) {
-			caller.setupComplete = true;
-			if(caller.setupFinished !== undefined) {
-				Mojo.Log.info("FEEDREADER> setup finished; enabling transition");
-				caller.setupFinished();
-			}
-		}
-	},
-	
-	/**
-	 * Called to indicate that a scene is about to activate.
-	 * 
-	 * @param {Object}		Scene assistant
-	 * @param {Function}	callback provided by webOS
-	 */
-	aboutToActivate: function(caller, callback) {
-		if((caller.setupComplete === undefined)|| caller.setupComplete) {
-			Mojo.Log.info("FEEDREADER> setup already completed; enabling transition");
-			callback();
-		} else {
-			caller.setupFinished = callback;
-		}
-	},
-	
-	/**
-	 *
-	 * Show a notification
-	 *
-	 * @param {Int}		Count of new stories
-	 */
-	postNotification: function(count) {
-		if(!count) {	// nothing new or undefined.
-			return;
-		}
-		
-		// Check if the main stage exists.
-		var appController = Mojo.Controller.getAppController();
-		if(!FeedReader.prefs.notifyWhileRunning) {
-			if(appController.getStageProxy(this.mainStageName)) {
-				Mojo.Log.info("FEEDREADER> Ignoring notification as app is running");
-				return;
-			}
-			
-		}
-		
-		// Now create/update the dashboard.
-		var dashboardStageController = appController.getStageProxy(this.dashboardStageName);
-		if(!dashboardStageController) {
-			appController.createStageWithCallback({
-				name: this.dashboardStageName,
-				lightweight: true
-			}, function(stageController) {
-				stageController.pushScene("dashboard", count);			
-			}, "dashboard");
-		} else {
-			dashboardStageController.delegateToSceneAssistant("updateDashboard", count);
-		}
-	},
-	
-	/**
-	 *
-	 * WebOS 1.4+ doesn't allow headless apps to run longer than 15 seconds
-	 * without an open stage. Therefore we use the dashboard stage to indicate
-	 * a scheduled update.
-	 *
-	 * Open the update dashboard.
-	 * 
-	 */
-	createUpdateDashboard: function(force) {
-		var appController = Mojo.Controller.getAppController();
-		var mainStageController = appController.getStageProxy(this.mainStageName);
-		var dashboardStageController = appController.getStageProxy(this.dashboardStageName);
-		
-		if(mainStageController && (force === undefined)) {
-			return;
-		}
-		
-		if(!dashboardStageController) {
-			appController.createStageWithCallback({
-				name: this.dashboardStageName,
-				lightweight: true
-			}, function(stageController) {
-				stageController.pushScene("dashboard", -1);
-			}, "dashboard");
-		} else {
-			dashboardStageController.delegateToSceneAssistant("updateDashboard", -1);
-		}
-	},
-	
-	/**
-	 *
-	 * WebOS 1.4+ doesn't allow headless apps to run longer than 15 seconds
-	 * without an open stage. Therefore we use the dashboard stage to indicate
-	 * a scheduled update.
-	 *
-	 * Close the update dashboard.
-	 *
-	 */
-	removeUpdateDashboard: function() {
-		var appController = Mojo.Controller.getAppController();
-		var dashboardStageController = appController.getStageProxy(this.dashboardStageName);
-		
-		if(dashboardStageController) {
-			dashboardStageController.delegateToSceneAssistant("updateDashboard", -2);
-		}
-	},
-
-	/**
-	 * Remove the application splash screen.
-	 */	
-	hideSplash: function() {
-		var cardStageController = Mojo.Controller.getAppController().getStageController(this.mainStageName);
-		if(cardStageController) {
-			Mojo.Log.info("FEEDREADER> Main stage exist, removing splash screen");
-			cardStageController.hideSplashScreen();
-		}
 	},
 	
 	/**
@@ -260,26 +107,6 @@ FeedReader = {
 				}
 			}
 		});
-	},
-	
-	/**
-	 * Strip CDATA tags from text.
-	 * 
-	 * @param {String} text			string containing CDATA tags
-	 * @return {String}				string without CDATA tags
-	 */
-	stripCDATA: function(text) {
-		return text.replace(/<\!\[CDATA\[(.*)\]\]/ig, "$1");		
-	},
-	
-	/**
-	 * Strip HTML tags from text.
-	 * 
-	 * @param {String} text			string containing HTML tags
-	 * @return {String}				string without HTML tags
-	 */
-	stripHTML: function(text) {
-        return text.replace(/(<([^>]+)>)/ig, "");
 	},
 	
 	/**

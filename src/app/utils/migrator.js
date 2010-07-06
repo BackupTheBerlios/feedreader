@@ -21,9 +21,10 @@
  */
 
 var migrator = Class.create ({
-	db:		null,
-	depot:	null,
-	ver:	0,
+	db:			null,
+	depot:		null,
+	ver:		0,
+	finished:	false,
 	
 	initialize: function(db, ver) {
 		this.db = db;
@@ -68,6 +69,7 @@ var migrator = Class.create ({
 				}
 				
 				this.list[f].viewMode = parseInt(this.list[f].viewMode, 10);
+				var fullStory = this.list[f].viewMode & 0xFF;
 				var detailViewMode = this.list[f].viewMode >> 24;
 				var listViewMode = this.list[f].viewMode >> 16;
 				feed = {
@@ -82,7 +84,10 @@ var migrator = Class.create ({
 					showListCaption:	(listViewMode < 2) ? 1 : 0,
 					showDetailCaption:	(detailViewMode < 2) ? 1 : 0,
 					sortMode:			this.list[f].sortMode,
-					allowHTML:			this.list[f].allowHTML
+					allowHTML:			this.list[f].allowHTML,
+					fullStory:			fullStory,
+					username:			"",
+					password:			""
 				};
 				switch(this.list[f].type) {
 					case "RDF":
@@ -107,10 +112,10 @@ var migrator = Class.create ({
 			}
 		}
 		delete this.list;
+		this.depot.removeAll();	// Delete the depot database.
 		Mojo.Log.info("MIGRATOR> migration complete");
 		
-		this.depot.removeAll();	// Delete the depot database.
-		Mojo.Log.info("MIGRATOR> deleted depot");
+		this.finished = true;
 	},
 	
 	/** @private
@@ -118,7 +123,7 @@ var migrator = Class.create ({
 	 * Called when the feed list cannot be retrieved.
 	 */
 	loadFeedListFailed: function() {
-		Mojo.Log.warn("FEEDS> unable to retrieve feedlist");
+		Mojo.Log.warn("MIGRATOR> unable to retrieve feedlist");
 		Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-loaded" });
 	},
 	

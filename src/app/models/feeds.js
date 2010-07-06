@@ -37,6 +37,9 @@ var feedProto = Class.create({
 	numNew:				0,
 	numUnRead:			0,
 	preventDelete:		false,
+	username:			"",
+	password:			"",
+	fullStory:			true,
 	
 	/**
 	 * Constructor.
@@ -67,8 +70,15 @@ var feedProto = Class.create({
 			if(proto.id !== null) {
 				this.id = proto.id;
 			}
+			if(proto.fullStory !== null) {
+				this.fullStory = proto.fullStory;
+			}
 			if(this.feedType < feedTypes.ftUnknown) {
 				this.preventDelete = true;
+			}
+			if(proto.username && proto.password) {
+				this.username = proto.username;
+				this.password = proto.password;
 			}
 		}
 	}
@@ -165,12 +175,19 @@ var feeds = Class.create ({
 				Mojo.Log.info("FEEDS> Internet connection available, requesting", feed.url);
 				this.updateInProgress = true;
 				this.db.beginStoryUpdate(feed);
-				var request = new Ajax.Request(feed.url, {
-						method: "get",
-						evalJS: "false",
-						evalJSON: "false",
-						onSuccess: this.updateFeedSuccess.bind(this, feed),
-						onFailure: this.updateFeedFailed.bind(this, feed)});
+				var requestOptions = {
+						method:			"get",
+						evalJS:			false,
+						evalJSON:		false,
+						onSuccess:		this.updateFeedSuccess.bind(this, feed),
+						onFailure:		this.updateFeedFailed.bind(this, feed)
+				};
+				if(feed.username && feed.password) {
+					requestOptions.requestHeaders = {
+						"Authorization":	"Basic " + Base64.encode(feed.username + ':' + feed.password)
+					}
+				}
+				var request = new Ajax.Request(feed.url, requestOptions);
 			} else {
 				Mojo.Log.info("FEEDS> No internet connection available");
 				this.spooler.nextAction();
@@ -191,39 +208,6 @@ var feeds = Class.create ({
 	getConnStatusFailed: function(feed, result) {
 		Mojo.Log.warn("FEEDS> Unable to determine connection status");
 		this.spooler.nextAction();
-	},
-
-	/** @private
-	 * 
-	 * Reformat a story's summary.
-	 * 
-	 * @param 	summary		{string}		string containing the summary to reformat
-	 * @return 				{string}		reformatted summary
-	 */
-	reformatSummary: function(summary) {
-		try {
-			summary = FeedReader.stripCDATA(summary);
-			
-			// Remove potentially dangerous tags.
-			summary = summary.replace(/<script[^>]*>(.*?)<\/script>/ig, "");
-			summary = summary.replace(/(<script([^>]*)\/>)/ig, "");
-			summary = summary.replace(/<iframe[^>]*>(.*?)<\/iframe>/ig, "");
-			summary = summary.replace(/(<iframe([^>]+)\/>)/ig, "");
-			
-			summary = summary.replace(/(\{([^\}]+)\})/ig, "");
-			summary = summary.replace(/digg_url .../, "");
-			
-			// Parse some BBCodes.
-			summary = summary.replace(/\[i\](.*)\[\/i\]/ig, '<span class="italic">$1</span>');
-			summary = summary.replace(/\[b\](.*)\[\/b\]/ig, '<span class="bold">$1</span>');
-			summary = summary.replace(/\[u\](.*)\[\/u\]/ig, '<span class="underline">$1</span>');
-			summary = unescape(summary);
-		
-			return summary;
-		} catch(e) {
-			Mojo.Log.logException(e, "FEEDS>");
-		}
-		return "";
 	},
 	
 	/** @private
@@ -309,10 +293,10 @@ var feeds = Class.create ({
 					}
 					if (atomItems[i].getElementsByTagName("summary") &&
 						atomItems[i].getElementsByTagName("summary").item(0)) {
-						story.summary = this.reformatSummary(this.cpConverter.convert(contentType, atomItems[i].getElementsByTagName("summary").item(0).textContent));
+						story.summary = Formatting.reformatSummary(this.cpConverter.convert(contentType, atomItems[i].getElementsByTagName("summary").item(0).textContent));
 					} else if(atomItems[i].getElementsByTagName("content") &&
 							  atomItems[i].getElementsByTagName("content").item(0)) {
-						story.summary = this.reformatSummary(this.cpConverter.convert(contentType, atomItems[i].getElementsByTagName("content").item(0).textContent));
+						story.summary = Formatting.reformatSummary(this.cpConverter.convert(contentType, atomItems[i].getElementsByTagName("content").item(0).textContent));
 					}
 					
 					// Analyse the enclosures.
@@ -418,7 +402,7 @@ var feeds = Class.create ({
 					}
 					if(rssItems[i].getElementsByTagName("description") &&
 					   rssItems[i].getElementsByTagName("description").item(0)) {
-						story.summary = this.reformatSummary(this.cpConverter.convert(contentType, rssItems[i].getElementsByTagName("description").item(0).textContent));
+						story.summary = Formatting.reformatSummary(this.cpConverter.convert(contentType, rssItems[i].getElementsByTagName("description").item(0).textContent));
 					}
 					if(rssItems[i].getElementsByTagName("link") &&
 					   rssItems[i].getElementsByTagName("link").item(0)) {
@@ -543,7 +527,7 @@ var feeds = Class.create ({
 	 * @param 	feed		{object}	feed object
 	 * @param 	transport	{object} 	AJAX transport
 	 */
-	updateFeedFailed: function(url, transport) {
+	updateFeedFailed: function(feed, transport) {
 		try {
 			var error = "";
 			switch(transport.status) {
@@ -573,7 +557,7 @@ var feeds = Class.create ({
 					}
 					break;
 			}	
-			Mojo.Log.warn("FEEDS> Feed", feed.url, "is defect; disabling feed; error:", error);
+			Mojo.Log.warn("FEEDS> Feed", feed.url, "is defect; error:", error);
 			if (this.changingFeed) {
 				this.db.disableFeed(feed);
 				var errorMsg = new Template($L("The Feed '#{title}' could not be retrieved. The server responded: #{err}. The Feed was automatically disabled."));
@@ -605,7 +589,7 @@ var feeds = Class.create ({
 			if(count > 0) {		
 				if((!FeedReader.isActive) && (!this.interactiveUpdate) && (FeedReader.prefs.notificationEnabled)) {
 					Mojo.Log.info("FEEDS> About to post notification for new items; count =", count);
-					FeedReader.postNotification(count);
+					DashboardControl.postNotification(count);
 				}
 			}
 		} catch(e) {

@@ -60,9 +60,18 @@ AddfeedAssistant.prototype.setup = function() {
 								  autoReplace: false, textCase: Mojo.Widget.steModeLowerCase, enterSubmits: false },
 								this.urlModel = { value: this.feed.url });
 	this.controller.setupWidget("feedTitle",
-								{ hintText: $L("Optional"), limitResize: true, autoReplace: true,
+								{ hintText: $L("Feed title"), limitResize: true, autoReplace: true,
 								  textCase: Mojo.Widget.steModeTitleCase, enterSubmits: false },
 								this.titleModel = { value: this.feed.title });
+
+	this.controller.setupWidget("feedUser",
+								{ hintText: $L("Username"), limitResize: true, autoReplace: true,
+								  textCase: Mojo.Widget.steModeTitleCase, enterSubmits: false },
+								this.userModel = { value: this.feed.username });
+	this.controller.setupWidget("feedPassword",
+								{ hintText: $L("Password"), limitResize: true,
+								  textCase: Mojo.Widget.steModeLowerCase, enterSubmits: false },
+								this.passwordModel = { value: this.feed.password });
     
 	this.controller.setupWidget("listMode", {
 		label: $L("Show"),
@@ -133,6 +142,18 @@ AddfeedAssistant.prototype.setup = function() {
 		disabled: false
 	});
 
+	this.controller.setupWidget("fullStory", {
+		property: "value",
+		trueLabel: $L("Yes"),
+		trueValue: 1,
+		falseLabel: $L("No"),
+		falseValue: 0
+	}, this.fullStoryModel = {
+		value: this.feed.fullStory,
+		disabled: false
+	});
+
+
 	this.controller.setupWidget("allowHTML", {
 		property: "value",
 		trueLabel: $L("Yes"),
@@ -170,11 +191,15 @@ AddfeedAssistant.prototype.setup = function() {
 	this.controller.get("feedEnabled-title").update($L("Activate Feed"));
 	this.controller.get("feedURL-title").update($L("URL"));
 	this.controller.get("feedTitle-title").update($L("Title"));
+	this.controller.get("feedUser-title").update($L("Auth"));
+	this.controller.get("feedPassword-title").update($L("Pass"));
 
 	this.controller.get("feed-group-title").update($L("Basic settings"));
+	this.controller.get("auth-group-title").update($L("Authentification"));
 	this.controller.get("storylist-group-title").update($L("Story list"));
 	this.controller.get("detail-group-title").update($L("Story details"));
 	
+	this.controller.get("fullStory-title").update($L("Show details"));
 	this.controller.get("showMedia-title").update($L("Show media"));
 	this.controller.get("showPicture-title").update($L("Show picture"));
 	this.controller.get("allowHTML-title").update($L("Allow HTML"));
@@ -196,6 +221,9 @@ AddfeedAssistant.prototype.updateFeed = function() {
     this.feed.url = this.urlModel.value;
 	this.feed.title = this.titleModel.value;
 	this.feed.enabled = this.enabledModel.value;
+
+	this.feed.username = this.userModel.value;
+	this.feed.password = this.passwordModel.value;
 
 	this.feed.showListCaption = (this.listModeModel.value == 0) || ((this.listModeModel.value % 2) == 1);
 	this.feed.showListSummary = (this.listModeModel.value % 2) == 0;

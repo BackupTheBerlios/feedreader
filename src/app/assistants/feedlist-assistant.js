@@ -22,7 +22,6 @@
 
 function FeedlistAssistant(feeds) {
 	this.feeds = feeds;
-	this.setupComplete = false;
 	this.filter = "dummyString";
 	this.feedListWidget = null;
 	this.commandModel = {};
@@ -37,7 +36,7 @@ function FeedlistAssistant(feeds) {
 }
 
 FeedlistAssistant.prototype.setup = function() {
-	FeedReader.beginSceneSetup(this, true);
+	SceneControl.beginSceneSetup(this, true);
 
 	// Setup activation/deactivation handlers.
 	this.controller.listen(this.controller.stageController.document,
@@ -83,6 +82,12 @@ FeedlistAssistant.prototype.setup = function() {
 	// Setup command menu.
 	this.initCommandModel();
     this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel);
+
+	if(this.feeds.isReady()) {
+		Mojo.Log.info("FL> databse ready at end of setup");
+		delete this.loadHandler;
+		this.refreshList();
+	}
 };
 
 FeedlistAssistant.prototype.initCommandModel = function() {
@@ -167,7 +172,6 @@ FeedlistAssistant.prototype.cleanup = function(event) {
 
 FeedlistAssistant.prototype.refreshList = function() {
 	this.feeds.getFeedCount(this.filter, this.setListLengthHandler);
-	this.refreshUpdateLock();
 };
 
 FeedlistAssistant.prototype.refreshUpdateLock = function () {
@@ -222,10 +226,8 @@ FeedlistAssistant.prototype.listFind = function(filterString, listWidget, offset
 
 FeedlistAssistant.prototype.updateItems = function(offset, items) {
 	this.feedListWidget.mojo.noticeUpdatedItems(offset, items);
-	if(!this.setupComplete) {
-		FeedReader.endSceneSetup(this);
-		FeedReader.hideSplash();
-	}
+	SceneControl.endSceneSetup(this);
+	SceneControl.hideSplash();
 };
 
 FeedlistAssistant.prototype.setListLength = function(count) {
@@ -234,10 +236,7 @@ FeedlistAssistant.prototype.setListLength = function(count) {
 		this.feedListWidget.mojo.setCount(count);
 	}
 	this.feedListWidget.mojo.setLengthAndInvalidate(count);
-	if(!this.setupComplete && (count <= 0)) {
-		FeedReader.endSceneSetup(this);
-		FeedReader.hideSplash();
-	}
+	this.refreshUpdateLock();
 };
 
 FeedlistAssistant.prototype.reOrderFeed =  function(event) {
@@ -302,6 +301,16 @@ FeedlistAssistant.prototype.handleCommand = function(event) {
     }
 };
 
+FeedlistAssistant.prototype.loadHandler = function() {
+	if(this.feedListWidget) {
+		Mojo.Log.info("FEEDLIST> db ready; setup completed");
+		if(!this.setupComplete) {
+			this.filter = "";
+			this.refreshList();
+		}
+	}
+};
+
 FeedlistAssistant.prototype.considerForNotification = function(params){
 	if(params) {
 		switch(params.type) {
@@ -313,24 +322,21 @@ FeedlistAssistant.prototype.considerForNotification = function(params){
 				break;
 			
 			case "feedlist-loaded":
-				if(this.feedListWidget) {
-					Mojo.Log.info("FEEDLIST> db ready; setup completed");
-					if(!this.setupComplete) {
-						this.filter = "";
-						this.refreshList();
-					}
+				if(this.loadHandler) {
+					this.loadHandler();
 				}
 				break;
 				
 			case "feed-update":
-				if(this.setupComplete) {
+				if(this.feedListWidget) {
 					var node = this.feedListWidget.mojo.getNodeByIndex(params.feedOrder);
 					var item = this.feedListWidget.mojo.getItemByNode(node);
-					if(item) {
-						item.spinning = params.inProgress;
+					if(item && params.inProgress) {
+						item.spinning = true;
 						var items = [];
 						items.push(item);
 						this.feedListWidget.mojo.noticeUpdatedItems(params.feedOrder, items);
+					} else {
 						this.feeds.getFeeds(this.filter, params.feedOrder, 1, this.updateItemsHandler);
 						params = undefined;
 					}
@@ -338,12 +344,10 @@ FeedlistAssistant.prototype.considerForNotification = function(params){
 				break;
 			
 			case "updatestate-changed":
-				if(this.setupComplete) {
-					if(!this.feeds.isUpdating()) {
-						this.refreshList();
-					} else {
-						this.refreshUpdateLock();
-					}
+				if(!this.feeds.isUpdating()) {
+					this.refreshList();
+				} else {
+					this.refreshUpdateLock();
 				}
 				break;
 		}

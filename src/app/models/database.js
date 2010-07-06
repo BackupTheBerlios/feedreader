@@ -48,7 +48,8 @@ var commonSQL = {
 					"  LEFT JOIN stories" +
 					"    ON (stories.fid = feeds.id) OR (feeds.feedType = ? AND stories.isStarred = 1) OR (feeds.feedType = ?) ",
 	csGetStoryIDs:	"SELECT id" +
-					"  FROM stories"
+					"  FROM stories",
+	csSetVersion:	"INSERT INTO system (version) VALUES (?)"
 };
 
 /**
@@ -58,13 +59,32 @@ var commonSQL = {
  */
 var database = Class.create({
 	db:					null,
-	nullDataHandler:	null,
-	errorHandler:		null,
 	migrateFromDepot:	false,
 	migrator:			null,
-	transactionCounter:	0,
+	openTransactions:	0,
 	ready:				true,
 	loading:			true,
+	
+	updateSqls:			[
+		{
+			version:	11,
+			sqls:		[
+				"ALTER TABLE feeds ADD COLUMN username TEXT",
+				"ALTER TABLE feeds ADD COLUMN password TEXT",
+				"ALTER TABLE feeds ADD COLUMN fullStory BOOLEAN",
+				"UPDATE feeds SET fullStory = 1"
+			]
+		}, {
+			version:	12,
+			sqls:		[
+				"CREATE TRIGGER stories_after_insert AFTER INSERT ON stories" +
+				"  BEGIN" +
+				"    DELETE FROM stories" +
+				"      WHERE NOT fid IN (SELECT id FROM feeds)" +
+				"  END"
+			]
+		}
+	],
 	
 	/** @private
 	 * 
@@ -72,22 +92,21 @@ var database = Class.create({
 	 */
 	initialize: function() {
 		// Transaction handlers.
-		this.transactionSuccessHandler = this.transactionSuccess.bind(this);
-		this.transactionFailedHandler = this.transactionFailed.bind(this);
+		this.transactionSuccess = this.transactionSuccess.bind(this);
+		this.transactionFailed = this.transactionFailed.bind(this);
 		
 		// Per-Query handlers.
-		this.nullDataHandler = this.nullData.bind(this);
-		this.errorHandler = this.error.bind(this);
+		this.nullData = this.nullData.bind(this);
+		this.error = this.error.bind(this);
+		var checkVersion = this.checkVersion.bind(this);
+		var initDB = this.initDB.bind(this);
 		
 		try {
 			this.db = openDatabase("ext:FeedReader", "", "FeedReader Database");
 			
-			var checkVersionHandler = this.checkVersion.bind(this);
-			var initDBHandler = this.initDB.bind(this);
-			
 			this.transaction(function(transaction) {
 				transaction.executeSql("SELECT MAX(version) AS version FROM system",
-									   [], checkVersionHandler, initDBHandler);
+									   [], checkVersion, initDB);
 			});
 		} catch(e) {
 			Mojo.Log.logException(e, "DB");
@@ -100,11 +119,12 @@ var database = Class.create({
 	 *
 	 * @param	fnc			{function}		function to be called with opened transaction
 	 */
-	transaction: function(fnc) {
-		this.transactionCounter++;
-		this.db.transaction(fnc,
-							this.transactionFailedHandler,
-							this.transactionSuccessHandler);
+	transaction: function(fnc, onSuccess, onFail) {
+		onSuccess = onSuccess || this.transactionSuccess;
+		onFail = onFail || this.transactionFailed;
+		
+		this.openTransactions++;
+		this.db.transaction(fnc, onFail, onSuccess);
 	},
 	
 	/** @private
@@ -115,8 +135,8 @@ var database = Class.create({
 	 */
 	transactionFailed: function(error) {
 		Mojo.Log.error("DB> Transaction failed; error code:", error.code, "; message:", error.message);
-		this.transactionCounter--;
-		this.handleLoad();
+		this.openTransactions--;
+		this.handleMigration();
 	},
 	
 	/** @private
@@ -124,26 +144,24 @@ var database = Class.create({
 	 * Event handler for successful transactions.
 	 */
 	transactionSuccess: function() {
-		this.transactionCounter--;
-		this.handleLoad();
+		this.openTransactions--;
+		this.handleMigration();
 	},
-	
+
 	/** @private
-	 * 
-	 * Used when migrating Depot database to send a success notification.
 	 */
-	handleLoad: function() {
-		if(!this.ready && (this.transactionCounter <= 0)) {
-			this.ready = true;
-			this.loading = false;
-			Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-loaded" });
-			if(this.migrator) {
+	handleMigration: function() {
+		if(this.migrator) {
+			if(this.migrator.finished && (this.openTransactions <= 0)) {
+				this.ready = true;
+				this.loading = false;
+				Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-loaded" });
 				delete this.migrator;
+				if(FeedReader.prefs.updateOnStart) {
+					FeedReader.feeds.enqueueUpdateAll();
+				}
 			}
-			if(FeedReader.prefs.updateOnStart) {
-				FeedReader.feeds.enqueueUpdateAll();
-			}
-		}
+		}		
 	},
 	
 	/** @private
@@ -152,7 +170,8 @@ var database = Class.create({
 	 */
 	dbReady: function() {
 		Mojo.Log.info("DB> Database schema ready");
-			
+		
+		this.loading = this.migrateFromDepot;
 		if(this.migrateFromDepot) {
 			// At first, check the properties cookie.
 			var props = new Mojo.Model.Cookie("comtegi-stuffAppFeedReaderProps");
@@ -178,10 +197,8 @@ var database = Class.create({
 				Mojo.Log.info("DB> No need to migrate; new installation");
 				this.loading = false;
 			}
-		} else {
-			Mojo.Log.info("DB> No migration needed");
-			this.loading = false;
 		}
+		
 		if(this.ready && !this.loading) {
 			Mojo.Controller.getAppController().sendToNotificationChain({ type: "feedlist-loaded" });
 			if(FeedReader.prefs.updateOnStart || FeedReader.feeds.updateWhenReady) {
@@ -217,8 +234,11 @@ var database = Class.create({
 								   '  showDetailSummary BOOL NOT NULL,' +
 								   '  showDetailCaption BOOL NOT NULL,' +
 								   '  sortMode INTEGER NOT NULL,' +
-								   '  allowHTML BOOL NOT NULL)',
-								   [], this.nullDataHandler, this.errorHandler);
+								   '  allowHTML BOOL NOT NULL,' +
+								   '  fullStory BOOL NOT NULL,' +
+								   '  username TEXT,' +
+								   '  password TEXT)',
+								   [], this.nullData, this.error);
 			
 			// Create the story table.
 			transaction.executeSql('CREATE TABLE stories (' +
@@ -237,10 +257,10 @@ var database = Class.create({
 								   '  isStarred BOOL NOT NULL DEFAULT 0,' +
 								   '  pubdate INT NOT NULL,' +
 								   '  flag BOOL NOT NULL DEFAULT 0)',
-								   [], this.nullDataHandler, this.errorHandler);
+								   [], this.nullData, this.error);
 			transaction.executeSql('CREATE UNIQUE INDEX idx_stories_fid_uuid' +
 								   '  ON stories (fid, uuid)',
-								   [], this.nullDataHandler, this.errorHandler);
+								   [], this.nullData, this.error);
 			
 			// The storyurls table takes up the urls.
 			transaction.executeSql('CREATE TABLE storyurls (' +
@@ -250,7 +270,7 @@ var database = Class.create({
 								   '    ON DELETE CASCADE ON UPDATE CASCADE,' +
 								   '  title TEXT,' +
 								   '  href TEXT)',
-								   [], this.nullDataHandler, this.errorHandler);
+								   [], this.nullData, this.error);
 			
 			// Create triggers.
 			transaction.executeSql("CREATE TRIGGER feeds_after_insert AFTER INSERT ON feeds" +
@@ -259,36 +279,43 @@ var database = Class.create({
 								   "      SET feedOrder = (SELECT MAX(feedOrder) + 1 FROM feeds)" +
 								   "      WHERE id = NEW.id" +
 								   "        AND feedOrder = -1;" +
-								   "  END", [], this.nullDataHandler, this.errorHandler);
+								   "  END", [], this.nullData, this.error);
 			transaction.executeSql("CREATE TRIGGER feeds_after_delete AFTER DELETE ON feeds" +
 								   "  BEGIN" +
 								   "    UPDATE feeds SET feedOrder = feedOrder - 1 WHERE feedOrder > old.feedOrder;" +
 								   "    DELETE FROM stories WHERE fid = old.id;" +
-								   "  END", [], this.nullDataHandler, this.errorHandler);
+								   "  END", [], this.nullData, this.error);
 			transaction.executeSql("CREATE TRIGGER stories_after_delete AFTER DELETE ON stories" +
 								   "  BEGIN" +
 								   "    DELETE FROM storyurls WHERE sid = old.id;" +
-								   "  END", [], this.nullDataHandler, this.errorHandler);
+								   "  END", [], this.nullData, this.error);
+			transaction.executeSql("CREATE TRIGGER stories_after_insert AFTER INSERT ON stories" +
+								   "  BEGIN" +
+								   "    DELETE FROM stories" +
+								   "      WHERE NOT fid IN (SELECT id FROM feeds)" +
+								   "  END", [], this.nullData, this.error);
 			
 			// Create the system table. It currently contains nothing but the version.
 			transaction.executeSql('CREATE TABLE system (version INTEGER)',
-								   [], this.nullDataHandler, this.errorHandler);
-			transaction.executeSql('INSERT INTO system (version) VALUES(10)',
-								   [], this.nullDataHandler, this.errorHandler);
+								   [], this.nullData, this.error);
+			transaction.executeSql('INSERT INTO system (version) VALUES(12)',
+								   [], this.nullData, this.error);
 
 			// Insert aggregated feeds with default settings.
 			transaction.executeSql('INSERT INTO feeds (title, url, feedType, feedOrder, enabled, showPicture,' +
 								   '                   showMedia, showListSummary, showListCaption,'+
-								   '                   showDetailSummary, showDetailCaption, sortMode, allowHTML)' +
-								   '  VALUES(?, "starred", ?, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1)',
+								   '                   showDetailSummary, showDetailCaption, sortMode, allowHTML,' +
+								   '                   fullStory, username, password)' +
+								   '  VALUES(?, "starred", ?, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, "", "")',
 								   ['Starred Items', feedTypes.ftStarred],
-								   this.nullDataHandler, this.errorHandler);
+								   this.nullData, this.error);
 			transaction.executeSql('INSERT INTO feeds (title, url, feedType, feedOrder, enabled, showPicture,' +
 								   '                   showMedia, showListSummary, showListCaption,'+
-								   '                   showDetailSummary, showDetailCaption, sortMode, allowHTML)' +
-								   '  VALUES(?, "allItems", ?, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1)',
+								   '                   showDetailSummary, showDetailCaption, sortMode, allowHTML,' +
+								   '                   fullStory, username, password)' +
+								   '  VALUES(?, "allItems", ?, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, "", "")',
 								   ['All Items', feedTypes.ftAllItems],
-								   this.nullDataHandler, this.errorHandler);
+								   this.nullData, this.error);
 			this.dbReady();
 		} catch(e) {
 			Mojo.Log.logException(e, "DB");
@@ -304,7 +331,29 @@ var database = Class.create({
 	 */
 	checkVersion: function(transaction, result) {
 		var version = result.rows.item(0).version;
-		Mojo.Log.info("DB> Database already exists, version is:", version);			
+		var destVer = version;
+		var sqls = [];
+		
+		Mojo.Log.info("DB> Database already exists, version is:", version);
+		
+		for(var i = 0; i < this.updateSqls.length; i++) {
+			if(this.updateSqls[i].version > destVer) {
+				sqls = sqls.concat(this.updateSqls[i].sqls);
+				destVer = this.updateSqls[i].version;
+			}
+		}
+		
+		if(destVer > version) {
+			Mojo.Log.info("DB> Updating to schema version", destVer);
+			var onSuccess = this.nullData;
+			var onFail = this.error;
+			
+			for(i = 0; i < sqls.length; i++) {
+				transaction.executeSql(sqls[i], [], onSuccess, onFail);
+			}
+			transaction.executeSql(commonSQL.csSetVersion, [destVer],
+								   onSuccess, onFail);
+		}
 		
 		this.dbReady();
 	},
@@ -338,8 +387,8 @@ var database = Class.create({
 	 * @param	onFail		{function}		function to be called on failure
 	 */
 	addOrEditFeed: function(feed, onSuccess, onFail) {
-		onSuccess = onSuccess || this.nullDataHandler;
-		onFail = onFail || this.errorHandler;
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
 		
 		var id = feed.id || null;
 		
@@ -348,14 +397,15 @@ var database = Class.create({
 			transaction.executeSql('UPDATE feeds SET title = ?, url = ?, feedType = ?, feedOrder = ?, ' +
 								   '    enabled = ?, showPicture = ?, showMedia = ?, showListSummary = ?,' +
 								   '    showListCaption = ?, showDetailSummary = ?, showDetailCaption = ?,' +
-								   '    sortMode = ?, allowHTML = ?' +
+								   '    sortMode = ?, allowHTML = ?, username = ?, password = ?, fullStory = ?' +
 								   '  WHERE id = ?',
 								   [feed.title, feed.url, feed.feedType, feed.feedOrder,
 									feed.enabled ? 1 : 0,
 									feed.showPicture ? 1 : 0, feed.showMedia ? 1 : 0,
 									feed.showListSummary ? 1 : 0, feed.showListCaption ? 1 : 0,
 									feed.showDetailSummary ? 1 : 0, feed.showDetailCaption ? 1 : 0,
-									feed.sortMode, feed.allowHTML ? 1 : 0, id],
+									feed.sortMode, feed.allowHTML ? 1 : 0, feed.username,
+									feed.password, feed.fullStory ? 1 : 0, id],
 								   onSuccess.bind(feed), onFail);
 		};
 		
@@ -372,16 +422,18 @@ var database = Class.create({
 		
 		var doInsert = function(transaction) {
 			Mojo.Log.info("DB> inserting new feed");
-			transaction.executeSql('INSERT INTO feeds (title, url, feedType, feedOrder, enabled, showPicture,' +
-								   '    showMedia, showListSummary, showListCaption,'+
-								   '    showDetailSummary, showDetailCaption, sortMode, allowHTML)' +
-								   '  VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+			transaction.executeSql('INSERT INTO feeds (title, url, feedType, feedOrder,' +
+								   '    enabled, showPicture, showMedia, showListSummary,' +
+								   '    showListCaption, showDetailSummary, showDetailCaption,' +
+								   '    sortMode, allowHTML, username, password, fullStory)' +
+								   '  VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
 								   [feed.title, feed.url, feed.feedType, -1,
 									feed.enabled ? 1 : 0,
 									feed.showPicture ? 1 : 0, feed.showMedia ? 1 : 0,
 									feed.showListSummary ? 1 : 0, feed.showListCaption ? 1 : 0,
 									feed.showDetailSummary ? 1 : 0, feed.showDetailCaption ? 1 : 0,
-									feed.sortMode, feed.allowHTML ? 1 : 0],
+									feed.sortMode, feed.allowHTML ? 1 : 0, feed.username,
+									feed.password, feed.fullStory ? 1 : 0],
 									getID, onFail);
 		};
 		
@@ -403,8 +455,8 @@ var database = Class.create({
 	 * @param	onFail		{function}		function to be called on failure
 	 */
 	setFeedType: function(feed, type, onSuccess, onFail) {
-		onSuccess = onSuccess || this.nullDataHandler;
-		onFail = onFail || this.errorHandler;
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
 		
 		this.transaction(function(transaction) {
 			transaction.executeSql("UPDATE feeds SET feedType = ? WHERE id = ?",
@@ -421,8 +473,8 @@ var database = Class.create({
 	 * @param	onFail		{function}		function to be called on failure
 	 */
 	setSortMode: function(feed, onSuccess, onFail) {
-		onSuccess = onSuccess || this.nullDataHandler;
-		onFail = onFail || this.errorHandler;
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
 		
 		this.transaction(function(transaction) {
 			transaction.executeSql("UPDATE feeds SET sortMode = ? WHERE id = ?",
@@ -439,8 +491,8 @@ var database = Class.create({
 	 * @param	onFail		{function}		function to be called on failure
 	 */
 	disableFeed: function(feed, onSuccess, onFail) {
-		onSuccess = onSuccess || this.nullDataHandler;
-		onFail = onFail || this.errorHandler;
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
 		
 		this.transaction(function(transaction) {
 			transaction.executeSql("UPDATE feeds SET feedType = ?, enabled = 0 WHERE id = ?",
@@ -456,8 +508,8 @@ var database = Class.create({
 	 * @param	onFail		{function}		function to be called on failure
 	 */
 	deleteFeed: function(feed, onSuccess, onFail) {
-		onSuccess = onSuccess || this.nullDataHandler;
-		onFail = onFail || this.errorHandler;
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
 		
 		Mojo.Log.info("DB> deleting feed", feed.id);
 		
@@ -476,8 +528,8 @@ var database = Class.create({
 	 * @param	onFail		{function}		function to be called on failure
 	 */
 	reOrderFeed: function(oldOrder, newOrder, onSuccess, onFail) {
-		onSuccess = onSuccess || this.nullDataHandler;
-		onFail = onFail || this.errorHandler;
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
 		
 		var count = 0;
 		var successWrapper = function() {
@@ -507,10 +559,13 @@ var database = Class.create({
 	 */
 	getUpdatableFeeds: function(onSuccess, onFail) {
 		Mojo.assert(onSuccess, "DB> getUpdatableFeeds needs data handler");		
-		onFail = onFail || this.errorHandler;
+		onFail = onFail || this.error;
 		
 		this.transaction(function(transaction) {
-			transaction.executeSql("SELECT id, feedOrder, url FROM feeds WHERE feedType >= ? AND enabled = 1 ORDER BY feedOrder", [feedTypes.ftUnknown],
+			transaction.executeSql("SELECT id, feedOrder, url, username, password" +
+								   "  FROM feeds" +
+								   "  WHERE feedType >= ? AND enabled = 1" +
+								   "  ORDER BY feedOrder", [feedTypes.ftUnknown],
 				function(transaction, result) {
 					var list = [];
 					for(var i = 0; i < result.rows.length; i++) {
@@ -530,7 +585,7 @@ var database = Class.create({
 	 */
 	getFeedCount: function(filter, onSuccess, onFail) {
 		Mojo.assert(onSuccess, "DB> getFeedCount needs data handler");		
-		onFail = onFail || this.errorHandler;
+		onFail = onFail || this.error;
 		
 		this.transaction(
 			function(transaction) {
@@ -554,7 +609,7 @@ var database = Class.create({
 	 */
 	getFeeds: function(filter, offset, count, onSuccess, onFail) {
 		Mojo.assert(onSuccess, "DB> getFeeds needs data handler");		
-		onFail = onFail || this.errorHandler;
+		onFail = onFail || this.error;
 		this.transaction(
 			function(transaction) {
 				transaction.executeSql(commonSQL.csGetFeedData +
@@ -581,7 +636,7 @@ var database = Class.create({
 	 */
 	getFeedIDList: function(onSuccess, onFail) {
 		Mojo.assert(onSuccess, "DB> getFeedIDList needs data handler");
-		onFail = onFail || this.errorHandler;
+		onFail = onFail || this.error;
 		
 		// This function will assemble the result set.
 		var handleResult = function(transaction, result) {
@@ -607,7 +662,7 @@ var database = Class.create({
 	 */
 	getFeed: function(id, onSuccess, onFail) {
 		Mojo.assert(onSuccess, "DB> getFeed needs data handler");
-		onFail = onFail || this.errorHandler;
+		onFail = onFail || this.error;
 		this.transaction(
 			function(transaction) {
 				transaction.executeSql(commonSQL.csGetFeedData +
@@ -631,7 +686,7 @@ var database = Class.create({
 	 */
 	getStoryCount: function(feed, filter, onSuccess, onFail) {
 		Mojo.assert(onSuccess, "DB> getStoryCount needs data handler");
-		onFail = onFail || this.errorHandler;
+		onFail = onFail || this.error;
 			
 		// This function will assemble the result set.
 		var handleResult = function(transaction, result) {
@@ -683,7 +738,7 @@ var database = Class.create({
 	 */
 	getNewStoryCount: function(onSuccess, onFail) {
 		Mojo.assert(onSuccess, "DB> getStories needs data handler");
-		onFail = onFail || this.errorHandler;
+		onFail = onFail || this.error;
 		
 		this.transaction(function(transaction) {
 			transaction.executeSql("SELECT COUNT(*) AS newCount FROM stories WHERE isNew = 1", [],
@@ -709,7 +764,7 @@ var database = Class.create({
 	 */
 	getStories: function(feed, filter, offset, limit, onSuccess, onFail) {
 		Mojo.assert(onSuccess, "DB> getStories needs data handler");
-		onFail = onFail || this.errorHandler;
+		onFail = onFail || this.error;
 		
 		// This function will assemble the result set.
 		var handleResult = function(transaction, result) {
@@ -775,7 +830,7 @@ var database = Class.create({
 	 */
 	getFeedURLList: function(feed, onSuccess, onFail) {
 		Mojo.assert(onSuccess, "DB> getFeedURLList needs data handler");
-		onFail = onFail || this.errorHandler;
+		onFail = onFail || this.error;
 		
 		// This function will assemble the result set.
 		var handleResult = function(transaction, result) {
@@ -831,7 +886,7 @@ var database = Class.create({
 	 */
 	getStoryIDList: function(feed, onSuccess, onFail) {
 		Mojo.assert(onSuccess, "DB> getStoryIDList needs data handler");
-		onFail = onFail || this.errorHandler;
+		onFail = onFail || this.error;
 		
 		// This function will assemble the result set.
 		var handleResult = function(transaction, result) {
@@ -899,7 +954,7 @@ var database = Class.create({
 	 */
 	getStory: function(id, onSuccess, onFail) {
 		Mojo.assert(onSuccess, "DB> getStory needs data handler");
-		onFail = onFail || this.errorHandler;
+		onFail = onFail || this.error;
 		
 		var urls = [];
 		var feed = null;
@@ -961,9 +1016,9 @@ var database = Class.create({
 	 * @param	onFail		{function}		function to be called on failure
 	 */
 	beginStoryUpdate: function(feed, onSuccess, onFail) {
-		onSuccess = onSuccess || this.nullDataHandler;
-		onFail = onFail || this.errorHandler;
-		var nullData = this.nullDataHandler;
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
+		var nullData = this.nullData;
 		var onNotify = this.notifyOfUpdate.bind(this, true);
 		
 		var date = new Date();
@@ -1016,8 +1071,8 @@ var database = Class.create({
 	 * @param	onFail		{function}		function to be called on failure
 	 */
 	endStoryUpdate: function(feed, successful, onSuccess, onFail) {
-		onSuccess = onSuccess || this.nullDataHandler;
-		onFail = onFail || this.errorHandler;
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
 		var onNotify = this.notifyOfUpdate.bind(this, false);
 		
 		this.transaction(function(transaction) {
@@ -1047,21 +1102,21 @@ var database = Class.create({
 	 * @param	onFail		{function}		function to be called on failure
 	 */
 	addOrEditStory: function(feed, story, onSuccess, onFail) {
-		onSuccess = onSuccess || this.nullDataHandler;
-		onFail = onFail || this.errorHandler;
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
 		
-		var nullDataHandler = this.nullDataHandler;
-		var errorHandler = this.errorHandler;
+		var nullData = this.nullData;
+		var error = this.error;
 		
 		var insertURLs = function(transaction, result) {
 			var sid = result.insertId;
 			transaction.executeSql("DELETE FROM storyurls WHERE sid = ?",
-								   [sid], nullDataHandler, errorHandler);
+								   [sid], nullData, error);
 			for(var i = 0; i < story.url.length; i++) {
 				transaction.executeSql("INSERT INTO storyurls (sid, title, href)" +
 									   "  VALUES(?, ?, ?)",
 									   [sid, story.url[i].title, story.url[i].href],
-										nullDataHandler, errorHandler);
+										nullData, error);
 			}
 			onSuccess();
 		};
@@ -1114,8 +1169,8 @@ var database = Class.create({
 	 * @param	onFail		{function}		function to be called on failure
 	 */	
 	markStarred: function(story, onSuccess, onFail) {
-		onSuccess = onSuccess || this.nullDataHandler;
-		onFail = onFail || this.errorHandler;
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
 		this.transaction(function(transaction) {
 			transaction.executeSql("UPDATE stories SET isStarred = ? WHERE id = ?",
 								   [story.isStarred ? 1 : 0, story.id], onSuccess, onFail);
@@ -1130,8 +1185,8 @@ var database = Class.create({
 	 * @param	onFail		{function}		function to be called on failure
 	 */	
 	markAllUnStarred: function(feed, onSuccess, onFail) {
-		onSuccess = onSuccess || this.nullDataHandler;
-		onFail = onFail || this.errorHandler;
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
 		
 		var sql = "UPDATE stories SET isStarred = 0";
 		if(feed.feedType >= feedTypes.ftUnknown) {
@@ -1151,8 +1206,8 @@ var database = Class.create({
 	 * @param	onFail		{function}		function to be called on failure
 	 */	
 	markStoryRead: function(story, onSuccess, onFail) {
-		onSuccess = onSuccess || this.nullDataHandler;
-		onFail = onFail || this.errorHandler;
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
 		this.transaction(function(transaction) {
 			transaction.executeSql("UPDATE stories SET isRead = 1, isNew = 0 WHERE id = ?",
 								   [story.id], onSuccess, onFail);
@@ -1168,8 +1223,8 @@ var database = Class.create({
 	 * @param	onFail		{function}		function to be called on failure
 	 */	
 	markAllRead: function(feed, state, onSuccess, onFail) {
-		onSuccess = onSuccess || this.nullDataHandler;
-		onFail = onFail || this.errorHandler;
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
 		
 		state = state ? 1 : 0;
 		

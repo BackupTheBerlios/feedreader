@@ -25,6 +25,8 @@ function PreferencesAssistant() {
 }
 
 PreferencesAssistant.prototype.setup = function() {
+	SceneControl.beginSceneSetup(this, false);
+	
 	this.controller.get("prefs-title").update($L("FeedReader Preferences"));
 	this.controller.get("prefs-general-group-title").update($L("General"));
 	this.controller.get("prefs-updating-group-title").update($L("Automatic updating"));
@@ -120,6 +122,8 @@ PreferencesAssistant.prototype.setup = function() {
 			{ label: $L("250 characters"),	value: 250}
 		]    
 	}, this.summaryLengthModel = { value : this.prefs.summaryLength });
+	
+	SceneControl.endSceneSetup(this);
 };
 
 PreferencesAssistant.prototype.cleanup = function(event) {

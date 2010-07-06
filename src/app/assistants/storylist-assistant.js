@@ -54,7 +54,7 @@ function StorylistAssistant(feeds, feed) {
 }
 
 StorylistAssistant.prototype.setup = function() {
-	FeedReader.beginSceneSetup(this, true);
+	SceneControl.beginSceneSetup(this, true);
 	
 	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feed));
 	this.controller.get("appIcon").className += " " + this.feeds.getFeedIconClass(this.feed, true, true);
@@ -133,10 +133,6 @@ StorylistAssistant.prototype.initCommandModel = function() {
 	}
 };
 
-StorylistAssistant.prototype.aboutToActivate = function(callback) {
-	FeedReader.aboutToActivate(this, callback);
-};
-
 StorylistAssistant.prototype.activate = function(event) {
 	if(this.wasActiveBefore) {
 		this.refreshList();
@@ -174,7 +170,7 @@ StorylistAssistant.prototype.listFormatter = function(attribute, property, model
 		
 		case "summary":
 			if(model.showSummary) {
-				var baseSummary = FeedReader.stripHTML(property);
+				var baseSummary = Formatting.stripHTML(property);
 				if(baseSummary.length > (parseInt(FeedReader.prefs.summaryLength, 10) + 10)) {
 					return { shortSummary: baseSummary.slice(0, parseInt(FeedReader.prefs.summaryLength, 10) - 1) + '...' };
 				} else {
@@ -219,9 +215,7 @@ StorylistAssistant.prototype.listDataHandler = function(ids) {
 
 StorylistAssistant.prototype.updateItems = function(offset, items) {
 	this.storyListWidget.mojo.noticeUpdatedItems(offset, items);
-	if(!this.setupComplete) {
-		FeedReader.endSceneSetup(this);
-	}
+	SceneControl.endSceneSetup(this);
 };
 
 StorylistAssistant.prototype.setListLength = function(count) {
@@ -230,9 +224,7 @@ StorylistAssistant.prototype.setListLength = function(count) {
 		this.storyListWidget.mojo.setCount(count);
 	}
 	this.storyListWidget.mojo.setLengthAndInvalidate(count);
-	if(!this.setupComplete && (count <= 0)) {
-		FeedReader.endSceneSetup(this);
-	}
+	SceneControl.endSceneSetup(this);
 };
 
 StorylistAssistant.prototype.feedDataHandler = function(feed) {

@@ -52,7 +52,7 @@ var spooler = new Class.create({
 	endUpdate: function() {
 		this.updateCounter--;
 		if(!this.actionRunning && (this.list.length >= 1)) {
-			FeedReader.createUpdateDashboard();
+			DashboardControl.createUpdateDashboard();
 			Mojo.Controller.getAppController().sendToNotificationChain({ type: "updatestate-changed" });
 			this.nextAction();
 		}
@@ -97,7 +97,7 @@ var spooler = new Class.create({
 			});
 			
 			if((this.updateCounter === 0) && (this.list.length == 1) && !this.actionRunning)  {
-				FeedReader.createUpdateDashboard();
+				DashboardControl.createUpdateDashboard();
 				Mojo.Controller.getAppController().sendToNotificationChain({ type: "updatestate-changed" });
 				this.nextAction();
 			}
@@ -187,7 +187,7 @@ var spooler = new Class.create({
 			} else {
 				this.actionRunning = false;
 				this.actionIdent = "";
-				FeedReader.removeUpdateDashboard();
+				DashboardControl.removeUpdateDashboard();
 				FeedReader.feeds.interactiveUpdate = false;
 				Mojo.Controller.getAppController().sendToNotificationChain({ type: "updatestate-changed" });
 				this.leaveActivity();
@@ -209,7 +209,7 @@ var spooler = new Class.create({
 	aboutToClose: function() {
 		try {
 			if(this.hasWork()) {
-				FeedReader.createUpdateDashboard(true);
+				DashboardControl.createUpdateDashboard(true);
 			}
 		} catch(e) {
 			Mojo.Log.logException(e);

@@ -119,7 +119,7 @@ var dateConverter = Class.create({
 		var intDate;
 		
 		try {
-			dateString = FeedReader.stripCDATA(dateString);
+			dateString = Formatting.stripCDATA(dateString);
 			if(!dateString) {
 				var d = new Date();
 				intDate = d.getTime();

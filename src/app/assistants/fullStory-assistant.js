@@ -68,7 +68,7 @@ function FullStoryAssistant(feeds, feed, storyID) {
 }
 
 FullStoryAssistant.prototype.setup = function() {
-	FeedReader.beginSceneSetup(this, true);
+	SceneControl.beginSceneSetup(this, true);
 	
 	// Set the default transition.
 	this.controller.setDefaultTransition(Mojo.Transition.defaultTransition);
@@ -163,7 +163,7 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 			if(this.originFeed.allowHTML) {
 				this.controller.get("story-content").update(this.story.summary);
 			} else {
-				this.controller.get("story-content").update(FeedReader.stripHTML(this.story.summary));
+				this.controller.get("story-content").update(Formatting.stripHTML(this.story.summary));
 			}
 		}
 		
@@ -256,10 +256,10 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 		if(this.ids) {
 			this.listDataHandler(this.ids);
 		}
-		FeedReader.endSceneSetup(this);
 	} catch(e) {
 		Mojo.Log.logException(e, "FULLSTORY>");
 	}
+	SceneControl.endSceneSetup(this);
 };
 
 FullStoryAssistant.prototype.listDataHandler = function(ids) {
@@ -291,10 +291,6 @@ FullStoryAssistant.prototype.feedDataHandler = function(feed) {
 		this.controller.get("new-count").update(newCount);
 		this.controller.get("unread-count").update(unReadCount);
 	}
-};
-
-FullStoryAssistant.prototype.aboutToActivate = function(callback) {
-	FeedReader.aboutToActivate(this, callback);
 };
 
 FullStoryAssistant.prototype.activate = function(event) {
