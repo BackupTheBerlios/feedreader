@@ -235,6 +235,7 @@ AddfeedAssistant.prototype.updateFeed = function() {
 	this.feed.showMedia = this.showMediaModel.value;
 	this.feed.sortMode = this.sortModeModel.value;
 	this.feed.allowHTML = this.allowHTMLModel.value;
+	this.feed.fullStory = this.fullStoryModel.value;
 	
     if(/^[a-z]{1,5}:/.test(this.feed.url) === false) {
         this.feed.url = this.feed.url.replace(/^\/{1,2}/, "");                                

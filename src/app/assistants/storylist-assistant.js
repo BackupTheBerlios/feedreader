@@ -44,6 +44,7 @@ function StorylistAssistant(feeds, feed) {
 	this.showStory = this.showStory.bindAsEventListener(this);
 	this.listDataHandler = this.listDataHandler.bind(this);
 	this.changeFeed = this.changeFeed.bind(this);
+	this.openBrowser = this.openBrowser.bind(this);
 	
 	this.setupComplete = false;	
 	this.wasActiveBefore = false;
@@ -245,10 +246,45 @@ StorylistAssistant.prototype.showStory = function(event) {
 		};	
 		this.feeds.markStarred(item);
 		this.refreshList();
-	} else {
+	} else if(event.item.fullStory) {
 		this.controller.stageController.pushScene("fullStory", this.feeds,
 												  this.feed, event.item.id);
+	} else {
+		this.feeds.getStory(event.item.id, this.listStoryURLs.bind(this, event));
 	}
+};
+
+StorylistAssistant.prototype.listStoryURLs = function(event, feed, story, urls) {
+	if(urls.length == 1) {
+		this.openBrowser(urls[0].href);
+	} else if(urls.length > 1) {
+		var subMenu = {
+			onChoose:	this.openBrowser,
+			placeNear:	event.target,
+			items: 		[]
+		};
+		
+		for(var i = 0; i < urls.length; i++) {
+			subMenu.items.push({
+				label:		urls[i].title,
+				command:	urls[i].href
+			});
+		}
+		
+		this.controller.popupSubmenu(subMenu);
+	}
+};
+
+StorylistAssistant.prototype.openBrowser = function(url) {
+	this.controller.serviceRequest("palm://com.palm.applicationManager", {
+		method: "open",
+		parameters: {
+			id: "com.palm.app.browser",
+			params: {
+				target: url
+			}
+		}
+	});
 };
 
 StorylistAssistant.prototype.sortModeTap = function(event) {

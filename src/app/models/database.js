@@ -737,7 +737,7 @@ var database = Class.create({
 	 * @param	onFail		{function}		function to be called on failure
 	 */
 	getNewStoryCount: function(onSuccess, onFail) {
-		Mojo.assert(onSuccess, "DB> getStories needs data handler");
+		Mojo.assert(onSuccess, "DB> getNewStoryCount needs data handler");
 		onFail = onFail || this.error;
 		
 		this.transaction(function(transaction) {
@@ -779,7 +779,7 @@ var database = Class.create({
 		var selectStmt = "SELECT s.id, s.title, s.summary," +
 						 "       s.pubdate, s.isRead, s.isNew, s.isStarred," +
 						 "       f.title AS feedTitle, f.showListCaption AS showCaption," +
-						 "       f.showListSummary AS showSummary" +
+						 "       f.showListSummary AS showSummary, f.fullStory" +
 						 "  FROM stories AS s" +
 						 "  INNER JOIN feeds AS f ON (f.id = s.fid)" +
 						 "  WHERE (s.title LIKE '%' || ? || '%')";		
