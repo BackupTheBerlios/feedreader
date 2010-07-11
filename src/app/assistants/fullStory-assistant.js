@@ -688,7 +688,8 @@ FullStoryAssistant.prototype.considerForNotification = function(params){
 				this.activate();
 				break;
 			
-			case "jslint-dummy":
+			case "feed-update":
+				this.feeds.getFeed(this.feed.id, this.feedDataHandler);
 				break;
 		}
 	}
