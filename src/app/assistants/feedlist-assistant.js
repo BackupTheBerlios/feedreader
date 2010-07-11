@@ -27,12 +27,17 @@ function FeedlistAssistant(feeds) {
 	this.commandModel = {};
 	this.popupItem = null;
 	
-	this.activateWindowHandler = this.activateWindow.bindAsEventListener(this);
-	this.deactivateWindowHandler = this.deactivateWindow.bindAsEventListener(this);
+	this.activateWindow = this.activateWindow.bindAsEventListener(this);
+	this.deactivateWindow = this.deactivateWindow.bindAsEventListener(this);
 	
-	this.listFindHandler = this.listFind.bind(this);
-	this.updateItemsHandler = this.updateItems.bind(this);
-	this.setListLengthHandler = this.setListLength.bind(this);
+	this.listFind = this.listFind.bind(this);
+	this.updateItems = this.updateItems.bind(this);
+	this.setListLength = this.setListLength.bind(this);
+	
+	this.showFeed = this.showFeed.bindAsEventListener(this);
+	this.addNewFeed = this.addNewFeed.bindAsEventListener(this);
+	this.deleteFeed = this.deleteFeed.bindAsEventListener(this);
+	this.reOrderFeed = this.reOrderFeed.bindAsEventListener(this);
 }
 
 FeedlistAssistant.prototype.setup = function() {
@@ -40,9 +45,9 @@ FeedlistAssistant.prototype.setup = function() {
 
 	// Setup activation/deactivation handlers.
 	this.controller.listen(this.controller.stageController.document,
-						   Mojo.Event.stageActivate, this.activateWindowHandler);
+						   Mojo.Event.stageActivate, this.activateWindow);
 	this.controller.listen(this.controller.stageController.document,
-						   Mojo.Event.stageDeactivate, this.deactivateWindowHandler);
+						   Mojo.Event.stageDeactivate, this.deactivateWindow);
 
 	// Setup the feed list.
 	this.feedListWidget = this.controller.get("feedList");
@@ -62,7 +67,7 @@ FeedlistAssistant.prototype.setup = function() {
         renderLimit: 	40,
         reorderable:	true,
 		delay:			700,
-		filterFunction: this.listFindHandler
+		filterFunction: this.listFind
     });
 	
 	this.controller.setupWidget("feedSpinner", {
@@ -70,14 +75,10 @@ FeedlistAssistant.prototype.setup = function() {
 	});
 	  
     // Setup event handlers: list selection, add, delete and reorder feed entry
-    this.controller.listen("feedList", Mojo.Event.listTap,
-        				   this.showFeed.bindAsEventListener(this));
-    this.controller.listen("feedList", Mojo.Event.listAdd,
-        				   this.addNewFeed.bindAsEventListener(this));    
-    this.controller.listen("feedList", Mojo.Event.listDelete,
-        				   this.deleteFeed.bindAsEventListener(this));
-    this.controller.listen("feedList", Mojo.Event.listReorder,
-					       this.reOrderFeed.bindAsEventListener(this));
+    this.controller.listen("feedList", Mojo.Event.listTap, this.showFeed);
+    this.controller.listen("feedList", Mojo.Event.listAdd, this.addNewFeed);
+    this.controller.listen("feedList", Mojo.Event.listDelete, this.deleteFeed);
+    this.controller.listen("feedList", Mojo.Event.listReorder, this.reOrderFeed);
 	
 	// Setup command menu.
 	this.initCommandModel();
@@ -171,7 +172,7 @@ FeedlistAssistant.prototype.cleanup = function(event) {
 };
 
 FeedlistAssistant.prototype.refreshList = function() {
-	this.feeds.getFeedCount(this.filter, this.setListLengthHandler);
+	this.feeds.getFeedCount(this.filter, this.setListLength);
 };
 
 FeedlistAssistant.prototype.refreshUpdateLock = function () {
@@ -217,9 +218,9 @@ FeedlistAssistant.prototype.listFind = function(filterString, listWidget, offset
 	if(this.feeds.isReady()) {
 		if(this.filter != filterString) {
 			this.filter = filterString;
-			this.feeds.getFeedCount(this.filter, this.setListLengthHandler);
+			this.feeds.getFeedCount(this.filter, this.setListLength);
 		} else {
-			this.feeds.getFeeds(this.filter, offset, count, this.updateItemsHandler);
+			this.feeds.getFeeds(this.filter, offset, count, this.updateItems);
 		}
 	}
 };
@@ -337,7 +338,7 @@ FeedlistAssistant.prototype.considerForNotification = function(params){
 						items.push(item);
 						this.feedListWidget.mojo.noticeUpdatedItems(params.feedOrder, items);
 					} else {
-						this.feeds.getFeeds(this.filter, params.feedOrder, 1, this.updateItemsHandler);
+						this.feeds.getFeeds(this.filter, params.feedOrder, 1, this.updateItems);
 						params = undefined;
 					}
 				}

@@ -65,6 +65,16 @@ function FullStoryAssistant(feeds, feed, storyID) {
 	this.listDataHandler = this.listDataHandler.bind(this);
 	this.feedDataHandler = this.feedDataHandler.bind(this);
 	this.storyUpdate = this.storyUpdate.bind(this);
+
+	this.mediaProgressModel = {
+		progressStart: 0,
+		progressEnd: 0,
+		value: 0,
+		minValue: 0,
+		maxValue: 1000,
+		disabled: true
+	};
+	
 }
 
 FullStoryAssistant.prototype.setup = function() {
@@ -75,27 +85,18 @@ FullStoryAssistant.prototype.setup = function() {
 	
 	// The controls should be intialized even if no audio is to be played
 	// as Mojo will log a warning otherwise.
-	this.controller.setupWidget("media-progress", this.mediaProgressAttribs = {
+	this.controller.setupWidget("media-progress",{
 		sliderProperty: "value",
 		round: true,
 		updateInterval: 0.2
-	}, this.mediaProgressModel = {
-		progressStart: 0,
-		progressEnd: 0,
-		value: 0,
-		minValue: 0,
-		maxValue: 1000,
-		disabled: true
-	});
+	}, this.mediaProgressModel);
 	this.controller.listen("media-progress", Mojo.Event.propertyChange, this.doSeek);
 	this.controller.listen("media-progress", Mojo.Event.sliderDragStart, this.startSeeking);
 	this.controller.listen("media-progress", Mojo.Event.sliderDragEnd, this.stopSeeking);
 
 	// Setup the picture spinner.
-	this.controller.setupWidget("picture-spinner",
-								{ spinnerSize: "small" },
+	this.controller.setupWidget("picture-spinner", { spinnerSize: "small" },
 								this.pictureSpinnerModel);
-	
     this.controller.listen("starIcon", Mojo.Event.tap, this.starIconTap);	
 	
 	// Handle a story click.

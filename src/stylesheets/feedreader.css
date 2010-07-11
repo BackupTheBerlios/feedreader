@@ -450,3 +450,9 @@ h3 {
 	padding: 0px 0px 0px 5px;
 	float:left;
 }
+
+.load-scrim {
+	z-index: 1000000;
+	background-color: gray;
+	opacity: 0.8;
+}

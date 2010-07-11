@@ -1,22 +1,27 @@
 <div id="storylistScene">
-	<div class="list-fade-top" x-mojo-scroll-fade="top"></div>
-	<div class="palm-page-header">
-		<div class="palm-page-header-wrapper">				
-			<div class="palm-dashboard-icon-container">
-				<div class="header-feed-unreaditem">
-					<span id="unread-count" class="feed-count"></span>
+	<div id="load-scrim" class="palm-scrim load-scrim">
+		<div x-mojo-element="Spinner" id="load-spinner"></div>
+	</div>
+	<div id="scene-main" style="display: none;">
+		<div class="list-fade-top" x-mojo-scroll-fade="top"></div>
+		<div class="palm-page-header">
+			<div class="palm-page-header-wrapper">				
+				<div class="palm-dashboard-icon-container">
+					<div class="header-feed-unreaditem">
+						<span id="unread-count" class="feed-count"></span>
+					</div>
+					<div class="header-feed-newitem">
+						<span id="new-count" class="feed-count"></span>
+					</div>
+					<div id="appIcon" class="header-icon icon"></div>
 				</div>
-				<div class="header-feed-newitem">
-					<span id="new-count" class="feed-count"></span>
-				</div>
-				<div id="appIcon" class="header-icon icon"></div>
+				<div id="feed-title" class="title"></div>
+				<div id="sortIcon" class="right"></div>
 			</div>
-			<div id="feed-title" class="title"></div>
-			<div id="sortIcon" class="right"></div>
 		</div>
+		<div class="palm-list">
+			<div id="storyList" x-mojo-element="FilterList"></div>
+		</div>
+		<div class="list-fade-bottom" x-mojo-scroll-fade="bottom"></div>
 	</div>
-	<div class="palm-list">
-		<div id="storyList" x-mojo-element="FilterList"></div>
-	</div>
-	<div class="list-fade-bottom" x-mojo-scroll-fade="bottom"></div>
 </div>	

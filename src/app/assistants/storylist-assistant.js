@@ -59,6 +59,7 @@ StorylistAssistant.prototype.setup = function() {
 	
 	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feed));
 	this.controller.get("appIcon").className += " " + this.feeds.getFeedIconClass(this.feed, true, true);
+	
 	this.feedDataHandler(this.feed);
 	this.feeds.getFeedIDList(this.listDataHandler);
 
@@ -88,8 +89,7 @@ StorylistAssistant.prototype.setup = function() {
 		filterFunction: this.listFindHandler
 	}, {});
 	
-	this.controller.listen("storyList", Mojo.Event.listTap,
-					       this.showStory);
+	this.controller.listen("storyList", Mojo.Event.listTap, this.showStory);
     this.controller.listen("sortIcon", Mojo.Event.tap, this.sortModeTap);
 
 	// Setup command menu.

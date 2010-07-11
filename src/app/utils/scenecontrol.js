@@ -20,6 +20,67 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+var ScrimController = Class.create({
+	initialize: function(scene) {
+		this.scene = scene;
+		this.scrimDiv = scene.controller.get('load-scrim');
+		this.spinner = scene.controller.get('load-spinner');
+		
+		this.shown = true;
+		this.spinnerAttribs = {	spinnerSize: "large" };
+		this.spinnerModel = { spinning: true };
+		this.hide = this.hide.bind(this);
+		
+		if(this.spinner) {
+			Mojo.Log.info("SC> Setting up loading spinner");
+			scene.controller.setupWidget("load-spinner", this.spinnerAttribs, this.spinnerModel);
+		}
+	},
+	
+	/** @private
+	 */
+	showSiblings: function(elem) {
+		var siblings = elem.siblings();
+		for(var i = 0; i < siblings.length; i++) {
+			siblings[i].show();
+		}
+	},
+	
+	show: function() {
+		if(!this.shown) {
+			if(this.scrimDiv) {
+				this.scrimDiv.show();
+			}
+			if(this.spinner) {
+				this.spinnerModel.spinning = true;
+				this.scene.controller.modelChanged(this.spinnerModel);
+			}
+		}
+		this.shown = true;
+	},
+	
+	hide: function() {
+		if(this.shown) {
+			if(this.spinner) {
+				this.spinnerModel.spinning = false;
+				this.scene.controller.modelChanged(this.spinnerModel);
+			}
+			if(this.scrimDiv) {
+				if(this.scrimDiv) {
+					this.showSiblings(this.scrimDiv);
+				}
+				this.scrimDiv.hide();
+			}
+		}
+		this.shown = false;
+	},
+	
+	hideWithDelay: function() {
+		this.hide.delay(0.5);
+	}
+	
+});
+
 var SceneControl = {
 	menuAttr: 			{},
 	menuModel: 			{
@@ -39,33 +100,18 @@ var SceneControl = {
 	 * @parsm {Boolean}		Whether the app menu shall be initialized
 	 */
 	beginSceneSetup: function(caller, initAppMenu) {
-		if(caller.setupFinished !== undefined) {
-			delete caller.setupFinished;
+		if(caller.setupFinished !== null) {
+			caller.setupFinished = null;
 		}
+		
+		caller.setupComplete = false;
+		caller.aboutToActivate = this.aboutToActivate.bind(caller);
+		caller.scrimController = new ScrimController(caller);
 		
 		if(initAppMenu) {
 			// Setup application menu.
 			caller.controller.setupWidget(Mojo.Menu.appMenu, this.menuAttr, this.menuModel);
 		}
-		caller.setupComplete = false;
-		caller.aboutToActivate = this.aboutToActivate.bind(caller);
-		
-		Mojo.Log.info("SC> Creating scrim");
-		caller.scrim = document.createElement('div');
-		caller.scrim.addClassName("palm-scrim");
-		caller.controller.topContainer().appendChild(caller.scrim);
-		
-		caller.scrim.innerHTML = Mojo.View.render({
-			object:	{
-				loading: $L('Loading data')
-			},
-			template: 'common/scrim'
-		});
-		caller.controller.setupWidget("scrimSpinner", {
-			spinnerSize: "large"
-        }, {
-			spinning: true 
-        }); 		
 	},
 	
 	/**
@@ -76,15 +122,10 @@ var SceneControl = {
 	endSceneSetup: function(caller) {
 		if(!caller.setupComplete) {
 			caller.setupComplete = true;
-			if(caller.scrim) {
-				if(caller.setupFinished !== undefined) {
-					caller.scrim.hide.bind(caller.scrim).delay(0.5);
-				} else {
-					caller.scrim.hide();					
-				}
+			if(caller.scrimController) {
+				caller.scrimController.hideWithDelay();
 			}
-			if(caller.setupFinished !== undefined) {
-				Mojo.Log.info("SC> setup finished; enabling transition");
+			if(caller.setupFinished) {
 				caller.setupFinished();
 			}
 		}
@@ -98,8 +139,9 @@ var SceneControl = {
 	aboutToActivate: function(callback) {
 		try {
 			if(this.setupComplete) {
-				Mojo.Log.info("SC> setup already completed; enabling transition");
-				this.scrim.hide();
+				if(this.scrimController) {
+					this.scrimController.hide();
+				}
 				callback();
 			} else {
 				this.setupFinished = callback;

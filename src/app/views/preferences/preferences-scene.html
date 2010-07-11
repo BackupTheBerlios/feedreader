@@ -1,94 +1,99 @@
 <div id="preferencesScene">
-	<div class="palm-page-header">
-		<div class="palm-page-header-wrapper">
-		    <div class="header-icon icon rss"></div>                        
-			<div id="prefs-title" class="title"></div>      
-		</div>
+	<div id="load-scrim" class="palm-scrim load-scrim">
+		<div x-mojo-element="Spinner" id="load-spinner"></div>
 	</div>
-	<div class="palm-group">
-		<div id="prefs-general-group-title" class="palm-group-title"></div>
-		<div class="palm-list">
-			<div class="palm-row first">
-				<div class="palm-row-wrapper">
-					<div x-mojo-element="ToggleButton" id="leftHanded"></div>
-					<div id="left-handed-title" class="title left"></div>
-				</div>
-			</div>
-			<div class="palm-row last">
-				<div class="palm-row-wrapper">
-					<div x-mojo-element="ToggleButton" id="enableRotation"></div>
-					<div id="enableRotation-title" class="title left"></div>
-				</div>
+	<div id="scene-main">
+		<div class="palm-page-header">
+			<div class="palm-page-header-wrapper">
+				<div class="header-icon icon rss"></div>                        
+				<div id="prefs-title" class="title"></div>      
 			</div>
 		</div>
-	</div>
-	<div class="palm-group">
-		<div id="prefs-updating-group-title" class="palm-group-title"></div>
-		<div class="palm-list">
-			<div class="palm-row first">
-				<div class="palm-row-wrapper">
-					<div x-mojo-element="ListSelector" id="updateInterval"></div>
+		<div class="palm-group">
+			<div id="prefs-general-group-title" class="palm-group-title"></div>
+			<div class="palm-list">
+				<div class="palm-row first">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ToggleButton" id="leftHanded"></div>
+						<div id="left-handed-title" class="title left"></div>
+					</div>
 				</div>
-			</div>
-			<div class="palm-row">
-				<div class="palm-row-wrapper">
-					<div x-mojo-element="ListSelector" id="storyKeepTime"></div>
-				</div>
-			</div>
-			<div class="palm-row">
-				<div class="palm-row-wrapper">
-					<div x-mojo-element="ToggleButton" id="updateOnStart"></div>
-					<div id="updateOnStart-title" class="title left"></div>
-				</div>
-			</div>
-			<div class="palm-row last">
-				<div class="palm-row-wrapper">
-					<div x-mojo-element="ToggleButton" id="wakingEnabled"></div>
-					<div id="wake-device-title" class="title left"></div>
+				<div class="palm-row last">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ToggleButton" id="enableRotation"></div>
+						<div id="enableRotation-title" class="title left"></div>
+					</div>
 				</div>
 			</div>
 		</div>
-	</div>
-	<div class="palm-group">
-		<div id="prefs-notify-group-title" class="palm-group-title"></div>
-		<div class="palm-list">
-			<div class="palm-row first">
-				<div class="palm-row-wrapper">
-					<div x-mojo-element="ToggleButton" id="notificationEnabled"></div>
-					<div id="notify-title" class="title left"></div>
+		<div class="palm-group">
+			<div id="prefs-updating-group-title" class="palm-group-title"></div>
+			<div class="palm-list">
+				<div class="palm-row first">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ListSelector" id="updateInterval"></div>
+					</div>
 				</div>
-			</div>
-			<div class="palm-row">
-				<div class="palm-row-wrapper">
-					<div x-mojo-element="ToggleButton" id="blinkingEnabled"></div>
-					<div id="blinking-title" class="title left"></div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ListSelector" id="storyKeepTime"></div>
+					</div>
 				</div>
-			</div>
-			<div class="palm-row last">
-				<div class="palm-row-wrapper">
-					<div x-mojo-element="ToggleButton" id="notifyWhileRunning"></div>
-					<div id="notifyRunning-title" class="title left"></div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ToggleButton" id="updateOnStart"></div>
+						<div id="updateOnStart-title" class="title left"></div>
+					</div>
+				</div>
+				<div class="palm-row last">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ToggleButton" id="wakingEnabled"></div>
+						<div id="wake-device-title" class="title left"></div>
+					</div>
 				</div>
 			</div>
 		</div>
-	</div>
-	<div class="palm-group">
-		<div id="prefs-appearance-group-title" class="palm-group-title"></div>
-		<div class="palm-list">
-			<div class="palm-row first">
-				<div class="palm-row-wrapper">
-					<div x-mojo-element="ListSelector" id="feedTitleColor"></div>
+		<div class="palm-group">
+			<div id="prefs-notify-group-title" class="palm-group-title"></div>
+			<div class="palm-list">
+				<div class="palm-row first">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ToggleButton" id="notificationEnabled"></div>
+						<div id="notify-title" class="title left"></div>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ToggleButton" id="blinkingEnabled"></div>
+						<div id="blinking-title" class="title left"></div>
+					</div>
+				</div>
+				<div class="palm-row last">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ToggleButton" id="notifyWhileRunning"></div>
+						<div id="notifyRunning-title" class="title left"></div>
+					</div>
 				</div>
 			</div>
-			<div class="palm-row">
-				<div class="palm-row-wrapper">
-					<div id="largeFont" x-mojo-element="ToggleButton"></div>
-			 		<div id="largeFont-title" class="title left"></div>
+		</div>
+		<div class="palm-group">
+			<div id="prefs-appearance-group-title" class="palm-group-title"></div>
+			<div class="palm-list">
+				<div class="palm-row first">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ListSelector" id="feedTitleColor"></div>
+					</div>
 				</div>
-			</div>
-			<div class="palm-row last">
-				<div class="palm-row-wrapper">
-					<div x-mojo-element="ListSelector" id="summaryLength"></div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+						<div id="largeFont" x-mojo-element="ToggleButton"></div>
+						<div id="largeFont-title" class="title left"></div>
+					</div>
+				</div>
+				<div class="palm-row last">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ListSelector" id="summaryLength"></div>
+					</div>
 				</div>
 			</div>
 		</div>
