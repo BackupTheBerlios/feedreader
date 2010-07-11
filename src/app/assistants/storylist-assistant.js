@@ -255,6 +255,7 @@ StorylistAssistant.prototype.showStory = function(event) {
 };
 
 StorylistAssistant.prototype.listStoryURLs = function(event, feed, story, urls) {
+	this.feeds.markStoryRead(story);
 	if(urls.length == 1) {
 		this.openBrowser(urls[0].href);
 	} else if(urls.length > 1) {
