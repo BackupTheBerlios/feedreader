@@ -22,7 +22,7 @@
 
 var prefs = Class.create({
 	updateInterval:	30,
-	storyKeepTime: 24,
+	storyKeepTime: 24 * 3,
 	updateOnStart: true,
 	notificationEnabled: true,
 	blinkingEnabled: true,
