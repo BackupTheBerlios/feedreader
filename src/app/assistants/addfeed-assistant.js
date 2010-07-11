@@ -55,6 +55,8 @@ function AddfeedAssistant(feeds, feed) {
 }
 
 AddfeedAssistant.prototype.setup = function() {
+	SceneControl.beginSceneSetup(this);
+
 	this.controller.setupWidget("feedURL",
 								{ hintText: $L("RSS/ATOM Feed"), autoFocus: true, limitResize: true,
 								  autoReplace: false, textCase: Mojo.Widget.steModeLowerCase, enterSubmits: false },
@@ -191,8 +193,6 @@ AddfeedAssistant.prototype.setup = function() {
 	this.controller.get("feedEnabled-title").update($L("Activate Feed"));
 	this.controller.get("feedURL-title").update($L("URL"));
 	this.controller.get("feedTitle-title").update($L("Title"));
-	this.controller.get("feedUser-title").update($L("Auth"));
-	this.controller.get("feedPassword-title").update($L("Pass"));
 
 	this.controller.get("feed-group-title").update($L("Basic settings"));
 	this.controller.get("auth-group-title").update($L("Authentification"));
@@ -203,6 +203,8 @@ AddfeedAssistant.prototype.setup = function() {
 	this.controller.get("showMedia-title").update($L("Show media"));
 	this.controller.get("showPicture-title").update($L("Show picture"));
 	this.controller.get("allowHTML-title").update($L("Allow HTML"));
+	
+	SceneControl.endSceneSetup(this);
 };
 
 AddfeedAssistant.prototype.cleanup = function(event) {
