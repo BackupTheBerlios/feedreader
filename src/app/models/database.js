@@ -80,7 +80,7 @@ var database = Class.create({
 				"CREATE TRIGGER stories_after_insert AFTER INSERT ON stories" +
 				"  BEGIN" +
 				"    DELETE FROM stories" +
-				"      WHERE NOT fid IN (SELECT id FROM feeds)" +
+				"      WHERE NOT fid IN (SELECT id FROM feeds);" +
 				"  END"
 			]
 		}
@@ -292,7 +292,7 @@ var database = Class.create({
 			transaction.executeSql("CREATE TRIGGER stories_after_insert AFTER INSERT ON stories" +
 								   "  BEGIN" +
 								   "    DELETE FROM stories" +
-								   "      WHERE NOT fid IN (SELECT id FROM feeds)" +
+								   "      WHERE NOT fid IN (SELECT id FROM feeds);" +
 								   "  END", [], this.nullData, this.error);
 			
 			// Create the system table. It currently contains nothing but the version.
