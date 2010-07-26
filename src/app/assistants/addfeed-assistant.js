@@ -195,7 +195,7 @@ AddfeedAssistant.prototype.setup = function() {
 	this.controller.get("feedTitle-title").update($L("Title"));
 
 	this.controller.get("feed-group-title").update($L("Basic settings"));
-	this.controller.get("auth-group-title").update($L("Authentification"));
+	this.controller.get("auth-group-title").update($L("Authentication"));
 	this.controller.get("storylist-group-title").update($L("Story list"));
 	this.controller.get("detail-group-title").update($L("Story details"));
 	
