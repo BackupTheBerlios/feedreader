@@ -27,7 +27,7 @@
 	"All items": "Všechny články",
 	"All starred items": "Označené články",
 	"Allow HTML": "Povolit HTML",
-	"Authentification": "Autentifikace",
+	"Authentication": "HTTP Autentikace",
 	"Automatic updating": "Automatická aktualizace",
 	"Auto-rotate screen": "Autorotace obrazu",
 	"Bad Request": "Bad Request - Chybný požadavek",
