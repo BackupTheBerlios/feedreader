@@ -73,8 +73,11 @@ PreferencesAssistant.prototype.setup = function() {
 			{ label: $L("5 Minutes"),		value: 5},    
 			{ label: $L("15 Minutes"),		value: 15},
 			{ label: $L("30 Minutes"),		value: 30},    
-			{ label: $L("1 Hour"),			value: 60},    
+			{ label: $L("1 Hour"),			value: 60},
+			{ label: $L("2 Hours"),			value: 120},			
 			{ label: $L("4 Hours"),			value: 240},
+			{ label: $L("8 Hours"),			value: 480},
+			{ label: $L("12 Hours"),		value: 720},			
 			{ label: $L("1 Day"),			value: 1440}
 		]    
 	}, this.updateIntervalModel = { value : this.prefs.updateInterval });
