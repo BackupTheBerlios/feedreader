@@ -185,7 +185,7 @@ var feeds = Class.create ({
 				if(feed.username && feed.password) {
 					requestOptions.requestHeaders = {
 						"Authorization":	"Basic " + Base64.encode(feed.username + ':' + feed.password)
-					}
+					};
 				}
 				var request = new Ajax.Request(feed.url, requestOptions);
 			} else {
@@ -330,12 +330,14 @@ var feeds = Class.create ({
 									} else if(url.match(/.*\.mp3/i) ||
 											  (url.match(/.*\.mp4/i) && type.match(/audio\/.*/i)) ||
 											  url.match(/.*\.wav/i) ||
+											  url.match(/.*\.m4a/i) ||
 											  url.match(/.*\.aac/i)) {
 										story.audio = url;
 									} else if(url.match(/.*\.mpg/i) ||
 											  url.match(/.*\.mpeg/i) ||
-											  (url.match(/.*\.mp4/i) && type.match(/video\/.*/i)) ||
-											   url.match(/.*\.avi/i)) {
+											  url.match(/.*\.m4v/i) ||
+											  url.match(/.*\.avi/i) ||
+											  (url.match(/.*\.mp4/i) && type.match(/video\/.*/i))) {
 										story.video = url;
 									}
 								}
