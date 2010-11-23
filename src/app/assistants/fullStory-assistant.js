@@ -574,7 +574,7 @@ FullStoryAssistant.prototype.storyTap = function(event) {
 	} else if(this.urls.length > 1) {
 		var subMenu = {
 			onChoose:  this.openURL,
-			placeNear: event.originalEvent.target,
+			placeNear: event.target,
 			items: []
 		};
 		for(var i = 0; i < this.urls.length; i++) {
@@ -604,15 +604,17 @@ FullStoryAssistant.prototype.starIconTap = function(event) {
 };
 
 FullStoryAssistant.prototype.openURL = function(url) {
-	this.controller.serviceRequest("palm://com.palm.applicationManager", {
-		method: "open",
-		parameters: {
-			id: "com.palm.app.browser",
-			params: {
-				target: url
+	if((url) && (url.length > 0)) {
+		this.controller.serviceRequest("palm://com.palm.applicationManager", {
+			method: "open",
+			parameters: {
+				id: "com.palm.app.browser",
+				params: {
+					target: url
+				}
 			}
-		}
-	});	
+		});
+	}
 };
 
 FullStoryAssistant.prototype.sendChoose = function(command) {
