@@ -109,6 +109,44 @@ var dateConverter = Class.create({
 		
 		return d.getTime();
 	},
+	
+	convertDiggDate: function(dateString) {
+		// example: Thu, 04 November 2010 09:25:28
+		var d = new Date();
+		var parts = dateString.split(" ");
+		
+		switch(parts[2]) {
+			case "January":		d.setMonth(0); break;
+			case "February": 	d.setMonth(1); break;
+			case "March": 		d.setMonth(2); break;
+			case "April": 		d.setMonth(3); break;
+			case "May": 		d.setMonth(4); break;
+			case "June": 		d.setMonth(5); break;
+			case "July": 		d.setMonth(6); break;
+			case "August": 		d.setMonth(7); break;
+			case "September": 	d.setMonth(8); break;
+			case "October": 	d.setMonth(9); break;
+			case "November": 	d.setMonth(10); break;
+			case "December": 	d.setMonth(11); break;
+		}
+		d.setDate(parseInt(parts[1], 10));
+		d.setYear(parseInt(parts[3], 10));
+		
+		parts = parts[4].split(":");
+		if(parts[0]) {
+			d.setHours(parts[0]);
+		}
+		if(parts[1]) {
+			d.setMinutes(parts[1]);
+		}
+		if(parts[2]) {
+			d.setSeconds(parts[2]);
+		} else {
+			d.setSeconds(0);
+		}
+		
+		return d.getTime();
+	},
 
 	/**
 	 * Convert a date string to an integer; supports dc:date and RFC 822 format.
@@ -117,6 +155,8 @@ var dateConverter = Class.create({
 	 */
 	dateToInt: function(dateString) {
 		var intDate;
+		
+		dateString = Formatting.stripBreaks(dateString);
 		
 		try {
 			dateString = Formatting.stripCDATA(dateString);
@@ -129,6 +169,8 @@ var dateConverter = Class.create({
 				intDate = this.convertRFC2822(dateString);
 			} else if(dateString.match(/\d{1,2}\.\d{1,2}.\d{4}/)) {
 				intDate = this.convertSimpleDate(dateString);
+			} else if(dateString.match(/[a-zA-z]{3}\,\s\d{2}\s[a-zA-Z]+\s\d{4}\s\d{2}\:\d{2}:\d{2}/)) {
+				intDate = this.convertDiggDate(dateString);
 			} else {
 				intDate = this.convertDCDate(dateString);
 			}
