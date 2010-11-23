@@ -316,7 +316,13 @@ var feeds = Class.create ({
 								if(url.match(/.*\.htm(l){0,1}/i)){
 									title = enclosures.item(enc).getAttribute("title");
 									if((title === null) || (title.length === 0)) {
-										title = "Weblink";										
+										if(rel && rel.match(/alternate/i)) {
+											title = $L("Weblink");
+										} else if (rel && rel.match(/replies/i)) {
+											title = $L("Replies");
+										} else {
+											title = $L("Weblink");
+										}
 									}
 									story.url.push({
 										title:	this.cpConverter.convert(contentType, title),
