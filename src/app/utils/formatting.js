@@ -41,6 +41,24 @@ var Formatting = {
         return text.replace(/(<([^>]+)>)/ig, "");
 	},
 	
+	/**
+	 * Strip line breaks and tabs from text.
+	 * 
+	 * @param {String} text			string containing line breaks and/or tabs
+	 * @return {String}				string without line breaks and tabs
+	 */
+	stripBreaks: function(text) {
+		text = text.replace(/\n/g, " ");
+		text = text.replace(/\r/g, " ");
+		text = text.replace(/\t/g, " ");
+		
+		text = text.replace(/^\s+/, '');
+		text = text.replace(/\s+$/, '');
+		text = text.replace(/\s+/g, ' ');
+		
+		return text;
+	},
+	
 	/** @private
 	 * 
 	 * Reformat a story's summary.
@@ -50,7 +68,7 @@ var Formatting = {
 	 */
 	reformatSummary: function(summary) {
 		try {
-			summary = this.stripCDATA(summary);
+			summary = this.stripBreaks(this.stripCDATA(summary));
 			
 			// Remove potentially dangerous tags.
 			summary = summary.replace(/<script[^>]*>(.*?)<\/script>/ig, "");
@@ -65,6 +83,7 @@ var Formatting = {
 			summary = summary.replace(/\[i\](.*)\[\/i\]/ig, '<span class="italic">$1</span>');
 			summary = summary.replace(/\[b\](.*)\[\/b\]/ig, '<span class="bold">$1</span>');
 			summary = summary.replace(/\[u\](.*)\[\/u\]/ig, '<span class="underline">$1</span>');
+			
 			summary = unescape(summary);
 		
 			return summary;
