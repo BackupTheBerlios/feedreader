@@ -289,14 +289,15 @@ var feeds = Class.create ({
 					
 					if(atomItems[i].getElementsByTagName("title") &&
 					   atomItems[i].getElementsByTagName("title").item(0)) {
-						story.title = this.cpConverter.convert(contentType, unescape(atomItems[i].getElementsByTagName("title").item(0).textContent));
+						story.title = Formatting.stripBreaks(this.cpConverter.convert(contentType, unescape(atomItems[i].getElementsByTagName("title").item(0).textContent)));
 					}
-					if (atomItems[i].getElementsByTagName("summary") &&
+
+					if(atomItems[i].getElementsByTagName("content") &&
+					   atomItems[i].getElementsByTagName("content").item(0)) {
+						story.summary = Formatting.reformatSummary(this.cpConverter.convert(contentType, atomItems[i].getElementsByTagName("content").item(0).textContent));
+					} else if (atomItems[i].getElementsByTagName("summary") &&
 						atomItems[i].getElementsByTagName("summary").item(0)) {
 						story.summary = Formatting.reformatSummary(this.cpConverter.convert(contentType, atomItems[i].getElementsByTagName("summary").item(0).textContent));
-					} else if(atomItems[i].getElementsByTagName("content") &&
-							  atomItems[i].getElementsByTagName("content").item(0)) {
-						story.summary = Formatting.reformatSummary(this.cpConverter.convert(contentType, atomItems[i].getElementsByTagName("content").item(0).textContent));
 					}
 					
 					// Analyse the enclosures.
@@ -315,7 +316,7 @@ var feeds = Class.create ({
 								if(url.match(/.*\.htm(l){0,1}/i)){
 									title = enclosures.item(enc).getAttribute("title");
 									if((title === null) || (title.length === 0)) {
-										title = "Weblink";
+										title = "Weblink";										
 									}
 									story.url.push({
 										title:	this.cpConverter.convert(contentType, title),
@@ -354,9 +355,9 @@ var feeds = Class.create ({
 					// Set the unique id.
 					if (atomItems[i].getElementsByTagName("id") &&
 						atomItems[i].getElementsByTagName("id").item(0)) {
-						story.uuid = atomItems[i].getElementsByTagName("id").item(0).textContent;
+						story.uuid = Formatting.stripBreaks(atomItems[i].getElementsByTagName("id").item(0).textContent);
 					} else {
-						story.uuid = story.url;
+						story.uuid = Formatting.stripBreaks(story.title);
 					}
 					
 					this.db.addOrEditStory(feed, story);
@@ -400,7 +401,7 @@ var feeds = Class.create ({
 					
 					if(rssItems[i].getElementsByTagName("title") &&
 					   rssItems[i].getElementsByTagName("title").item(0)) {
-						story.title = this.cpConverter.convert(contentType, unescape(rssItems[i].getElementsByTagName("title").item(0).textContent));
+						story.title = Formatting.stripBreaks(this.cpConverter.convert(contentType, unescape(rssItems[i].getElementsByTagName("title").item(0).textContent)));
 					}
 					if(rssItems[i].getElementsByTagName("description") &&
 					   rssItems[i].getElementsByTagName("description").item(0)) {
@@ -410,7 +411,7 @@ var feeds = Class.create ({
 					   rssItems[i].getElementsByTagName("link").item(0)) {
 						story.url.push({
 							title:	"Weblink",
-							href:	rssItems[i].getElementsByTagName("link").item(0).textContent
+							href:	Formatting.stripBreaks(rssItems[i].getElementsByTagName("link").item(0).textContent)
 						});
 					}
 					
@@ -453,14 +454,16 @@ var feeds = Class.create ({
 					} else if (rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date") &&
 							   rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0)) {
 						story.pubdate = this.dateConverter.dateToInt(rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0).textContent);
+					} else {
+						Mojo.Log.info("FEEDS> no pubdate given")
 					}
 					
 					// Set the unique id.
 					if(rssItems[i].getElementsByTagName("guid") &&
 					   rssItems[i].getElementsByTagName("guid").item(0)) {
-						story.uuid = rssItems[i].getElementsByTagName("guid").item(0).textContent;
+						story.uuid = Formatting.stripBreaks(rssItems[i].getElementsByTagName("guid").item(0).textContent);
 					} else {
-						story.uuid = story.title;
+						story.uuid = Formatting.stripBreaks(story.title);
 					}
 					
 					this.db.addOrEditStory(feed, story);
