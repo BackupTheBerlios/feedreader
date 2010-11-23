@@ -25,10 +25,24 @@ Contributors
 ============
  * Milan Roubal <roubal@keyserver.cz>
  * Yannick LE NY
- * Daniel Razny <daniel.razny@hksinformatik.de>
 
 Changelog
 =========
+
+Version 2.0.3 (Maintenance Release)
+-----------------------------------
+ * added another date/time format
+ * improved "pubdate" handling
+ * improved multiple link handling
+ * improved ATOM support
+
+Version 2.0.2 (bug fix)
+-----------------------
+ * fixed problem in french locale
+
+Version 2.0.1 (bug fix)
+-----------------------
+ * fixed a localization problem
 
 Version 2.0.0 (feature release)
 -------------------------------
