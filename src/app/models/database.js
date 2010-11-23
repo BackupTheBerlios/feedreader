@@ -1142,7 +1142,8 @@ var database = Class.create({
 												   "  WHERE id = ?",
 												   [story.title, story.summary,
 													story.picture, story.audio,
-													story.video, story.pubdate,
+													story.video,
+													story.pubdate ? story.pubdate : 0,
 													sid],
 												   onSuccess, onFail);
 							insertURLs(transaction, { insertId: sid });
@@ -1153,7 +1154,9 @@ var database = Class.create({
 												   "  (fid, uuid, title, summary, picture, audio, video, pubdate, isRead, isNew, isStarred, flag)" +
 												   "  VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 0, 0)",
 												   [feed.id, story.uuid, story.title, story.summary, story.picture,
-													story.audio, story.video, story.pubdate, isNew ? 1 : 0],
+													story.audio, story.video,
+													story.pubdate ? story.pubdate : 0,
+													isNew ? 1 : 0],
 												   insertURLs, onFail);
 						}
 					},
