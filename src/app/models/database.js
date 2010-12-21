@@ -431,6 +431,57 @@ var database = Class.create({
 	},
 	
 	/**
+	 * Delete a category.
+	 *
+	 * @param	category	{object}		category to delete
+	 * @param	onSuccess	{function}		function to be called on success
+	 * @param	onFail		{function}		function to be called on failure
+	 */
+	deleteCategory: function(category, onSuccess, onFail) {
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
+		
+		Mojo.Log.info("DB> deleting category", category.id);
+		
+		this.transaction(function(transaction) {
+			transaction.executeSql("DELETE FROM categories WHERE id = ?",
+				[category.id], onSuccess, onFail);
+		});
+	},
+	
+	/**
+	 * Change the order of a category.
+	 *
+	 * @param	oldOrder	{int}			old order of the category
+	 * @param	newOrder	{int}			new order of the category
+	 * @param	onSuccess	{function}		function to be called on success
+	 * @param	onFail		{function}		function to be called on failure
+	 */
+	reOrderCategory: function(oldOrder, newOrder, onSuccess, onFail) {
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
+		
+		var count = 0;
+		var successWrapper = function() {
+			if(++count > 3) {
+				Mojo.Log.info("DB> category order successfully changed from", oldOrder, "to", newOrder);
+				onSuccess();
+			}
+		};
+		
+		this.transaction(function(transaction) {
+			transaction.executeSql("UPDATE categories SET catOrder = -1 WHERE catOrder = ?",
+								   [oldOrder], successWrapper, onFail);
+			transaction.executeSql("UPDATE categories SET catOrder = catOrder - 1 WHERE catOrder > ?",
+								   [oldOrder], successWrapper, onFail);
+			transaction.executeSql("UPDATE categories SET catOrder = catOrder + 1 WHERE catOrder >= ?",
+								   [newOrder], successWrapper, onFail);
+			transaction.executeSql("UPDATE categories SET catOrder = ? WHERE catOrder = -1",
+								   [newOrder], successWrapper, onFail);
+		});
+	},
+
+	/**
 	 * Add a feed or edit a feed's properties.
 	 *
 	 * @param	feed		{Object}		feed object
