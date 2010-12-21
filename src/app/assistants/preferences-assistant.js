@@ -32,6 +32,7 @@ PreferencesAssistant.prototype.setup = function() {
 	this.controller.get("prefs-updating-group-title").update($L("Automatic updating"));
 	this.controller.get("prefs-notify-group-title").update($L("Notifications"));
 	this.controller.get("prefs-appearance-group-title").update($L("Summary appearance"));
+	this.controller.get("prefs-ril-group-title").update($L("Read it Later"));
 	
 	this.controller.get("notify-title").update($L("Show notification"));
 	this.controller.get("blinking-title").update($L("Blink on new stories"));
@@ -126,6 +127,17 @@ PreferencesAssistant.prototype.setup = function() {
 		]    
 	}, this.summaryLengthModel = { value : this.prefs.summaryLength });
 	
+	this.controller.setupWidget("rilUser",
+								{ hintText: $L("Username"), limitResize: true, autoReplace: true,
+								  textCase: Mojo.Widget.steModeLowerCase, enterSubmits: false },
+								this.rilUserModel = { value: this.prefs.rilUser });
+	this.controller.setupWidget("rilPassword",
+								{ hintText: $L("Password"), limitResize: true,
+								  textCase: Mojo.Widget.steModeLowerCase, enterSubmits: false },
+								this.rilPasswordModel = { value: this.prefs.rilPassword });
+	
+	this.controller.setInitialFocusedElement(null);
+	
 	SceneControl.endSceneSetup(this);
 };
 
@@ -142,6 +154,8 @@ PreferencesAssistant.prototype.cleanup = function(event) {
 	this.prefs.leftHanded = this.leftHandedModel.value;
 	this.prefs.enableRotation = this.enableRotationModel.value;
 	this.prefs.storyKeepTime = this.storyKeepTimeModel.value;
+	this.prefs.rilUser = this.rilUserModel.value;
+	this.prefs.rilPassword = this.rilPasswordModel.value;
 	
 	this.prefs.save();
 	

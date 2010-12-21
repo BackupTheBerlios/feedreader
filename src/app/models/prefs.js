@@ -21,19 +21,25 @@
  */
 
 var prefs = Class.create({
-	updateInterval:	30,
-	storyKeepTime: 24 * 3,
-	updateOnStart: true,
-	notificationEnabled: true,
-	blinkingEnabled: true,
-	notifyWhileRunning: true,
-	wakingEnabled: false,
-	titleColor: "red",
-	summaryLength: 120,
-	largeFont: false,
-	showChanges: false,
-	leftHanded: true,
-	enableRotation: true,
+	updateInterval:			30,
+	storyKeepTime:			24 * 3,
+	updateOnStart:			true,
+	notificationEnabled:	true,
+	blinkingEnabled:		true,
+	notifyWhileRunning:		true,
+	wakingEnabled:			false,
+	titleColor:				"red",
+	summaryLength: 			120,
+	largeFont: 				false,
+	showChanges: 			false,
+	leftHanded: 			true,
+	enableRotation: 		true,
+	
+	rilUser: 				"",	// Read it Later
+	rilPassword:			"",
+	
+	gReaderUser:			"",	// Google Reader
+	gReaderPassword:		"",
 	
 	timer: {},
 	
@@ -72,6 +78,11 @@ var prefs = Class.create({
 				this.storyKeepTime = settings.storyKeepTime;
 			}
 			
+			this.rilUser = settings.rilUser || "";
+			this.rilPassword = settings.rilPassword || "";
+			this.gReaderUser = settings.gReaderUser || "";
+			this.gReaderPassword = settings.gReaderPassword || "";
+			
 			if(settings.version < FeedReader.versionInt) {
 				this.showChanges = true;
 				this.save();
@@ -93,7 +104,11 @@ var prefs = Class.create({
 			largeFont:				this.largeFont,
 			leftHanded:				this.leftHanded,
 			enableRotation:			this.enableRotation,
-			storyKeepTime:			this.storyKeepTime
+			storyKeepTime:			this.storyKeepTime,
+			rilUser:				this.rilUser,
+			rilPassword:			this.rilPassword,
+			gReaderUser:			this.gReaderUser,
+			gReaderPassword:		this.gReaderPassword
 		});
 		this.setTimer();
 	},
