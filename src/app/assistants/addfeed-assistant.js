@@ -68,7 +68,7 @@ AddfeedAssistant.prototype.setup = function() {
 
 	this.controller.setupWidget("feedUser",
 								{ hintText: $L("Username"), limitResize: true, autoReplace: true,
-								  textCase: Mojo.Widget.steModeTitleCase, enterSubmits: false },
+								  textCase: Mojo.Widget.steModeLowerCase, enterSubmits: false },
 								this.userModel = { value: this.feed.username });
 	this.controller.setupWidget("feedPassword",
 								{ hintText: $L("Password"), limitResize: true,
