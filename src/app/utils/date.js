@@ -147,6 +147,44 @@ var dateConverter = Class.create({
 		
 		return d.getTime();
 	},
+	
+	convertSimpleDate2: function(dateString) {
+		// example: 26 Nov 2010 02:30:00 +0100
+		var d = new Date();
+		var parts = dateString.split(" ");
+		
+		switch(parts[1]) {
+			case "Jan":		d.setMonth(0); break;
+			case "Feb": 	d.setMonth(1); break;
+			case "Mar":		d.setMonth(2); break;
+			case "Apr":		d.setMonth(3); break;
+			case "May":		d.setMonth(4); break;
+			case "Jun":		d.setMonth(5); break;
+			case "Jul":		d.setMonth(6); break;
+			case "Aug":		d.setMonth(7); break;
+			case "Sep": 	d.setMonth(8); break;
+			case "Oct": 	d.setMonth(9); break;
+			case "Nov": 	d.setMonth(10); break;
+			case "Dec": 	d.setMonth(11); break;
+		}
+		d.setDate(parseInt(parts[0], 10));
+		d.setYear(parseInt(parts[2], 10));
+		
+		parts = parts[3].split(":");
+		if(parts[0]) {
+			d.setHours(parts[0]);
+		}
+		if(parts[1]) {
+			d.setMinutes(parts[1]);
+		}
+		if(parts[2]) {
+			d.setSeconds(parts[2]);
+		} else {
+			d.setSeconds(0);
+		}
+		
+		return d.getTime();
+	},
 
 	/**
 	 * Convert a date string to an integer; supports dc:date and RFC 822 format.
@@ -164,14 +202,22 @@ var dateConverter = Class.create({
 				var d = new Date();
 				intDate = d.getTime();
 			} else if(dateString.match(/\D{3},\s\d{1,2}\s\D{3}\s\d{2,4}\s\d{1,2}:\d{1,2}:\d*/)) {
+				Mojo.Log.info("DATE> RFC822", dateString);
 				intDate = this.convertRFC822(dateString);
 			} else if(dateString.match(/\D{3}\s\D{3}\s\d{1,2}\s\d{2}:\d{2}(:\d{2}){0,1}\s[a-zA-Z\+\-0-9]{1,5}\s\d{3,4}/)) {
+				Mojo.Log.info("DATE> RFC2822", dateString);
 				intDate = this.convertRFC2822(dateString);
 			} else if(dateString.match(/\d{1,2}\.\d{1,2}.\d{4}/)) {
+				Mojo.Log.info("DATE> SIMPLEDATE", dateString);
 				intDate = this.convertSimpleDate(dateString);
 			} else if(dateString.match(/[a-zA-z]{3}\,\s\d{2}\s[a-zA-Z]+\s\d{4}\s\d{2}\:\d{2}:\d{2}/)) {
+				Mojo.Log.info("DATE> DIGGDATE", dateString);
 				intDate = this.convertDiggDate(dateString);
+			} else if(dateString.match(/\d{2}\s\D{3}\s\d{4}\s\d{2}:\d{2}:\d{2}.*/)) {
+				Mojo.Log.info("DATE> SIMPLEDATE2", dateString);
+				intDate = this.convertSimpleDate2(dateString);
 			} else {
+				Mojo.Log.info("DATE> DCDATE", dateString);
 				intDate = this.convertDCDate(dateString);
 			}
 		} catch(e) {
