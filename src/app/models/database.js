@@ -83,6 +83,31 @@ var database = Class.create({
 				"      WHERE NOT fid IN (SELECT id FROM feeds);" +
 				"  END"
 			]
+		}, {
+			version:	13,
+			sqls:		[
+				"CREATE TABLE categories (" +
+				"  id INTEGER PRIMARY KEY," +
+				"  catOrder INTEGER NOT NULL," +
+				"  title TEXT)",
+				'INSERT INTO categories (id, title, catOrder) VALUES(0, "Uncategorized", 1)',
+				'INSERT INTO categories (id, title, catOrder) VALUES(1, "Aggregations", 0)',
+				"CREATE TRIGGER categories_after_insert AFTER INSERT ON categories" +
+				"  BEGIN" +
+				"    UPDATE categories" +
+				"      SET catOrder = (SELECT MAX(catOrder) + 1 FROM categories)" +
+				"      WHERE id = NEW.id" +
+				"        AND catOrder = -1;" +
+				"  END",
+				"CREATE TRIGGER cat_after_delete AFTER DELETE ON categories" +
+				"  BEGIN" +
+				"    UPDATE categories SET catOrder = catOrder - 1 WHERE catOrder > old.catOrder;" +
+				"    UPDATE feeds SET category = 0 WHERE category = old.id;" +
+				"  END",
+				"ALTER TABLE FEEDS ADD COLUMN category INT NOT NULL DEFAULT 0",
+				"UPDATE feeds SET category = 0 WHERE feedType > -2",
+				"UPDATE feeds SET category = 1 WHERE feedType <= -2"
+			]
 		}
 	],
 	
@@ -219,6 +244,13 @@ var database = Class.create({
 			this.migrateFromDepot = true;
 			Mojo.Log.info("DB> initializing database");
 			
+			// Create the categories table.
+			transaction.executeSql('CREATE TABLE categories (' +
+								   '  id INTEGER PRIMARY KEY,' +
+								   '  catOrder INTEGER NOT NULL,' +
+								   '  title TEXT)',
+								   [], this.nullData, this.error);
+			
 			// Create the feed table.
 			transaction.executeSql('CREATE TABLE feeds (' +
 								   '  id INTEGER PRIMARY KEY,' +
@@ -237,7 +269,8 @@ var database = Class.create({
 								   '  allowHTML BOOL NOT NULL,' +
 								   '  fullStory BOOL NOT NULL,' +
 								   '  username TEXT,' +
-								   '  password TEXT)',
+								   '  password TEXT,' +
+								   '  category INT NOT NULL DEFAULT 0)' +
 								   [], this.nullData, this.error);
 			
 			// Create the story table.
@@ -273,6 +306,18 @@ var database = Class.create({
 								   [], this.nullData, this.error);
 			
 			// Create triggers.
+			transaction.executeSql("CREATE TRIGGER categories_after_insert AFTER INSERT ON categories" +
+								   "  BEGIN" +
+								   "    UPDATE categories" +
+								   "      SET catOrder = (SELECT MAX(catOrder) + 1 FROM categories)" +
+								   "      WHERE id = NEW.id" +
+								   "        AND catOrder = -1;" +
+								   "  END", [], this.nullData, this.error);
+			transaction.executeSql("CREATE TRIGGER cat_after_delete AFTER DELETE ON categories" +
+								   "  BEGIN" +
+								   "    UPDATE categories SET catOrder = catOrder - 1 WHERE catOrder > old.catOrder;" +
+								   "    UPDATE feeds SET category = 0 WHERE category = old.id;" +
+								   "  END", [], this.nullData, this.error);
 			transaction.executeSql("CREATE TRIGGER feeds_after_insert AFTER INSERT ON feeds" +
 								   "  BEGIN" +
 								   "    UPDATE feeds" +
@@ -298,22 +343,28 @@ var database = Class.create({
 			// Create the system table. It currently contains nothing but the version.
 			transaction.executeSql('CREATE TABLE system (version INTEGER)',
 								   [], this.nullData, this.error);
-			transaction.executeSql('INSERT INTO system (version) VALUES(12)',
+			transaction.executeSql('INSERT INTO system (version) VALUES(13)',
 								   [], this.nullData, this.error);
-
+			
+			// Insert default categories.
+			transaction.executeSql('INSERT INTO categories (id, title, catOrder) VALUES(0, "Uncategorized", 1)',
+								   [], this.nullData, this.error);
+			transaction.executeSql('INSERT INTO categories (id, title, catOrder) VALUES(1, "Aggregations", 0)',
+								   [], this.nullData, this.error);			
+			
 			// Insert aggregated feeds with default settings.
 			transaction.executeSql('INSERT INTO feeds (title, url, feedType, feedOrder, enabled, showPicture,' +
 								   '                   showMedia, showListSummary, showListCaption,'+
 								   '                   showDetailSummary, showDetailCaption, sortMode, allowHTML,' +
-								   '                   fullStory, username, password)' +
-								   '  VALUES(?, "starred", ?, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, "", "")',
+								   '                   fullStory, username, password, category)' +
+								   '  VALUES(?, "starred", ?, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, "", "", 1)',
 								   ['Starred Items', feedTypes.ftStarred],
 								   this.nullData, this.error);
 			transaction.executeSql('INSERT INTO feeds (title, url, feedType, feedOrder, enabled, showPicture,' +
 								   '                   showMedia, showListSummary, showListCaption,'+
 								   '                   showDetailSummary, showDetailCaption, sortMode, allowHTML,' +
-								   '                   fullStory, username, password)' +
-								   '  VALUES(?, "allItems", ?, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, "", "")',
+								   '                   fullStory, username, password, category)' +
+								   '  VALUES(?, "allItems", ?, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, "", "", 1)',
 								   ['All Items', feedTypes.ftAllItems],
 								   this.nullData, this.error);
 			this.dbReady();
