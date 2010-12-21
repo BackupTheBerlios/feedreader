@@ -1,6 +1,6 @@
 {
 	"id": "com.tegi-stuff.app.feedreader",
-	"version": "2.0.3",
+	"version": "2.1.0",
 	"type": "web",
 	"vendor": "Timo Tegtmeier",
 	"vendorurl": "http://www.tegi-stuff.de",
@@ -14,7 +14,7 @@
     "noWindow" : "true",
     "noDeprecatedStyles": "true",
     "theme": "light",
-	"copyright": "&copy; 2009, 2010 Timo Tegtmeier",
+	"copyright": "&copy; 2009, 2010, 2011 Timo Tegtmeier",
 	"support": {
 		"email": {
 			"address": "general@tegi-stuff.de",

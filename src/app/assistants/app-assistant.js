@@ -27,9 +27,10 @@
 FeedReader = {
 	appName:			"FeedReader",
 	appAuthor:			"Timo Tegtmeier",
-	versionString:		"2.0.3",
+	versionString:		"2.1.0",
 	versionInt:			20,
-	copyrightYears:		"2009, 2010",
+	copyrightYears:		"2009, 2010, 2011",
+	RILAPIKey:			"5f1A6m56d6649k41a0p5d3dXg8T0w47f",
 
 	mainStageName: 		"FeedReaderStage",
 	dashboardStageName:	"FeedReaderDashboard",

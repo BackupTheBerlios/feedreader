@@ -29,7 +29,12 @@ Contributors
 Changelog
 =========
 
-Version 2.0.3 (Maintenance Release)
+Version 2.1.0 (feature release)
+-------------------------------
+ * added support for Read it Later
+ * improved compatibility
+
+Version 2.0.3 (maintenance release)
 -----------------------------------
  * added another date/time format
  * improved "pubdate" handling
