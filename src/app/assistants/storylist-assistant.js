@@ -147,6 +147,8 @@ StorylistAssistant.prototype.activate = function(event) {
 };
 
 StorylistAssistant.prototype.cleanup = function(event) {
+	this.controller.stopListening("storyList", Mojo.Event.listTap, this.showStory);
+    this.controller.stopListening("sortIcon", Mojo.Event.tap, this.sortModeTap);
 };
 
 StorylistAssistant.prototype.refreshList = function() {

@@ -168,6 +168,16 @@ FeedlistAssistant.prototype.deactivateWindow = function(event) {
 
 FeedlistAssistant.prototype.cleanup = function(event) {
 	Mojo.Log.info("FEEDLIST> About to close app");
+
+	this.controller.stopListening(this.controller.stageController.document,
+								  Mojo.Event.stageActivate, this.activateWindow);
+	this.controller.stopListening(this.controller.stageController.document,
+								  Mojo.Event.stageDeactivate, this.deactivateWindow);
+    this.controller.stopListening("feedList", Mojo.Event.listTap, this.showFeed);
+    this.controller.stopListening("feedList", Mojo.Event.listAdd, this.addNewFeed);
+    this.controller.stopListening("feedList", Mojo.Event.listDelete, this.deleteFeed);
+    this.controller.stopListening("feedList", Mojo.Event.listReorder, this.reOrderFeed);
+
 	this.feeds.spooler.aboutToClose();
 };
 
