@@ -461,7 +461,7 @@ var feeds = Class.create ({
 							   rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0)) {
 						story.pubdate = this.dateConverter.dateToInt(rssItems[i].getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "date").item(0).textContent);
 					} else {
-						Mojo.Log.info("FEEDS> no pubdate given")
+						Mojo.Log.info("FEEDS> no pubdate given");
 					}
 					
 					// Set the unique id.
