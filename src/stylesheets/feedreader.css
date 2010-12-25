@@ -195,10 +195,12 @@ img {
 }
 
 .list-info-icon {
+	margin-right: -10px;
     background: url(../images/lists/info-icon.png) center center no-repeat;
 }
 
 .list-star-icon {
+	margin-right: -10px;
     background: url(../images/lists/star-icon.png) center center no-repeat;
 }
 
