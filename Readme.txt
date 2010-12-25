@@ -1,5 +1,5 @@
 FeedReader - A RSS Feed Aggregator for Palm WebOS
-Copyright (C) 2009, 2010 Timo Tegtmeier
+Copyright (C) 2009, 2010, 2011 Timo Tegtmeier
 
 The icons icon-play.png, icon-pause.png, web-icon.png, email-icon.png are Copyright Palm, Inc.
 The script Math.uuid.js is Copyright 2009 Robert Kieffer.
@@ -33,6 +33,7 @@ Version 2.1.0 (feature release)
 -------------------------------
  * added support for Read it Later
  * improved compatibility
+ * improved icons
 
 Version 2.0.3 (maintenance release)
 -----------------------------------
