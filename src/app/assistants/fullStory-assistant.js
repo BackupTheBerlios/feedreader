@@ -330,6 +330,12 @@ FullStoryAssistant.prototype.cleanup = function(event) {
 	if(!this.story.isRead) {
 		this.feeds.markStoryRead(this.story);
 	}
+	
+	this.controller.stopListening("media-progress", Mojo.Event.propertyChange, this.doSeek);
+	this.controller.stopListening("media-progress", Mojo.Event.sliderDragStart, this.startSeeking);
+	this.controller.stopListening("media-progress", Mojo.Event.sliderDragEnd, this.stopSeeking);
+    this.controller.stopListening("starIcon", Mojo.Event.tap, this.starIconTap);	
+    this.controller.stopListening("followLink", Mojo.Event.tap, this.storyTap);
 };
 
 FullStoryAssistant.prototype.refreshAll = function() {

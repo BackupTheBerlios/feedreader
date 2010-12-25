@@ -17,4 +17,5 @@ ChangelogAssistant.prototype.deactivate = function(event) {
 };
 
 ChangelogAssistant.prototype.cleanup = function(event) {
+	this.controller.stopListening("okButton", Mojo.Event.tap, this.widget.mojo.close);
 };

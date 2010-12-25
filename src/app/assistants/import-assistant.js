@@ -49,13 +49,13 @@ function ImportAssistant(feeds) {
 	
 	this.inHeader = false;
 	
-	this.searchForFeedsHandler = this.searchForFeeds.bind(this);
-	this.getConnStatusSuccessHandler = this.getConnStatusSuccess.bind(this);
-	this.getConnStatusFailedHandler = this.getConnStatusFailed.bind(this);
-	this.ajaxRequestSuccessHandler = this.ajaxRequestSuccess.bind(this);
-	this.ajaxRequestFailedHandler = this.ajaxRequestFailed.bind(this);
+	this.getConnStatusSuccess = this.getConnStatusSuccess.bind(this);
+	this.getConnStatusFailed = this.getConnStatusFailed.bind(this);
+	this.ajaxRequestSuccess = this.ajaxRequestSuccess.bind(this);
+	this.ajaxRequestFailed = this.ajaxRequestFailed.bind(this);
 	
-	this.addFeedHandler = this.addFeed.bindAsEventListener(this);
+	this.addFeed = this.addFeed.bindAsEventListener(this);
+	this.searchForFeeds = this.searchForFeeds.bindAsEventListener(this);
 }
 
 ImportAssistant.prototype.setup = function() {
@@ -86,7 +86,7 @@ ImportAssistant.prototype.setup = function() {
 									label: $L("Search for feeds"),
 									disabled: false
 								});
-	this.controller.listen("searchButton", Mojo.Event.tap, this.searchForFeeds.bindAsEventListener(this));
+	this.controller.listen("searchButton", Mojo.Event.tap, this.searchForFeeds);
 	
 	this.controller.setupWidget("importList", {
         itemTemplate:	"import/importRowTemplate", 
@@ -99,7 +99,7 @@ ImportAssistant.prototype.setup = function() {
 		items: this.feedList
 	});
 	
-    this.controller.listen("importList", Mojo.Event.listTap, this.addFeedHandler);	
+    this.controller.listen("importList", Mojo.Event.listTap, this.addFeed);	
 };
 
 ImportAssistant.prototype.activate = function(event) {
@@ -109,6 +109,8 @@ ImportAssistant.prototype.deactivate = function(event) {
 };
 
 ImportAssistant.prototype.cleanup = function(event) {
+	this.controller.stopListening("searchButton", Mojo.Event.tap, this.searchForFeeds);
+    this.controller.stopListening("importList", Mojo.Event.listTap, this.addFeed);	
 };
 
 ImportAssistant.prototype.showScrim = function(visible) {
@@ -135,8 +137,8 @@ ImportAssistant.prototype.searchForFeeds = function(event) {
 	this.connStatus = new Mojo.Service.Request('palm://com.palm.connectionmanager', {
 		method: 'getstatus',
 		parameters: {},
-		onSuccess: this.getConnStatusSuccessHandler,
-		onFailure: this.getConnStatusFailedHandler
+		onSuccess: this.getConnStatusSuccess,
+		onFailure: this.getConnStatusFailed
 	});		
 };
 
@@ -147,8 +149,8 @@ ImportAssistant.prototype.getConnStatusSuccess = function(result) {
 				method: "get",
 				evalJS: "false",
 				evalJSON: "false",
-				onSuccess: this.ajaxRequestSuccessHandler,
-				onFailure: this.ajaxRequestFailedHandler});
+				onSuccess: this.ajaxRequestSuccess,
+				onFailure: this.ajaxRequestFailed});
 	} else {
 		this.controller.get("conn-status").update($L("No internet connection."));
 		this.showScrim(false);
