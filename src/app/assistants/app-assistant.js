@@ -39,6 +39,7 @@ FeedReader = {
 	
 	feeds:				null,
 	prefs: 				null,
+	ril:				null,
 	mediaExtensionLib:	null,
 	
 	controller:			{},
@@ -133,6 +134,7 @@ FeedReader = {
  */
 function AppAssistant (appController) {
 	FeedReader.prefs = new prefs();
+	FeedReader.ril = new rilSupport(FeedReader.prefs);
 	FeedReader.prefs.load();
 	FeedReader.feeds = new feeds();
 }

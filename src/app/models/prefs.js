@@ -85,12 +85,13 @@ var prefs = Class.create({
 			
 			if(settings.version < FeedReader.versionInt) {
 				this.showChanges = true;
-				this.save();
+				this.save(false);
 			}
 		}
+		FeedReader.ril.checkCredentials();
 	},
 	
-	save: function() {
+	save: function(showCredentialsWarning) {
 		this.cookie.put({
 			version: 				FeedReader.versionInt,
 			updateInterval: 		this.updateInterval,
@@ -111,6 +112,7 @@ var prefs = Class.create({
 			gReaderPassword:		this.gReaderPassword
 		});
 		this.setTimer();
+		FeedReader.ril.checkCredentials(showCredentialsWarning);
 	},
 	
 	setTimerSuccess: function(response) {

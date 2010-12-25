@@ -20,12 +20,18 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-var ril = Class.create({
+var rilSupport = Class.create({
 	APIKey:				"5f1A6m56d6649k41a0p5d3dXg8T0w47f",
 	credentialsWorking:	false,
 	
+	prefs:				null,
+	
+	initialize: function(prefs) {
+		this.prefs = prefs;
+	},
+	
 	enabled: function(noCredentialCheck) {
-		if(!prefs.rilUser || !prefs.rilPassword) {
+		if((!this.prefs.rilUser) || (!this.prefs.rilPassword)) {
 			return false;
 		} else if(noCredentialCheck) {
 			return true;
@@ -36,7 +42,7 @@ var ril = Class.create({
 	
 	checkCredentials: function(withFeedback) {
 		if(!this.enabled(true)) {
-			Mojo.Log.info("RIL> No credentials giving: RIL support disabled");
+			Mojo.Log.info("RIL> No credentials given: RIL support disabled");
 			this.credentialsWorking = false;
 			return;
 		}

@@ -11,7 +11,7 @@
 	{"source": "app/models/database.js"},
     {"source": "app/models/feeds.js"},
     {"source": "app/models/prefs.js"},
-	{"source": "app/models/ril.js"},
+	{"source": "app/models/readitlater.js"},
     {"source": "app/assistants/app-assistant.js"},
     {"source": "app/assistants/stage-assistant.js"},
     {"source": "app/assistants/changelog-assistant.js"},
