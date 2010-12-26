@@ -363,6 +363,14 @@ img {
 }
 
 /* Text styling */
+.text-note {
+	margin-left: 10px;
+	margin-right: 10px;
+	margin-bottom: 15px;
+	color: gray;
+	font-size: 15px;
+}
+
 .red {
 	color: red;
 }

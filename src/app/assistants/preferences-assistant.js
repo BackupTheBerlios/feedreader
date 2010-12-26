@@ -33,6 +33,7 @@ PreferencesAssistant.prototype.setup = function() {
 	this.controller.get("prefs-notify-group-title").update($L("Notifications"));
 	this.controller.get("prefs-appearance-group-title").update($L("Summary appearance"));
 	this.controller.get("prefs-ril-group-title").update($L("Read it Later"));
+	this.controller.get("prefs-ril-note").update($L("If you provide 'Read it Later' credentials, FeedReader will sync starred items to 'Read it Later'."));
 	
 	this.controller.get("notify-title").update($L("Show notification"));
 	this.controller.get("blinking-title").update($L("Blink on new stories"));

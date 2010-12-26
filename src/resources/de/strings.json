@@ -57,6 +57,7 @@
 	"From OPML": "Aus OPML",
 	"General": "Allgemeines",
 	"Green": "Grün",
+	"If you provide 'Read it Later' credentials, FeedReader will sync starred items to 'Read it Later'.": "Wenn Sie Anmeldeinformationen für 'Read it Later' eingeben, sendet FeedReader ihre markierten Nachrichten an 'Read it Later'.",
 	"Import feeds": "Feeds importieren",
 	"Interval": "Intervall",
 	"Keep stories": "Aufräumen",
