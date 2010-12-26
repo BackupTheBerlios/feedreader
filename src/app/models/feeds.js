@@ -647,6 +647,17 @@ var feeds = Class.create ({
 	 */
 	markStarred: function(story) {
 		this.db.markStarred(story);
+		
+		var storyMarker = function(feed, story, urls) {
+			if(urls.length <= 0) {
+				return;
+			} else if(story.isStarred) {
+				FeedReader.ril.addURL(story.title, urls[0].href);
+			} else {
+				FeedReader.ril.removeURL(urls[0].href);
+			}
+		};
+		this.db.getStory(story.id, storyMarker.bind(this));
 	},
 	
 	/**

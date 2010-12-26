@@ -20,16 +20,36 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+/* Basic class for AJAX paramaters */
+function rilParameters(prefs) {
+	this.username = prefs.rilUser;
+	this.password = prefs.rilPassword;
+	this.apikey = "5f1A6m56d6649k41a0p5d3dXg8T0w47f";
+}
+
 var rilSupport = Class.create({
-	APIKey:				"5f1A6m56d6649k41a0p5d3dXg8T0w47f",
 	credentialsWorking:	false,
-	
 	prefs:				null,
+	showAuthFeedback:	false,
 	
 	initialize: function(prefs) {
 		this.prefs = prefs;
+		
+		this.noConnection = this.noConnection.bind(this);
+		this.doCheckCredentials = this.doCheckCredentials.bind(this);
+		this.credentialsDoWork = this.credentialsDoWork.bind(this);
+		this.credentialsDoNotWork = this.credentialsDoNotWork.bind(this);
+		this.urlAdded = this.urlAdded.bind(this);
+		this.urlNotAdded = this.urlNotAdded.bind(this);
+		this.urlRemoved = this.urlRemoved.bind(this);
+		this.urlNotRemoved = this.urlNotRemoved.bind(this);
 	},
 	
+	/**
+	 * Check if Read it Later support is enabled.
+	 *
+	 * @param noCredentialCheck	{bool}	If true, the credential are not checked for validity
+	 */	
 	enabled: function(noCredentialCheck) {
 		if((!this.prefs.rilUser) || (!this.prefs.rilPassword)) {
 			return false;
@@ -40,77 +60,118 @@ var rilSupport = Class.create({
 		return this.credentialsWorking;
 	},
 	
+	/**
+	 * Check the given credentials for validity.
+	 *
+	 * @param withFeedback	{bool}	display error message if credentials are invalid
+	 */	
 	checkCredentials: function(withFeedback) {
 		if(!this.enabled(true)) {
 			Mojo.Log.info("RIL> No credentials given: RIL support disabled");
 			this.credentialsWorking = false;
 			return;
 		}
+		
+		this.showAuthFeedback = withFeedback;
+		FeedReader.connection.checkConnection(this.doCheckCredentials,
+											  this.noConnection);
 	},
 	
 	/** @private
-	 * 
-	 * Check the internet connection status
 	 *
-	 * @param onSuccess		{function}	function to be called on success
-	 * @param onFail		{function}	function to be called on failure
-	 */	
-	checkConnection: function(onSuccess, onFail) {
-		Mojo.Log.info("RIL> requesting internet connection availability");
-		this.connStatus = new Mojo.Service.Request('palm://com.palm.connectionmanager', {
-			method: 'getstatus',
-			parameters: {},
-			onSuccess: this.getConnStatusSuccess.bind(this, onSuccess, onFail),
-			onFailure: this.getConnStatusFailed.bind(this, onFail)
-		});
+	 * Called when internet connection is available to check the credentials.
+	 */
+	doCheckCredentials: function() {
+		var parameters = new rilParameters(this.prefs);
+		var requestOptions = {
+			method:			"get",
+			parameters:		parameters,
+			evalJS:			false,
+			evalJSON:		false,
+			onSuccess:		this.credentialsDoWork,
+			onFailure:		this.credentialsDoNotWork
+		};
+		var request = new Ajax.Request("https://readitlaterlist.com/v2/auth", requestOptions);
 	},
 	
 	/** @private
-	 * 
-	 * Called when the connection status could be retrieved.
 	 *
-	 * @param onSuccess		{function}	function to be called on success
-	 * @param onFail		{function}	function to be called on failure
-	 * @param result		{object}	information about the connection status
-	 */	
-	getConnStatusSuccess: function(onSuccess, onFail, result) {
-		try {
-			if(result.isInternetConnectionAvailable) {
-				onSuccess();
-			} else {
-				Mojo.Log.info("RIL> no internet connection available");
-				if(onFail) {
-					onFail();
-				}
-			}
-		} catch(e) {
-			Mojo.Log.logException(e, "RIL>");
-		}
+	 * Called when the credential check returned a positive result.
+	 */
+	credentialsDoWork: function() {
+		Mojo.Log.info("RIL> Credentials checked: working");
+		this.credentialsWorking = true;
 	},
 	
 	/** @private
-	 * 
-	 * Called when the connection status could not be retrieved.
 	 *
-	 * @param onFail	{function}	function to be called on failure
-	 * @param result	{object}	information about the connection status
-	 */	
-	getConnStatusFailed: function(onFail, result) {
-		Mojo.Log.warn("RIL> Unable to determine connection status");
-		if(onFail) {
-			onFail();
+	 * Called when the credential check returned an error.
+	 */
+	credentialsDoNotWork: function() {
+		Mojo.Log.warn("RIL> Credentials checked: NOT working");
+		this.credentialsWorking = false;
+	},
+	
+	/** @private
+	 *
+	 * Called when no connection is available.
+	 */
+	noConnection: function() {
+		this.credentialsWorking = null;
+		if(this.showAuthFeedback) {
+			
 		}
 	},
 	
 	/**
 	 * Add a URL to the list of unread items.
 	 *
+	 * @param title	{string}	title
 	 * @param url	{string}	url to add
 	 */	
-	addURL: function(url) {
+	addURL: function(title, url) {
 		if(!this.enabled()) {
 			return;
 		}
+		
+		Mojo.Log.info("RIL> Adding URL", url, "with title", title);
+		FeedReader.connection.checkConnection(this.doAddURL.bind(this, title, url));
+	},
+	
+	/** @private
+	 *
+	 * Called when internet connection is available to a URL.
+	 */
+	doAddURL: function(title, url) {
+		var parameters = new rilParameters(this.prefs);
+		parameters.title = title;
+		parameters.url = url;
+		
+		var requestOptions = {
+			method:			"get",
+			parameters:		parameters,
+			evalJS:			false,
+			evalJSON:		false,
+			onSuccess:		this.urlAdded,
+			onFailure:		this.urlNotAdded
+		};
+		var request = new Ajax.Request("https://readitlaterlist.com/v2/add", requestOptions);		
+	},
+
+	/** @private
+	 *
+	 * Called when adding a url succeeded.
+	 */	
+	urlAdded: function() {
+		Mojo.Log.info("RIL> URL successfully added");
+	},
+
+	/** @private
+	 *
+	 * Called when adding a url failed.
+	 */	
+	urlNotAdded: function(transport) {
+		Mojo.Log.warn("RIL> URL could not be added, code", transport.status);
 	},
 	
 	/**
@@ -122,5 +183,47 @@ var rilSupport = Class.create({
 		if(!this.enabled()) {
 			return;
 		}
-	}
+
+		Mojo.Log.info("RIL> Removing URL", url);
+		FeedReader.connection.checkConnection(this.doRemoveURL.bind(this, url));
+	},
+	
+	/** @private
+	 *
+	 * Called when internet connection is available to remove a url.
+	 */
+	doRemoveURL: function(url) {
+		var parameters = new rilParameters(this.prefs);
+		parameters.read = Object.toJSON({
+			"0": {
+				"url": url
+			}
+		});
+		
+		var requestOptions = {
+			method:			"get",
+			parameters:		parameters,
+			evalJS:			false,
+			evalJSON:		false,
+			onSuccess:		this.urlRemoved,
+			onFailure:		this.urlNotRemoved
+		};
+		var request = new Ajax.Request("https://readitlaterlist.com/v2/send", requestOptions);				
+	},
+	
+	/** @private
+	 *
+	 * Called when a url has successfully been removed.
+	 */
+	urlRemoved: function() {
+		Mojo.Log.info("RIL> URL successfully removed");
+	},
+	
+	/** @private
+	 *
+	 * Called when removing a url did not succeed.
+	 */
+	urlNotRemoved: function(transport) {
+		Mojo.Log.warn("RIL> URL could not be removed, code", transport.status);
+	}	
 });

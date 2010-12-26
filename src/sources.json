@@ -8,6 +8,7 @@
 	{"source": "app/utils/scenecontrol.js"},
 	{"source": "app/utils/formatting.js"},
 	{"source": "app/utils/dashboard.js"},
+	{"source": "app/utils/connection.js"},
 	{"source": "app/models/database.js"},
     {"source": "app/models/feeds.js"},
     {"source": "app/models/prefs.js"},
