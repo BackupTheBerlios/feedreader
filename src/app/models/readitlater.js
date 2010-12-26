@@ -183,7 +183,7 @@ var rilSupport = Class.create({
 	/**
 	 * Remove a URL from the list of unread items.
 	 *
-	 * @param url	{string}	url to add
+	 * @param url	{string}	url to remove
 	 */	
 	removeURL: function(url) {
 		if(!this.enabled()) {
@@ -192,6 +192,20 @@ var rilSupport = Class.create({
 
 		Mojo.Log.info("RIL> Removing URL", url);
 		FeedReader.connection.checkConnection(this.doRemoveURL.bind(this, url));
+	},
+
+	/**
+	 * Remove a list of URLs from the list of unread items.
+	 *
+	 * @param urls	{array}	list of urls
+	 */	
+	removeURLs: function(urls) {
+		if(!this.enabled()) {
+			return;
+		}
+
+		Mojo.Log.info("RIL> Removing URLs");
+		FeedReader.connection.checkConnection(this.doRemoveURLs.bind(this, urls));
 	},
 	
 	/** @private
@@ -217,6 +231,31 @@ var rilSupport = Class.create({
 		var request = new Ajax.Request("https://readitlaterlist.com/v2/send", requestOptions);				
 	},
 	
+	/** @private
+	 *
+	 * Called when internet connection is available to remove a url list.
+	 */
+	doRemoveURLs: function(urls) {
+		var parameters = new rilParameters(this.prefs);
+		var list = "";
+		var urlTemplate = new Template('"#{n}": { "url": "#{url}"},');
+		
+		for(var i = 0; i < urls.length; i++) {
+			list += urlTemplate.evaluate({ n: i, url: urls[i].url });
+		}
+		parameters.read = "{" + list + "}";
+		
+		var requestOptions = {
+			method:			"get",
+			parameters:		parameters,
+			evalJS:			false,
+			evalJSON:		false,
+			onSuccess:		this.urlRemoved,
+			onFailure:		this.urlNotRemoved
+		};
+		var request = new Ajax.Request("https://readitlaterlist.com/v2/send", requestOptions);				
+	},
+
 	/** @private
 	 *
 	 * Called when a url has successfully been removed.

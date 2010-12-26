@@ -666,6 +666,12 @@ var feeds = Class.create ({
 	 * @param	feed	{object}	feed object
 	 */
 	markAllUnStarred: function(feed) {
+		var storyMarker = function(list) {
+			if(list.length > 0) {
+				FeedReader.ril.removeURLs(list);
+			}
+		};
+		this.db.getFeedURLList(feed, storyMarker.bind(this));
 		this.db.markAllUnStarred(feed);
 	},
 	
