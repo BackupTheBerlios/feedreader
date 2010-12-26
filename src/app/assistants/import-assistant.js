@@ -33,7 +33,6 @@ function ImportAssistant(feeds) {
 	};
 	
 	this.feedList = [];
-	this.connStatus = {};
 	
 	this.loadingSpinnerAttribs = {
 		spinnerSize: "large"
@@ -134,27 +133,17 @@ ImportAssistant.prototype.searchForFeeds = function(event) {
 		this.controller.modelChanged(this.urlModel);
     }
 	
-	this.connStatus = new Mojo.Service.Request('palm://com.palm.connectionmanager', {
-		method: 'getstatus',
-		parameters: {},
-		onSuccess: this.getConnStatusSuccess,
-		onFailure: this.getConnStatusFailed
-	});		
+	FeedReader.connection.checkConnection(this.getConnStatusSuccess, this.getConnStatusFailed);
 };
 
 ImportAssistant.prototype.getConnStatusSuccess = function(result) {
-	if(result.isInternetConnectionAvailable) {
-		Mojo.Log.info("Scanning url", this.urlModel.value);
-		var request = new Ajax.Request(this.urlModel.value, {
-				method: "get",
-				evalJS: "false",
-				evalJSON: "false",
-				onSuccess: this.ajaxRequestSuccess,
-				onFailure: this.ajaxRequestFailed});
-	} else {
-		this.controller.get("conn-status").update($L("No internet connection."));
-		this.showScrim(false);
-	}
+	Mojo.Log.info("Scanning url", this.urlModel.value);
+	var request = new Ajax.Request(this.urlModel.value, {
+								   method: "get",
+								   evalJS: "false",
+								   evalJSON: "false",
+								   onSuccess: this.ajaxRequestSuccess,
+								   onFailure: this.ajaxRequestFailed});
 };
 
 ImportAssistant.prototype.getConnStatusFailed = function(result) {
