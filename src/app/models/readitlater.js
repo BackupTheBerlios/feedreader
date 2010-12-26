@@ -238,15 +238,17 @@ var rilSupport = Class.create({
 	doRemoveURLs: function(urls) {
 		var parameters = new rilParameters(this.prefs);
 		var list = "";
-		var urlTemplate = new Template('"#{n}": { "url": "#{url}"},');
+		var urlTemplate = new Template('"#{n}": { "url": "#{url}"}');
 		
 		for(var i = 0; i < urls.length; i++) {
-			list += urlTemplate.evaluate({ n: i, url: urls[i].url });
+			list += ((i > 0) ? ',' : '') + urlTemplate.evaluate({ n: i, url: urls[i].url });
 		}
 		parameters.read = "{" + list + "}";
 		
+		Mojo.Log.info(parameters.read);
+		
 		var requestOptions = {
-			method:			"get",
+			method:			"post",
 			parameters:		parameters,
 			evalJS:			false,
 			evalJSON:		false,
