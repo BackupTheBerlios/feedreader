@@ -37,6 +37,7 @@ FeedReader = {
 	isActive: 			false,
 	showChangeLog:		false,
 	
+	connection:			null,
 	feeds:				null,
 	prefs: 				null,
 	ril:				null,
@@ -133,6 +134,7 @@ FeedReader = {
  * @param {Object} appController
  */
 function AppAssistant (appController) {
+	FeedReader.connection = new connectionChecker();
 	FeedReader.prefs = new prefs();
 	FeedReader.ril = new rilSupport(FeedReader.prefs);
 	FeedReader.prefs.load();
