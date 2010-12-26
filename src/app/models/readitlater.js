@@ -73,6 +73,7 @@ var rilSupport = Class.create({
 		}
 		
 		this.showAuthFeedback = withFeedback;
+		Mojo.Log.info("RIL> checking", this.showAuthFeedback);
 		FeedReader.connection.checkConnection(this.doCheckCredentials,
 											  this.noConnection);
 	},
@@ -108,8 +109,12 @@ var rilSupport = Class.create({
 	 * Called when the credential check returned an error.
 	 */
 	credentialsDoNotWork: function() {
-		Mojo.Log.warn("RIL> Credentials checked: NOT working");
+		Mojo.Log.warn("RIL> Credentials checked: NOT working; showing feedback:", this.showAuthFeedback);
 		this.credentialsWorking = false;
+		if(this.showAuthFeedback) {
+			var errorMsg = new Template($L("The provided '#{title}' credentials are wrong. '#{title}' support has been disabled."));
+			FeedReader.showError(errorMsg, { title: "Read it Later" });
+		}
 	},
 	
 	/** @private
@@ -119,7 +124,8 @@ var rilSupport = Class.create({
 	noConnection: function() {
 		this.credentialsWorking = null;
 		if(this.showAuthFeedback) {
-			
+			var errorMsg = new Template($L("The provided '#{title}' credentials could not be checked. '#{title}' support has been disabled."));
+			FeedReader.showError(errorMsg, { title: "Read it Later" });
 		}
 	},
 	

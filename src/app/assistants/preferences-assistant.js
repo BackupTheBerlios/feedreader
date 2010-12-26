@@ -157,7 +157,7 @@ PreferencesAssistant.prototype.cleanup = function(event) {
 	this.prefs.rilUser = this.rilUserModel.value;
 	this.prefs.rilPassword = this.rilPasswordModel.value;
 	
-	this.prefs.save();
+	this.prefs.save(true);
 	
     var cardStageController = Mojo.Controller.getAppController().getStageController(FeedReader.mainStageName);
 	if(cardStageController) {

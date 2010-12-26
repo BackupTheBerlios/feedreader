@@ -111,6 +111,7 @@
 	"The Feed '#{title}' could not be retrieved. The server responded: #{err}. The Feed was automatically disabled.": "Der Feed '#{title}' konnte nicht abgerufen werden. Der Server antwortete: #{err}. Der Feed wurde deaktiviert.",
 	"The Feed '#{title}' does not return data.": "Der Feed '#{title}' enthält keine Daten.",
 	"The format of Feed '#{title}' is unsupported.": "Das Format des Feeds '#{title}' ist unbekannt.",
+	"The provided '#{title}' credentials are wrong. '#{title}' support has been disabled.": "Die Anmeldeinformationen für '#{title}' sind falsch. '#{title}' Unterstützung deaktiviert.",
 	"Title": "Titel",
 	"Title color": "Titelfarbe",
 	"Unable to retrieve data.": "Konnte Daten nicht abrufen.",
