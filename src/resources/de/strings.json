@@ -113,6 +113,7 @@
 	"The Feed '#{title}' does not return data.": "Der Feed '#{title}' enthält keine Daten.",
 	"The format of Feed '#{title}' is unsupported.": "Das Format des Feeds '#{title}' ist unbekannt.",
 	"The provided '#{title}' credentials are wrong. '#{title}' support has been disabled.": "Die Anmeldeinformationen für '#{title}' sind falsch. '#{title}' Unterstützung deaktiviert.",
+	"FeedReader encountered problems contacting '#{title}'. '#{title}' support has been disabled.": "Es sind Probleme beim Kontaktieren von '#{title}' aufgetreten. '#{title}' Unterstützung deaktiviert.",
 	"Title": "Titel",
 	"Title color": "Titelfarbe",
 	"Unable to retrieve data.": "Konnte Daten nicht abrufen.",

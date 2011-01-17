@@ -29,6 +29,7 @@ function rilParameters(prefs) {
 
 var rilSupport = Class.create({
 	credentialsWorking:	false,
+	disabled:			false,
 	prefs:				null,
 	showAuthFeedback:	false,
 	
@@ -51,13 +52,23 @@ var rilSupport = Class.create({
 	 * @param noCredentialCheck	{bool}	If true, the credential are not checked for validity
 	 */	
 	enabled: function(noCredentialCheck) {
-		if((!this.prefs.rilUser) || (!this.prefs.rilPassword)) {
+		if((!this.prefs.rilUser) || (!this.prefs.rilPassword) || (this.disabled)) {
 			return false;
 		} else if(noCredentialCheck) {
 			return true;
 		}
 		
 		return this.credentialsWorking;
+	},
+	
+	/**
+	 */
+	disable: function() {
+		if(!this.disabled) {
+			this.disabled = true;
+			var errorMsg = new Template($L("FeedReader encountered problems contacting '#{title}'. '#{title}' support has been disabled."));
+			FeedReader.showError(errorMsg, { title: "Read it Later" });
+		}
 	},
 	
 	/**
@@ -178,6 +189,7 @@ var rilSupport = Class.create({
 	 */	
 	urlNotAdded: function(transport) {
 		Mojo.Log.warn("RIL> URL could not be added, code", transport.status);
+		this.disable();
 	},
 	
 	/**
@@ -272,5 +284,6 @@ var rilSupport = Class.create({
 	 */
 	urlNotRemoved: function(transport) {
 		Mojo.Log.warn("RIL> URL could not be removed, code", transport.status);
+		this.disable();
 	}	
 });
