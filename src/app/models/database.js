@@ -499,7 +499,8 @@ var database = Class.create({
 			transaction.executeSql('UPDATE feeds SET title = ?, url = ?, feedType = ?, feedOrder = ?, ' +
 								   '    enabled = ?, showPicture = ?, showMedia = ?, showListSummary = ?,' +
 								   '    showListCaption = ?, showDetailSummary = ?, showDetailCaption = ?,' +
-								   '    sortMode = ?, allowHTML = ?, username = ?, password = ?, fullStory = ?' +
+								   '    sortMode = ?, allowHTML = ?, username = ?, password = ?, fullStory = ?,' +
+								   '    category = ?' +
 								   '  WHERE id = ?',
 								   [feed.title, feed.url, feed.feedType, feed.feedOrder,
 									feed.enabled ? 1 : 0,
@@ -507,7 +508,8 @@ var database = Class.create({
 									feed.showListSummary ? 1 : 0, feed.showListCaption ? 1 : 0,
 									feed.showDetailSummary ? 1 : 0, feed.showDetailCaption ? 1 : 0,
 									feed.sortMode, feed.allowHTML ? 1 : 0, feed.username,
-									feed.password, feed.fullStory ? 1 : 0, id],
+									feed.password, feed.fullStory ? 1 : 0,
+									feed.category ? feed.category : 0, id],
 								   onSuccess.bind(feed), onFail);
 		};
 		
@@ -527,15 +529,15 @@ var database = Class.create({
 			transaction.executeSql('INSERT INTO feeds (title, url, feedType, feedOrder,' +
 								   '    enabled, showPicture, showMedia, showListSummary,' +
 								   '    showListCaption, showDetailSummary, showDetailCaption,' +
-								   '    sortMode, allowHTML, username, password, fullStory)' +
-								   '  VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+								   '    sortMode, allowHTML, username, password, fullStory, category)' +
+								   '  VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
 								   [feed.title, feed.url, feed.feedType, -1,
 									feed.enabled ? 1 : 0,
 									feed.showPicture ? 1 : 0, feed.showMedia ? 1 : 0,
 									feed.showListSummary ? 1 : 0, feed.showListCaption ? 1 : 0,
 									feed.showDetailSummary ? 1 : 0, feed.showDetailCaption ? 1 : 0,
 									feed.sortMode, feed.allowHTML ? 1 : 0, feed.username,
-									feed.password, feed.fullStory ? 1 : 0],
+									feed.password, feed.fullStory ? 1 : 0, feed.category ? feed.category : 0],
 									getID, onFail);
 		};
 		

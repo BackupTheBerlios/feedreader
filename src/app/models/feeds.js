@@ -40,6 +40,8 @@ var feedProto = Class.create({
 	username:			"",
 	password:			"",
 	fullStory:			true,
+	category:			0,
+	categoryName:		"Uncategorized",
 	
 	/**
 	 * Constructor.
@@ -79,6 +81,12 @@ var feedProto = Class.create({
 			if(proto.username && proto.password) {
 				this.username = proto.username;
 				this.password = proto.password;
+			}
+			if(proto.category !== null) {
+				this.category = proto.category;
+			}
+			if(proto.categoryName !== null) {
+				this.categoryName = proto.categoryName;
 			}
 		}
 	}
