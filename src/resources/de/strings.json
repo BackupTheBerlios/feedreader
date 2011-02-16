@@ -49,6 +49,7 @@
 	"Editing the Feed '#{title}' failed.": "Ändern des Feeds '#{title}' ist fehlgeschlagen.",
 	"Enter URL here": "URL hier eingeben",
 	"Feed title": "Name des Feeds",
+	"FeedReader encountered problems contacting '#{title}'. '#{title}' support has been disabled.": "Es sind Probleme beim Kontaktieren von '#{title}' aufgetreten. '#{title}' Unterstützung deaktiviert.",
 	"FeedReader Preferences": "FeedReader Einstellungen",
 	"Feeds": "Feeds",
 	"Filter": "Filter",
@@ -83,6 +84,7 @@
 	"Paused": "Wiedergabe pausiert",
 	"Playing": "Wiedergabe läuft",
 	"Purple": "Violett",
+	"Read it Later": "Read It Later",
 	"Red": "Rot",
 	"Replies": "Antworten",
 	"RSS/ATOM Feed": "RSS/ATOM Feed",
@@ -113,7 +115,7 @@
 	"The Feed '#{title}' does not return data.": "Der Feed '#{title}' enthält keine Daten.",
 	"The format of Feed '#{title}' is unsupported.": "Das Format des Feeds '#{title}' ist unbekannt.",
 	"The provided '#{title}' credentials are wrong. '#{title}' support has been disabled.": "Die Anmeldeinformationen für '#{title}' sind falsch. '#{title}' Unterstützung deaktiviert.",
-	"FeedReader encountered problems contacting '#{title}'. '#{title}' support has been disabled.": "Es sind Probleme beim Kontaktieren von '#{title}' aufgetreten. '#{title}' Unterstützung deaktiviert.",
+	"The provided '#{title}' credentials could not be checked. '#{title}' support has been disabled.": "Die Anmeldeinformationen für '#{title}' konnten nicht geprüft werden. '#{title}' Unterstützung deaktiviert.",
 	"Title": "Titel",
 	"Title color": "Titelfarbe",
 	"Unable to retrieve data.": "Konnte Daten nicht abrufen.",
@@ -129,6 +131,7 @@
 	"Waiting for data": "Warte auf Daten",
 	"Wake device": "Gerät einschalten",
 	"Web links": "Web-Links",
+	"Weblink": "Weblink",
 	"Yellow": "Gelb",
 	"Yes": "Ja"
 }
