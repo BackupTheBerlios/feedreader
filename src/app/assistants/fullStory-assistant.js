@@ -42,9 +42,7 @@ function FullStoryAssistant(feeds, feed, storyID) {
 	this.mediaReady = false;
 	this.playState = 0;
 	this.seeking = false;	
-	this.pictureSpinnerModel = {
-		spinning: false
-	};
+	this.pictureSpinner = null;
 	this.storyList = null;
 	this.storyIndex = -1;
 	this.isFirst = true;
@@ -95,8 +93,10 @@ FullStoryAssistant.prototype.setup = function() {
 	this.controller.listen("media-progress", Mojo.Event.sliderDragEnd, this.stopSeeking);
 
 	// Setup the picture spinner.
-	this.controller.setupWidget("picture-spinner", { spinnerSize: "small" },
-								this.pictureSpinnerModel);
+	this.pictureSpinner = this.controller.get("picture-spinner");
+	this.controller.setupWidget("picture-spinner",
+								{ spinnerSize: "small" },
+								{ spinning: false });
     this.controller.listen("starIcon", Mojo.Event.tap, this.starIconTap);	
 	
 	// Handle a story click.
@@ -170,8 +170,8 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 		
 		// Setup the story's picture.
 		if(this.doShowPicture && (this.story.picture.length > 0)) {
+			this.pictureSpinner.mojo.start();
 			this.controller.get("story-picture").src = this.story.picture;
-			this.pictureSpinnerModel.spinning = true;
 			this.controller.get("story-picture").onload = this.pictureLoaded;
 		} else {
 			this.controller.get("img-container").hide();		
@@ -300,7 +300,6 @@ FullStoryAssistant.prototype.activate = function(event) {
 			this.initCommandModel();
 			this.controller.modelChanged(this.commandModel);
 		}
-		this.controller.modelChanged(this.pictureSpinnerModel);
 	}
 	
 	this.feeds.getStoryIDList(this.feed, this.listDataHandler);
@@ -406,8 +405,7 @@ FullStoryAssistant.prototype.initCommandModel = function() {
 };
 
 FullStoryAssistant.prototype.pictureLoaded = function() {
-	this.pictureSpinnerModel.spinning = false;
-	this.controller.modelChanged(this.pictureSpinnerModel);	
+	this.pictureSpinner.mojo.stop();
 };
 
 FullStoryAssistant.prototype.mediaCanPlay = function() {
