@@ -153,6 +153,7 @@ ImportAssistant.prototype.getConnStatusFailed = function(result) {
 
 ImportAssistant.prototype.ajaxRequestSuccess = function(transport) {
 	if(transport.responseText && transport.responseText.length > 0) {
+		this.updateURL(transport.getHeader("Location"));
 		Mojo.Log.info("Got response from web!");
 		try {
 			this.inHeader = true;
@@ -198,7 +199,7 @@ ImportAssistant.prototype.parseStartTag = function(tag, attr) {
 					type = "rss";
 					possibility++;
 				} else if(attr[i].name.match(/href/i)) {
-					href = attr[i].value.replace(/^\//, "");
+					href = attr[i].value.replace("&amp;", "&");
 					possibility++;
 				} else if(attr[i].name.match(/title/i)) {
 					title = attr[i].value;
@@ -207,8 +208,12 @@ ImportAssistant.prototype.parseStartTag = function(tag, attr) {
 		}
 		
 		if((possibility == 3) && (href.length > 0)) {
-		    if(/^[a-z]{1,5}:/.test(href) === false) {
-				href = this.urlModel.value.replace(/$\//, "") + "/" + href;
+		    if(/^[a-z]{1,5}:/.test(href) === false) {	// relative URL
+				if(/^\//.test(href)) {					// relative to server root
+					href = this.urlModel.value.replace(/(^[a-z]{1,5}:\/\/[^\/]*).*/, "$1") + href;
+				} else {								// relative to document path
+					href = this.urlModel.value.replace(/(.*)\//, "$1") + "/" + href;
+				}
 			}
 			
 			this.feedList.push({
@@ -265,4 +270,18 @@ ImportAssistant.prototype.doAddFeed = function(index, feed, value) {
 		this.importListModel.items = this.feedList;
 		this.controller.modelChanged(this.importListModel);
 	}
+};
+
+ImportAssistant.prototype.updateURL = function(newURL) {
+	var url = newURL;
+	if((url == this.urlModel.value) || (!url)) {
+		return;
+	}
+	
+	if(/$\//.test(url) === false) {
+		url = url.replace(/(.*)\/[^\/]*/, "$1") + "/";
+	}
+		
+	this.urlModel.value = url;
+	this.controller.modelChanged(this.urlModel);
 };
