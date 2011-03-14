@@ -47,6 +47,9 @@ function FullStoryAssistant(feeds, feed, storyID) {
 	this.storyIndex = -1;
 	this.isFirst = true;
 	this.isLast = true;
+	
+	this.mouseDown = false;
+	this.scrolling = false;
 
 	/* pre bind handlers */	
 	this.startSeeking = this.startSeeking.bindAsEventListener(this);
@@ -63,6 +66,11 @@ function FullStoryAssistant(feeds, feed, storyID) {
 	this.listDataHandler = this.listDataHandler.bind(this);
 	this.feedDataHandler = this.feedDataHandler.bind(this);
 	this.storyUpdate = this.storyUpdate.bind(this);
+	
+	this.handleClick = this.handleClick.bindAsEventListener(this);
+	this.handleMouseDown = this.handleMouseDown.bindAsEventListener(this);
+	this.handleMouseUp = this.handleMouseUp.bindAsEventListener(this);
+	this.handleMouseMove = this.handleMouseMove.bindAsEventListener(this);
 
 	this.mediaProgressModel = {
 		progressStart: 0,
@@ -72,7 +80,6 @@ function FullStoryAssistant(feeds, feed, storyID) {
 		maxValue: 1000,
 		disabled: true
 	};
-	
 }
 
 FullStoryAssistant.prototype.setup = function() {
@@ -101,6 +108,7 @@ FullStoryAssistant.prototype.setup = function() {
 	
 	// Handle a story click.
     this.controller.listen("followLink", Mojo.Event.tap, this.storyTap);
+	this.controller.listen("story-content", Mojo.Event.tap, this.handleClick);
     this.controller.setupWidget(Mojo.Menu.commandMenu, undefined, this.commandModel);
 	
 	this.refreshAll();
@@ -166,10 +174,13 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 			} else {
 				this.controller.get("story-content").update(Formatting.stripHTML(this.story.summary));
 			}
+			
+			this.prependHyperLinks(this.controller.get("story-content"));
 		}
 		
 		// Setup the story's picture.
 		if(this.doShowPicture && (this.story.picture.length > 0)) {
+			Mojo.Log.info("FULLSTORY> item has picture:", this.story.picture);
 			this.pictureSpinner.mojo.start();
 			this.controller.get("story-picture").src = this.story.picture;
 			this.controller.get("story-picture").onload = this.pictureLoaded;
@@ -263,6 +274,24 @@ FullStoryAssistant.prototype.dataHandler = function(feed, story, urls) {
 	SceneControl.endSceneSetup(this);
 };
 
+FullStoryAssistant.prototype.prependHyperLinks = function(node) {
+	if(!node) {
+		return;
+	}
+	
+	try {
+		if((node.nodeName == 'A') && node.href && (node.href != '#')) {
+			node.href = '#' + node.href;
+		}
+		for(var i = 0; i < node.childNodes.length; i++) {
+			this.prependHyperLinks(node.childNodes[i]);
+		}
+	} catch(e) {
+		Mojo.Log.logException(e);
+	}
+}
+
+
 FullStoryAssistant.prototype.listDataHandler = function(ids) {
 	this.storyList = ids;
 	
@@ -303,9 +332,22 @@ FullStoryAssistant.prototype.activate = function(event) {
 	}
 	
 	this.feeds.getStoryIDList(this.feed, this.listDataHandler);
+
+	Mojo.Event.listen(this.controller.stageController.document,
+					  'mousedown', this.handleMouseDown);
+	Mojo.Event.listen(this.controller.stageController.document,
+					  'mouseup', this.handleMouseUp);
+	Mojo.Event.listen(this.controller.stageController.document,
+					  'mousemove', this.handleMouseMove);
 };
 
 FullStoryAssistant.prototype.deactivate = function(event) {
+	Mojo.Event.stopListening(this.controller.stageController.document,
+							 'mousedown', this.handleMouseDown);
+	Mojo.Event.stopListening(this.controller.stageController.document,
+							 'mouseup', this.handleMouseUp);
+	Mojo.Event.stopListening(this.controller.stageController.document,
+							 'mousemove', this.handleMouseMove);	
 };
 
 FullStoryAssistant.prototype.cleanup = function(event) {
@@ -335,6 +377,7 @@ FullStoryAssistant.prototype.cleanup = function(event) {
 	this.controller.stopListening("media-progress", Mojo.Event.sliderDragEnd, this.stopSeeking);
     this.controller.stopListening("starIcon", Mojo.Event.tap, this.starIconTap);	
     this.controller.stopListening("followLink", Mojo.Event.tap, this.storyTap);
+	this.controller.stopListening("story-content", Mojo.Event.tap, this.handleClick);
 };
 
 FullStoryAssistant.prototype.refreshAll = function() {
@@ -701,4 +744,33 @@ FullStoryAssistant.prototype.considerForNotification = function(params){
 	}
 	
 	return params;
+};
+
+FullStoryAssistant.prototype.handleClick = function(event) {
+	if((!event.target) || (event.target.nodeName != 'A') ||
+	   (!event.target.href) || this.scrolling) {
+		return;
+	}
+	
+	var href = event.target.href.replace(/[^#]*#(.*)/, '$1');
+	if(href) {
+		Mojo.Log.info("FULLSTORY> opening embedded link", href, "; original link", event.target.href);
+		this.openURL(href);
+	}
+};
+
+FullStoryAssistant.prototype.handleMouseDown = function(event) {
+	this.mouseDown = true;
+	this.scrolling = false;
+	return true;
+};
+
+FullStoryAssistant.prototype.handleMouseUp = function(event) {
+	this.mouseDown = false;
+	return true;
+};
+
+FullStoryAssistant.prototype.handleMouseMove = function(event) {
+	this.scrolling = true;
+	return true;
 };
