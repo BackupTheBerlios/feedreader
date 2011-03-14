@@ -356,6 +356,8 @@ img {
 .story-content {
 	color: black;
 	font-size: 15px;
+	clear: both;
+	float: none;
 }
 
 .story-content.large {
