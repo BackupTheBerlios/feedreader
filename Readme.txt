@@ -25,9 +25,15 @@ Contributors
 ============
  * Milan Roubal <roubal@keyserver.cz>
  * Yannick LE NY
+ * Francisco Rivas <franciscojrivash@gmail.com>
+ * Vladimir Voronov <voronov@pisem.net>
 
 Changelog
 =========
+
+Version 2.1.1 (bug fix)
+-----------------------
+ * fixed spanish locale
 
 Version 2.1.0 (feature release)
 -------------------------------

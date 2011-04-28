@@ -27,7 +27,7 @@
 FeedReader = {
 	appName:			"FeedReader",
 	appAuthor:			"Timo Tegtmeier",
-	versionString:		"2.1.0",
+	versionString:		"2.1.1",
 	versionInt:			21,
 	copyrightYears:		"2009-2011",
 
