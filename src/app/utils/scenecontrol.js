@@ -24,7 +24,12 @@ var ScrimController = Class.create({
 	initialize: function(scene) {
 		this.scene = scene;
 		this.scrimDiv = scene.controller.get('load-scrim');
-		this.spinner = scene.controller.get('load-spinner');
+		
+		if(!FeedReader.scrimMode) {
+			this.spinner = scene.controller.get('load-spinner');
+		} else {
+			this.spinner = undefined;	// Scrim-Mode: Don't show spinner.
+		}
 		
 		this.shown = true;
 		this.spinnerAttribs = {	spinnerSize: "large" };
@@ -60,6 +65,10 @@ var ScrimController = Class.create({
 	},
 	
 	hide: function() {
+		if(FeedReader.scrimMode) {
+			return;	// Scrim-Mode: Don't hide scrim.
+		}
+		
 		if(this.shown) {
 			if(this.spinner) {
 				this.spinnerModel.spinning = false;

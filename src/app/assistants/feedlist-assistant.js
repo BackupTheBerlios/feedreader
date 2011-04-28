@@ -52,7 +52,9 @@ FeedlistAssistant.prototype.setup = function() {
 	// Setup the feed list.
 	this.feedListWidget = this.controller.get("feedList");
 	this.controller.setupWidget("feedList", {
-        itemTemplate:	"feedlist/feedlistRowTemplate", 
+        itemTemplate:	FeedReader.scrimMode ?
+						"feedlist/feedlistScrimRowTemplate" :
+						"feedlist/feedlistRowTemplate",
         listTemplate:	"feedlist/feedlistListTemplate", 
 		formatters: 	{
 			feedIcon: 	this.listFormatter.bind(this, "feedIcon"),
@@ -62,7 +64,7 @@ FeedlistAssistant.prototype.setup = function() {
 		},
 		preventDeleteProperty:	"preventDelete",
 		uniquenessProperty: 	"id",
-        addItemLabel:	$L("Add new Feed..."),
+        addItemLabel:	FeedReader.scrimMode ? undefined : $L("Add new Feed..."),
         swipeToDelete:	true,
         renderLimit: 	40,
         reorderable:	true,
@@ -236,16 +238,28 @@ FeedlistAssistant.prototype.listFind = function(filterString, listWidget, offset
 };
 
 FeedlistAssistant.prototype.updateItems = function(offset, items) {
+	if(FeedReader.scrimMode) {
+		// Scrim-Mode: Display a single pseudo-feed
+		offset = 0;
+		items = this.feeds.getCopyrightFeed();
+	}
+
 	this.feedListWidget.mojo.noticeUpdatedItems(offset, items);
+
 	SceneControl.endSceneSetup(this);
 	SceneControl.hideSplash();
 };
 
 FeedlistAssistant.prototype.setListLength = function(count) {
+	if(FeedReader.scrimMode) {
+		count = 1;	// Scrim-Mode: Display a single pseudo-feed
+	}
+
 	if(this.filter !== "") {
 		// Stop the FilterField spinner and set the found count.
 		this.feedListWidget.mojo.setCount(count);
 	}
+	
 	this.feedListWidget.mojo.setLengthAndInvalidate(count);
 	this.refreshUpdateLock();
 };

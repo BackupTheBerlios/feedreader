@@ -461,6 +461,6 @@ h3 {
 
 .load-scrim {
 	z-index: 1000000;
-	background-color: gray;
-	opacity: 0.8;
+	/*background-color: gray;
+	opacity: 0.8;*/
 }

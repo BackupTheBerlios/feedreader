@@ -777,19 +777,23 @@ var feeds = Class.create ({
 	 * @return			{String}	the header icon class
 	 */
 	getFeedIconClass: function(feed, ignoreEnabled, ignoreUnknown) {
-		var iconClass = "";
-		switch(feed.feedType) {
-			case feedTypes.ftAllItems:	iconClass = "allitems";	break;
-			case feedTypes.ftStarred:	iconClass = "starred";	break;
-			case feedTypes.ftRDF:
-			case feedTypes.ftRSS:		iconClass = "rss";		break;
-			case feedTypes.ftATOM:		iconClass = "atom";		break;
-			default:					iconClass = ignoreUnknown ? "rss" : "unknown"; break;
+		if(FeedReader.scrimMode) {
+			return "starred";
+		} else {		
+			var iconClass = "";
+			switch(feed.feedType) {
+				case feedTypes.ftAllItems:	iconClass = "allitems";	break;
+				case feedTypes.ftStarred:	iconClass = "starred";	break;
+				case feedTypes.ftRDF:
+				case feedTypes.ftRSS:		iconClass = "rss";		break;
+				case feedTypes.ftATOM:		iconClass = "atom";		break;
+				default:					iconClass = ignoreUnknown ? "rss" : "unknown"; break;
+			}
+			if(!ignoreEnabled && !feed.enabled) {
+				iconClass += ' disabled';
+			}
+			return iconClass;
 		}
-		if(!ignoreEnabled && !feed.enabled) {
-			iconClass += ' disabled';
-		}
-		return iconClass;
 	},
 		
 	getFeeds: function(filter, offset, count, onSuccess) {
@@ -860,5 +864,23 @@ var feeds = Class.create ({
 	 */
 	isUpdating: function() {
 		return this.spooler.hasWork();
+	},
+	
+	/**
+	 * Return a single pseudo-feed used for the main scrim.
+	 *
+	 * @returns		{array}		array containing pseudo-feed
+	 */
+	getCopyrightFeed: function() {
+		var list = [];
+		
+		list.push(new feedProto({
+			title:		FeedReader.appName,
+			url:		"© " + FeedReader.copyrightYears + " " + FeedReader.appAuthor,
+			feedType:	feedTypes.ftRSS,
+			feedOrder:	0,
+			enabled:	true
+		}));
+		return list;
 	}
 });

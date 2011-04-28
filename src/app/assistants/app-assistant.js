@@ -29,7 +29,7 @@ FeedReader = {
 	appAuthor:			"Timo Tegtmeier",
 	versionString:		"2.1.0",
 	versionInt:			21,
-	copyrightYears:		"2009, 2010, 2011",
+	copyrightYears:		"2009-2011",
 
 	mainStageName: 		"FeedReaderStage",
 	dashboardStageName:	"FeedReaderDashboard",
@@ -44,6 +44,8 @@ FeedReader = {
 	mediaExtensionLib:	null,
 	
 	controller:			{},
+	
+	scrimMode:			false,	// Set to true, if a new scrim screenshot is needed
 	
 	/**
 	 * Show an alert.
