@@ -698,6 +698,22 @@ var feeds = Class.create ({
 		};
 		this.db.deleteFeed(feed, onSuccess, onFail);
 	},
+
+	/**
+	 * Delete a given story.
+	 *
+	 * @param 	story	{object}		story object
+	 */
+	deleteStory: function(story) {
+		var onSuccess = function() {
+			Mojo.Controller.getAppController().sendToNotificationChain({ type: "storylist-changed" });
+		};
+		var onFail = function(transaction, error) {
+			Mojo.Controller.getAppController().sendToNotificationChain({ type: "storylist-changed" });
+			Mojo.Log.error("FEEDS> Deleting story failed:", error.message);
+		};
+		this.db.deleteStory(story, onSuccess, onFail);
+	},
 	
 	/**
 	 * Move a feed in the list.

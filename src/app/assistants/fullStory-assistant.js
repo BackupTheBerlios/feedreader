@@ -289,8 +289,7 @@ FullStoryAssistant.prototype.prependHyperLinks = function(node) {
 	} catch(e) {
 		Mojo.Log.logException(e);
 	}
-}
-
+};
 
 FullStoryAssistant.prototype.listDataHandler = function(ids) {
 	this.storyList = ids;
@@ -398,6 +397,9 @@ FullStoryAssistant.prototype.initCommandModel = function() {
 			icon: "back",
 			disabled: this.isFirst,
 			command: "do-previousStory"
+		}, {
+			icon: "delete",
+			command: "do-deleteStory"
 		}, {
 			icon: "forward",
 			disabled: this.isLast,
@@ -705,6 +707,11 @@ FullStoryAssistant.prototype.handleCommand = function(event) {
 					name: "fullStory",
 					transition: Mojo.Transition.crossFade
 				}, this.feeds, this.feed, this.storyList[this.storyIndex + 1]);
+				break;
+			
+			case "do-deleteStory":
+				this.feeds.deleteStory(this.story);
+				this.controller.stageController.popScene();
 				break;
 			
 			case "do-togglePlay":

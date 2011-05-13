@@ -108,6 +108,12 @@ var database = Class.create({
 				"UPDATE feeds SET category = 0 WHERE feedType > -2",
 				"UPDATE feeds SET category = 1 WHERE feedType <= -2"
 			]
+		}, {
+			version:	14,
+			sqls:		[
+				"ALTER TABLE stories ADD COLUMN deleted BOOLEAN NOT NULL DEFAULT 0",
+				"UPDATE stories SET deleted = 0"
+			]
 		}
 	],
 	
@@ -289,7 +295,8 @@ var database = Class.create({
 								   '  isNew BOOL NOT NULL DEFAULT 1,' +
 								   '  isStarred BOOL NOT NULL DEFAULT 0,' +
 								   '  pubdate INT NOT NULL,' +
-								   '  flag BOOL NOT NULL DEFAULT 0)',
+								   '  flag BOOL NOT NULL DEFAULT 0,' +
+								   '  deleted BOOL NOT NULL DEFAULT 0)',
 								   [], this.nullData, this.error);
 			transaction.executeSql('CREATE UNIQUE INDEX idx_stories_fid_uuid' +
 								   '  ON stories (fid, uuid)',
@@ -343,7 +350,7 @@ var database = Class.create({
 			// Create the system table. It currently contains nothing but the version.
 			transaction.executeSql('CREATE TABLE system (version INTEGER)',
 								   [], this.nullData, this.error);
-			transaction.executeSql('INSERT INTO system (version) VALUES(13)',
+			transaction.executeSql('INSERT INTO system (version) VALUES(14)',
 								   [], this.nullData, this.error);
 			
 			// Insert default categories.
@@ -400,6 +407,7 @@ var database = Class.create({
 			var onFail = this.error;
 			
 			for(i = 0; i < sqls.length; i++) {
+				Mojo.Log.info("DB>", sqls[i]);
 				transaction.executeSql(sqls[i], [], onSuccess, onFail);
 			}
 			transaction.executeSql(commonSQL.csSetVersion, [destVer],
@@ -804,7 +812,8 @@ var database = Class.create({
 		// Build the SELECT statement.
 		var selectStmt = "SELECT COUNT(id) AS storyCount" +
 						 "  FROM stories" +
-						 "  WHERE (title LIKE '%' || ? || '%')";
+						 "  WHERE (title LIKE '%' || ? || '%')" +
+						 "    AND (deleted = 0)";
 		switch(feed.sortMode & 0xFF) {
 			case 1:	selectStmt += " AND isRead = 0";	break;
 			case 2: selectStmt += " AND isNew = 1";	break;
@@ -845,7 +854,7 @@ var database = Class.create({
 		onFail = onFail || this.error;
 		
 		this.transaction(function(transaction) {
-			transaction.executeSql("SELECT COUNT(*) AS newCount FROM stories WHERE isNew = 1", [],
+			transaction.executeSql("SELECT COUNT(*) AS newCount FROM stories WHERE (isNew = 1) AND (deleted = 0)", [],
 				function(transaction, result) {
 					if(result.rows.length > 0) {
 						onSuccess(result.rows.item(0).newCount);
@@ -886,7 +895,8 @@ var database = Class.create({
 						 "       f.showListSummary AS showSummary, f.fullStory" +
 						 "  FROM stories AS s" +
 						 "  INNER JOIN feeds AS f ON (f.id = s.fid)" +
-						 "  WHERE (s.title LIKE '%' || ? || '%')";		
+						 "  WHERE (s.title LIKE '%' || ? || '%')" +
+						 "    AND (s.deleted = 0)";
 		switch(feed.sortMode & 0xFF) {
 			case 1:	selectStmt += " AND s.isRead = 0";	break;
 			case 2: selectStmt += " AND s.isNew = 1";	break;
@@ -1004,12 +1014,13 @@ var database = Class.create({
 		// Build the basic SELECT statement.
 		var selectStmt = "SELECT s.id" +
 						 "  FROM stories AS s" +
-						 "  INNER JOIN feeds AS f ON (f.id = s.fid)";
+						 "  INNER JOIN feeds AS f ON (f.id = s.fid)" +
+						 "  WHERE (s.deleted = 0)";
 		
 		var whereClauseAddOn = null;
 		switch(feed.sortMode & 0xFF) {
-			case 1:	whereClauseAddOn = " s.isRead = 0";	break;
-			case 2: whereClauseAddOn = " s.isNew = 1";	break;
+			case 1:	whereClauseAddOn = " AND (s.isRead = 0)";	break;
+			case 2: whereClauseAddOn = " AND (s.isNew = 1)";	break;
 		}
 		
 		// Build the ORDER clause.
@@ -1023,7 +1034,7 @@ var database = Class.create({
 			case feedTypes.ftAllItems:
 				this.transaction(function(transaction) {
 					transaction.executeSql(selectStmt +
-										   (whereClauseAddOn ? " WHERE" + whereClauseAddOn : "") +
+										   (whereClauseAddOn ? whereClauseAddOn : "") +
 										   orderAndLimit, [],
 										   handleResult, onFail);
 				});
@@ -1031,8 +1042,8 @@ var database = Class.create({
 			
 			case feedTypes.ftStarred:
 				this.transaction(function(transaction) {
-					transaction.executeSql(selectStmt + " WHERE s.isStarred = 1" +
-										   (whereClauseAddOn ? " AND" + whereClauseAddOn : "") +
+					transaction.executeSql(selectStmt + " AND (s.isStarred = 1)" +
+										   (whereClauseAddOn ? whereClauseAddOn : "") +
 										   orderAndLimit,
 										   [], handleResult, onFail);
 				});
@@ -1040,8 +1051,8 @@ var database = Class.create({
 			
 			default:
 				this.transaction(function(transaction) {
-					transaction.executeSql(selectStmt + " WHERE s.fid = ?" +
-										   (whereClauseAddOn ? " AND" + whereClauseAddOn : "") +
+					transaction.executeSql(selectStmt + " AND (s.fid = ?) " +
+										   (whereClauseAddOn ? whereClauseAddOn : "") +
 										   orderAndLimit, [feed.id],
 										   handleResult, onFail);
 				});
@@ -1353,5 +1364,27 @@ var database = Class.create({
 					break;
 			}			
 		});		
+	},
+	
+	/**
+	 * Delete a story.
+	 * This does no "real" delete as the item would come back on the next
+	 * update. Instead, the story is marked as being deleted and will not
+	 * be selected again.
+	 *
+	 * @param	story		{object}		story to delete
+	 * @param	onSuccess	{function}		function to be called on success
+	 * @param	onFail		{function}		function to be called on failure
+	 */
+	deleteStory: function(story, onSuccess, onFail) {
+		onSuccess = onSuccess || this.nullData;
+		onFail = onFail || this.error;
+		
+		Mojo.Log.info("DB> deleting story", story.id);
+		
+		this.transaction(function(transaction) {
+			transaction.executeSql("UPDATE stories SET deleted = 1 WHERE id = ?",
+				[story.id], onSuccess, onFail);
+		});
 	}
 });

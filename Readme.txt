@@ -31,6 +31,11 @@ Contributors
 Changelog
 =========
 
+Version 2.1.2 (Minor Feature Release)
+-------------------------------------
+ * added ability to delete storys
+ * the AddFeed-Scene now saves on back gesture
+
 Version 2.1.1 (bug fix)
 -----------------------
  * fixed spanish locale

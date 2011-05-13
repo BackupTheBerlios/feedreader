@@ -45,6 +45,7 @@ function StorylistAssistant(feeds, feed) {
 	this.listDataHandler = this.listDataHandler.bind(this);
 	this.changeFeed = this.changeFeed.bind(this);
 	this.openBrowser = this.openBrowser.bind(this);
+	this.deleteStory = this.deleteStory.bind(this);
 	
 	this.setupComplete = false;	
 	this.wasActiveBefore = false;
@@ -82,7 +83,7 @@ StorylistAssistant.prototype.setup = function() {
 			"large":			this.listFormatter.bind(this, "large"),
 			"starClass":		this.listFormatter.bind(this, "starClass")
 		},
-		swipeToDelete:	false,
+		swipeToDelete:	true,
 		renderLimit: 	50,
 		reorderable:	false,
 		delay:			500,
@@ -90,6 +91,8 @@ StorylistAssistant.prototype.setup = function() {
 	}, {});
 	
 	this.controller.listen("storyList", Mojo.Event.listTap, this.showStory);
+    this.controller.listen("storyList", Mojo.Event.listDelete, this.deleteStory);	
+	
     this.controller.listen("sortIcon", Mojo.Event.tap, this.sortModeTap);
 
 	// Setup command menu.
@@ -148,6 +151,7 @@ StorylistAssistant.prototype.activate = function(event) {
 
 StorylistAssistant.prototype.cleanup = function(event) {
 	this.controller.stopListening("storyList", Mojo.Event.listTap, this.showStory);
+	this.controller.stopListening("storyList", Mojo.Event.listDelete, this.deleteStory);
     this.controller.stopListening("sortIcon", Mojo.Event.tap, this.sortModeTap);
 };
 
@@ -254,6 +258,10 @@ StorylistAssistant.prototype.showStory = function(event) {
 	} else {
 		this.feeds.getStory(event.item.id, this.listStoryURLs.bind(this, event));
 	}
+};
+
+StorylistAssistant.prototype.deleteStory = function(event) {
+	this.feeds.deleteStory(event.item);
 };
 
 StorylistAssistant.prototype.listStoryURLs = function(event, feed, story, urls) {
@@ -424,6 +432,11 @@ StorylistAssistant.prototype.considerForNotification = function(params){
 					this.refreshList();
 					Mojo.Log.info("SL> refreshing list");
 				}
+				break;
+			
+			case "storylist-changed":
+				Mojo.Log.info("SL> story list update received; refreshing list");
+				this.refreshList();
 				break;
 			
 			case "updatestate-changed":

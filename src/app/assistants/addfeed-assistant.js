@@ -175,7 +175,7 @@ AddfeedAssistant.prototype.setup = function() {
 									disabled: false
 								});
 	this.controller.listen("okButton", Mojo.Event.tap, this.updateFeed.bindAsEventListener(this));
-          
+	
 	this.controller.setupWidget("cancelButton",
 								{ type: Mojo.Widget.defaultButton }, {
 									buttonClass: "negative",
@@ -255,6 +255,15 @@ AddfeedAssistant.prototype.updateFeed = function() {
 
 	// Save the feed.
 	this.feeds.addOrEditFeed(this.feed, this.feedUpdateSuccess, this.feedUpdateFailed);
+};
+
+AddfeedAssistant.prototype.handleCommand = function(event) {
+    if (event.type === Mojo.Event.back) {
+		Mojo.Log.info("ADDFEED> Got back gesture");
+		event.stopPropagation();
+		event.preventDefault();
+		this.updateFeed();
+    }
 };
 
 AddfeedAssistant.prototype.feedUpdateFailed = function(transaction, error) {
