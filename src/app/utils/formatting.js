@@ -80,7 +80,7 @@ var Formatting = {
 			summary = summary.replace(/digg_url .../, "");
 			
 			// remove class properties of all elements
-			summary = summary.replace(/class="[^"]*"/ig, '')
+			summary = summary.replace(/class="[^"]*"/ig, '');
 			
 			// Parse some BBCodes.
 			summary = summary.replace(/\[i\](.*)\[\/i\]/ig, '<span class="italic">$1</span>');

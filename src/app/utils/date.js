@@ -202,22 +202,22 @@ var dateConverter = Class.create({
 				var d = new Date();
 				intDate = d.getTime();
 			} else if(dateString.match(/\D{3},\s\d{1,2}\s\D{3}\s\d{2,4}\s\d{1,2}:\d{1,2}:\d*/)) {
-				Mojo.Log.info("DATE> RFC822", dateString);
+//				Mojo.Log.info("DATE> RFC822", dateString);
 				intDate = this.convertRFC822(dateString);
 			} else if(dateString.match(/\D{3}\s\D{3}\s\d{1,2}\s\d{2}:\d{2}(:\d{2}){0,1}\s[a-zA-Z\+\-0-9]{1,5}\s\d{3,4}/)) {
-				Mojo.Log.info("DATE> RFC2822", dateString);
+//				Mojo.Log.info("DATE> RFC2822", dateString);
 				intDate = this.convertRFC2822(dateString);
 			} else if(dateString.match(/\d{1,2}\.\d{1,2}.\d{4}/)) {
-				Mojo.Log.info("DATE> SIMPLEDATE", dateString);
+//				Mojo.Log.info("DATE> SIMPLEDATE", dateString);
 				intDate = this.convertSimpleDate(dateString);
 			} else if(dateString.match(/[a-zA-z]{3}\,\s\d{2}\s[a-zA-Z]+\s\d{4}\s\d{2}\:\d{2}:\d{2}/)) {
-				Mojo.Log.info("DATE> DIGGDATE", dateString);
+//				Mojo.Log.info("DATE> DIGGDATE", dateString);
 				intDate = this.convertDiggDate(dateString);
 			} else if(dateString.match(/\d{2}\s\D{3}\s\d{4}\s\d{2}:\d{2}:\d{2}.*/)) {
-				Mojo.Log.info("DATE> SIMPLEDATE2", dateString);
+//				Mojo.Log.info("DATE> SIMPLEDATE2", dateString);
 				intDate = this.convertSimpleDate2(dateString);
 			} else {
-				Mojo.Log.info("DATE> DCDATE", dateString);
+//				Mojo.Log.info("DATE> DCDATE", dateString);
 				intDate = this.convertDCDate(dateString);
 			}
 		} catch(e) {
