@@ -726,6 +726,7 @@ var database = Class.create({
 			function(transaction) {
 				transaction.executeSql(commonSQL.csGetFeedData +
 									   "  WHERE feeds.title LIKE '%' || ? || '%'" +
+									   "    AND deleted = 0" +
 									   "  GROUP BY feeds.id" +
 									   "  ORDER BY feedOrder" +
 									   "  LIMIT ? OFFSET ?",
