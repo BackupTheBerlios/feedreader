@@ -280,9 +280,11 @@ FullStoryAssistant.prototype.prependHyperLinks = function(node) {
 	}
 	
 	try {
-		if((node.nodeName == 'A') && node.href && (node.href != '#')) {
-			node.href = '#' + node.href;
+		if((node.nodeName == 'A') && node.href && (!node.href.match(/javascript.*/))) {
+			node.onclick = this.handleClick.bind(this, node.href);
+			node.href = 'javascript:void(0)';
 		}
+		
 		for(var i = 0; i < node.childNodes.length; i++) {
 			this.prependHyperLinks(node.childNodes[i]);
 		}
@@ -753,17 +755,13 @@ FullStoryAssistant.prototype.considerForNotification = function(params){
 	return params;
 };
 
-FullStoryAssistant.prototype.handleClick = function(event) {
-	if((!event.target) || (event.target.nodeName != 'A') ||
-	   (!event.target.href) || this.scrolling) {
+FullStoryAssistant.prototype.handleClick = function(href) {
+	if((!href) || this.scrolling) {
 		return;
 	}
 	
-	var href = event.target.href.replace(/[^#]*#(.*)/, '$1');
-	if(href) {
-		Mojo.Log.info("FULLSTORY> opening embedded link", href, "; original link", event.target.href);
-		this.openURL(href);
-	}
+	Mojo.Log.info("FULLSTORY> opening embedded link", href);
+	this.openURL(href);
 };
 
 FullStoryAssistant.prototype.handleMouseDown = function(event) {
@@ -774,6 +772,10 @@ FullStoryAssistant.prototype.handleMouseDown = function(event) {
 
 FullStoryAssistant.prototype.handleMouseUp = function(event) {
 	this.mouseDown = false;
+	if(this.scrolling) {
+		event.preventDefault();
+		event.stopPropagation();
+	}
 	return true;
 };
 
