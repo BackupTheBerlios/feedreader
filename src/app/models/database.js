@@ -104,7 +104,7 @@ var database = Class.create({
 				"    UPDATE categories SET catOrder = catOrder - 1 WHERE catOrder > old.catOrder;" +
 				"    UPDATE feeds SET category = 0 WHERE category = old.id;" +
 				"  END",
-				"ALTER TABLE FEEDS ADD COLUMN category INT NOT NULL DEFAULT 0",
+				"ALTER TABLE feeds ADD COLUMN category INT NOT NULL DEFAULT 0",
 				"UPDATE feeds SET category = 0 WHERE feedType > -2",
 				"UPDATE feeds SET category = 1 WHERE feedType <= -2"
 			]
@@ -276,7 +276,7 @@ var database = Class.create({
 								   '  fullStory BOOL NOT NULL,' +
 								   '  username TEXT,' +
 								   '  password TEXT,' +
-								   '  category INT NOT NULL DEFAULT 0)' +
+								   '  category INT NOT NULL DEFAULT 0)',
 								   [], this.nullData, this.error);
 			
 			// Create the story table.
@@ -435,7 +435,7 @@ var database = Class.create({
 	 * @param	error		{Object}		error object
 	 */
 	error: function(transaction, error) {
-		Mojo.Log.error("DB>", error.message);
+		Mojo.Log.error("DB query failed>", error.message);
 	},
 	
 	/**
@@ -726,7 +726,6 @@ var database = Class.create({
 			function(transaction) {
 				transaction.executeSql(commonSQL.csGetFeedData +
 									   "  WHERE feeds.title LIKE '%' || ? || '%'" +
-									   "    AND deleted = 0" +
 									   "  GROUP BY feeds.id" +
 									   "  ORDER BY feedOrder" +
 									   "  LIMIT ? OFFSET ?",

@@ -31,6 +31,11 @@ Contributors
 Changelog
 =========
 
+Version 2.1.3 (bug fix)
+-----------------------
+ * fixed initial database creation
+ * improved link handling in FullStoryScene
+
 Version 2.1.2 (Minor Feature Release)
 -------------------------------------
  * added ability to delete storys
