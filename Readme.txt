@@ -31,6 +31,10 @@ Contributors
 Changelog
 =========
 
+Version 2.1.4 (maintenance release)
+-----------------------------------
+ * improved ATOM compatibility
+
 Version 2.1.3 (bug fix)
 -----------------------
  * fixed initial database creation

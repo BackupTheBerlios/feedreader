@@ -256,7 +256,7 @@ var feeds = Class.create ({
 							FeedReader.showError(errorMsg, { title: feed.url });
 						}
 						Mojo.Log.info("FEEDS> Unsupported feed format in", feed.url);
-						return this.db.setFeedType(feed.url, feedTypes.ftUnknown);
+						return this.db.setFeedType(feed, feedTypes.ftUnknown);
 					}
 				}
 			}
@@ -315,13 +315,13 @@ var feeds = Class.create ({
 						for(enc = 0; enc < el; enc++) {
 							rel = enclosures.item(enc).getAttribute("rel");
 							url = enclosures.item(enc).getAttribute("href");
-							type = enclosures.item(enc).getAttribute("type");
-	
+							type = enclosures.item(enc).getAttribute("type");	
 							if(!type) {
 								type = "";
 							}
 							if(url && (url.length > 0)) {
-								if(url.match(/.*\.htm(l){0,1}/i)){
+								if(url.match(/.*\.htm(l){0,1}/i) ||
+								  (type && (type.match(/text\/html/i) || type.match(/application\/xhtml\+xml/i)))){
 									title = enclosures.item(enc).getAttribute("title");
 									if((title === null) || (title.length === 0)) {
 										if(rel && rel.match(/alternate/i)) {
