@@ -1,1 +1,3 @@
 glob:*.ipk
+syntax: glob
+screenshots/*
