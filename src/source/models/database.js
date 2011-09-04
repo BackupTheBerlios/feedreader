@@ -43,42 +43,42 @@ var commonSQL = {
  * The feed list class encapsulated an object of this class.
  */
 enyo.kind({
-	
+
 	name:				"Database",
 	kind:				"Component",
-	
+
 	events:				{
 		onFeedListLoaded:	"",
 		onFeedUpdated:		""
 	},
-	
+
 	db:					null,
 	openTransactions:	0,
 	isReady:			false,
-	
+
 	updateSqls:			[
 	],
-	
+
 	/** @private
-	 * 
+	 *
 	 * Constructor.
 	 */
 	create: function() {
 		this.inherited(arguments);
-		
+
 		// Transaction handlers.
 		this.transactionSuccess = enyo.bind(this, this.transactionSuccess);
 		this.transactionFailed = enyo.bind(this, this.transactionFailed);
-		
+
 		// Per-Query handlers.
 		this.nullData = enyo.bind(this, this.nullData);
 		this.errorHandler = enyo.bind(this, this.errorHandler);
 		var checkVersion = enyo.bind(this, this.checkVersion);
 		var initDB = enyo.bind(this, this.initDB);
-		
+
 		try {
 			this.db = openDatabase("ext:FeedReader", "", "FeedReader Database");
-			
+
 			this.transaction(function(transaction) {
 				transaction.executeSql("SELECT MAX(version) AS version FROM system",
 									   [], checkVersion, initDB);
@@ -87,9 +87,9 @@ enyo.kind({
 			this.error("DB> exception", e);
 		}
 	},
-	
+
 	/** @private
-	 * 
+	 *
 	 * Open a transaction.
 	 *
 	 * @param	fnc			{function}		function to be called with opened transaction
@@ -97,13 +97,13 @@ enyo.kind({
 	transaction: function(fnc, onSuccess, onFail) {
 		onSuccess = onSuccess || this.transactionSuccess;
 		onFail = onFail || this.transactionFailed;
-		
+
 		this.openTransactions++;
 		this.db.transaction(fnc, onFail, onSuccess);
 	},
-	
+
 	/** @private
-	 * 
+	 *
 	 * Event handler for failed transactions.
 	 *
 	 * @param	error		{Object}		error object
@@ -112,31 +112,31 @@ enyo.kind({
 		this.error("DB> Transaction failed; error code:", error.code, "; message:", error.message);
 		this.openTransactions--;
 	},
-	
+
 	/** @private
-	 * 
+	 *
 	 * Event handler for successful transactions.
 	 */
 	transactionSuccess: function() {
 		this.openTransactions--;
 	},
-	
+
 	/** @private
-	 * 
+	 *
 	 * Called when opening the database succeeds.
 	 */
 	dbReady: function() {
 		this.log("DB> Database schema ready");
-		
+
 		if(enyo.application.prefs.updateOnStart || enyo.application.feeds.updateWhenReady) {
 			enyo.application.feeds.updateWhenReady = false;
 			enyo.application.feeds.enqueueUpdateAll();
 		}
-		
+
 		this.isReady = true;
 		enyo.application.notifyDBReady();
 	},
-	
+
 	/** @private
 	 *
 	 * Create the database schema.
@@ -146,14 +146,14 @@ enyo.kind({
 	initDB: function(transaction) {
 		try {
 			this.log("DB> initializing database");
-			
+
 			// Create the categories table.
 			transaction.executeSql('CREATE TABLE categories (' +
 								   '  id INTEGER PRIMARY KEY,' +
 								   '  catOrder INTEGER NOT NULL,' +
 								   '  title TEXT)',
 								   [], this.nullData, this.errorHandler);
-			
+
 			// Create the feed table.
 			transaction.executeSql('CREATE TABLE feeds (' +
 								   '  id INTEGER PRIMARY KEY,' +
@@ -175,7 +175,7 @@ enyo.kind({
 								   '  password TEXT,' +
 								   '  category INT NOT NULL DEFAULT 0)',
 								   [], this.nullData, this.errorHandler);
-			
+
 			// Create the story table.
 			transaction.executeSql('CREATE TABLE stories (' +
 								   '  id INTEGER PRIMARY KEY,' +
@@ -198,7 +198,7 @@ enyo.kind({
 			transaction.executeSql('CREATE UNIQUE INDEX idx_stories_fid_uuid' +
 								   '  ON stories (fid, uuid)',
 								   [], this.nullData, this.errorHandler);
-			
+
 			// The storyurls table takes up the urls.
 			transaction.executeSql('CREATE TABLE storyurls (' +
 								   '  id INTEGER PRIMARY KEY,' +
@@ -208,7 +208,7 @@ enyo.kind({
 								   '  title TEXT,' +
 								   '  href TEXT)',
 								   [], this.nullData, this.errorHandler);
-			
+
 			// Create triggers.
 			transaction.executeSql("CREATE TRIGGER categories_after_insert AFTER INSERT ON categories" +
 								   "  BEGIN" +
@@ -243,19 +243,19 @@ enyo.kind({
 								   "    DELETE FROM stories" +
 								   "      WHERE NOT fid IN (SELECT id FROM feeds);" +
 								   "  END", [], this.nullData, this.errorHandler);
-			
+
 			// Create the system table. It currently contains nothing but the version.
 			transaction.executeSql('CREATE TABLE system (version INTEGER)',
 								   [], this.nullData, this.errorHandler);
 			transaction.executeSql('INSERT INTO system (version) VALUES(14)',
 								   [], this.nullData, this.errorHandler);
-			
+
 			// Insert default categories.
 			transaction.executeSql('INSERT INTO categories (id, title, catOrder) VALUES(0, "Uncategorized", 1)',
 								   [], this.nullData, this.errorHandler);
 			transaction.executeSql('INSERT INTO categories (id, title, catOrder) VALUES(1, "Aggregations", 0)',
-								   [], this.nullData, this.errorHandler);			
-			
+								   [], this.nullData, this.errorHandler);
+
 			// Insert aggregated feeds with default settings.
 			transaction.executeSql('INSERT INTO feeds (title, url, feedType, feedOrder, enabled, showPicture,' +
 								   '                   showMedia, showListSummary, showListCaption,'+
@@ -276,7 +276,7 @@ enyo.kind({
 			this.error("DB EXCEPTION>", e);
 		}
 	},
-	
+
 	/** @private
 	 *
 	 * Check the database version and upgrade if necessary.
@@ -288,21 +288,21 @@ enyo.kind({
 		var version = result.rows.item(0).version;
 		var destVer = version;
 		var sqls = [];
-		
+
 		this.log("DB> Database already exists, version is:", version);
-		
+
 		for(var i = 0; i < this.updateSqls.length; i++) {
 			if(this.updateSqls[i].version > destVer) {
 				sqls = sqls.concat(this.updateSqls[i].sqls);
 				destVer = this.updateSqls[i].version;
 			}
 		}
-		
+
 		if(destVer > version) {
 			this.log("DB> Updating to schema version", destVer);
 			var onSuccess = this.nullData;
 			var onFail = this.errorHandler;
-			
+
 			for(i = 0; i < sqls.length; i++) {
 				this.log("DB>", sqls[i]);
 				transaction.executeSql(sqls[i], [], onSuccess, onFail);
@@ -310,10 +310,10 @@ enyo.kind({
 			transaction.executeSql(commonSQL.csSetVersion, [destVer],
 								   onSuccess, onFail);
 		}
-		
+
 		this.dbReady();
 	},
-	
+
 	/** @private
 	 *
 	 * Default data handler. Does nothing.
@@ -323,7 +323,7 @@ enyo.kind({
 	 */
 	nullData: function(transaction, result) {
 	},
-	
+
 	/** @private
 	 *
 	 * Default error handler.
@@ -334,7 +334,7 @@ enyo.kind({
 	errorHandler: function(transaction, error) {
 		this.error("DB query failed>", error.message);
 	},
-	
+
 	/**
 	 * Delete a category.
 	 *
@@ -345,15 +345,15 @@ enyo.kind({
 	deleteCategory: function(category, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullData;
 		onFail = onFail || this.errorHandler;
-		
+
 		this.log("DB> deleting category", category.id);
-		
+
 		this.transaction(function(transaction) {
 			transaction.executeSql("DELETE FROM categories WHERE id = ?",
 				[category.id], onSuccess, onFail);
 		});
 	},
-	
+
 	/**
 	 * Change the order of a category.
 	 *
@@ -365,7 +365,7 @@ enyo.kind({
 	reOrderCategory: function(oldOrder, newOrder, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullData;
 		onFail = onFail || this.errorHandler;
-		
+
 		var count = 0;
 		var successWrapper = function() {
 			if(++count > 3) {
@@ -373,7 +373,7 @@ enyo.kind({
 				onSuccess();
 			}
 		};
-		
+
 		this.transaction(function(transaction) {
 			transaction.executeSql("UPDATE categories SET catOrder = -1 WHERE catOrder = ?",
 								   [oldOrder], successWrapper, onFail);
@@ -396,9 +396,9 @@ enyo.kind({
 	addOrEditFeed: function(feed, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullData;
 		onFail = onFail || this.errorHandler;
-		
+
 		var id = feed.id || null;
-		
+
 		var doUpdate = function(transaction) {
 			enyo.log("DB> Updating feed, id is", id);
 			transaction.executeSql('UPDATE feeds SET title = ?, url = ?, feedType = ?, feedOrder = ?, ' +
@@ -420,7 +420,7 @@ enyo.kind({
 								   },
 								   onFail);
 		};
-		
+
 		var getID = function(transaction, result) {
 			var f = new Feed(feed);
 			transaction.executeSql("SELECT last_insert_rowid() AS id", [],
@@ -431,7 +431,7 @@ enyo.kind({
 					}
 				}, onFail);
 		};
-		
+
 		var doInsert = function(transaction) {
 			enyo.log("DB> inserting new feed");
 			transaction.executeSql('INSERT INTO feeds (title, url, feedType, feedOrder,' +
@@ -448,7 +448,7 @@ enyo.kind({
 									feed.password, feed.fullStory ? 1 : 0, feed.category ? feed.category : 0],
 									getID, onFail);
 		};
-		
+
 		this.transaction(function(transaction) {
 			if(id !== null) {
 				doUpdate(transaction);
@@ -457,7 +457,7 @@ enyo.kind({
 			}
 		});
 	},
-	
+
 	/**
 	 * Set the type of a feed.
 	 *
@@ -469,14 +469,14 @@ enyo.kind({
 	setFeedType: function(feed, type, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullData;
 		onFail = onFail || this.errorHandler;
-		
+
 		this.transaction(function(transaction) {
 			transaction.executeSql("UPDATE feeds SET feedType = ? WHERE id = ?",
 								   [type, feed.id], onSuccess, onFail);
 		});
 		return type;
 	},
-	
+
 	/**
 	 * Set the sort mode of a feed.
 	 *
@@ -487,13 +487,13 @@ enyo.kind({
 	setSortMode: function(feed, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullData;
 		onFail = onFail || this.errorHandler;
-		
+
 		this.transaction(function(transaction) {
 			transaction.executeSql("UPDATE feeds SET sortMode = ? WHERE id = ?",
 								   [feed.sortMode, feed.id], onSuccess, onFail);
 		});
 	},
-	
+
 	/**
 	 * Disable a feed.
 	 *
@@ -505,13 +505,13 @@ enyo.kind({
 	disableFeed: function(feed, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullData;
 		onFail = onFail || this.errorHandler;
-		
+
 		this.transaction(function(transaction) {
 			transaction.executeSql("UPDATE feeds SET feedType = ?, enabled = 0 WHERE id = ?",
 								   [feedTypes.ftUnknown, feed.id], onSuccess, onFail);
-		});		
+		});
 	},
-	
+
 	/**
 	 * Delete a feed.
 	 *
@@ -522,15 +522,15 @@ enyo.kind({
 	deleteFeed: function(feed, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullData;
 		onFail = onFail || this.errorHandler;
-		
+
 		this.log("DB> deleting feed", feed.id);
-		
+
 		this.transaction(function(transaction) {
 			transaction.executeSql("DELETE FROM feeds WHERE id = ?",
 				[feed.id], onSuccess, onFail);
 		});
 	},
-	
+
 	/**
 	 * Change the order of a feed.
 	 *
@@ -542,7 +542,7 @@ enyo.kind({
 	reOrderFeed: function(oldOrder, newOrder, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullData;
 		onFail = onFail || this.errorHandler;
-		
+
 		var count = 0;
 		var successWrapper = function() {
 			if(++count > 3) {
@@ -550,7 +550,7 @@ enyo.kind({
 				onSuccess();
 			}
 		};
-		
+
 		this.transaction(function(transaction) {
 			transaction.executeSql("UPDATE feeds SET feedOrder = -1 WHERE feedOrder = ?",
 								   [oldOrder], successWrapper, onFail);
@@ -570,9 +570,9 @@ enyo.kind({
 	 * @param	onFail		{function}		function to be called on failure
 	 */
 	getUpdatableFeeds: function(onSuccess, onFail) {
-		enyo.application.assert(onSuccess, "DB> getUpdatableFeeds needs data handler");		
+		enyo.application.assert(onSuccess, "DB> getUpdatableFeeds needs data handler");
 		onFail = onFail || this.errorHandler;
-		
+
 		this.transaction(function(transaction) {
 			transaction.executeSql("SELECT id, feedOrder, url, username, password" +
 								   "  FROM feeds" +
@@ -587,7 +587,7 @@ enyo.kind({
 				}, onFail);
 		});
 	},
-	
+
 	/**
 	 * Get the count of feeds matching a filter string.
 	 *
@@ -596,9 +596,9 @@ enyo.kind({
 	 * @param	onFail		{function}		function to be called on failure
 	 */
 	getFeedCount: function(filter, onSuccess, onFail) {
-		enyo.application.assert(onSuccess, "DB> getFeedCount needs data handler");		
+		enyo.application.assert(onSuccess, "DB> getFeedCount needs data handler");
 		onFail = onFail || this.errorHandler;
-		
+
 		this.transaction(
 			function(transaction) {
 				transaction.executeSql("SELECT COUNT(id) AS feedcount" +
@@ -609,7 +609,7 @@ enyo.kind({
 					}, onFail);
 			});
 	},
-	
+
 	/**
 	 * Retrieve a list of feeds.
 	 *
@@ -620,7 +620,7 @@ enyo.kind({
 	 * @param	onFail		{function}		function to be called on failure
 	 */
 	getFeeds: function(filter, offset, count, onSuccess, onFail) {
-		enyo.application.assert(onSuccess, "DB> getFeeds needs data handler");		
+		enyo.application.assert(onSuccess, "DB> getFeeds needs data handler");
 		onFail = onFail || this.errorHandler;
 		this.transaction(
 			function(transaction) {
@@ -639,7 +639,7 @@ enyo.kind({
 					}, onFail);
 			});
 	},
-	
+
 	/**
 	 * Get a list of all feed IDs.
 	 *
@@ -649,7 +649,7 @@ enyo.kind({
 	getFeedIDList: function(onSuccess, onFail) {
 		enyo.application.assert(onSuccess, "DB> getFeedIDList needs data handler");
 		onFail = onFail || this.errorHandler;
-		
+
 		// This function will assemble the result set.
 		var handleResult = function(transaction, result) {
 			var list = [];
@@ -658,13 +658,13 @@ enyo.kind({
 			}
 			onSuccess(list);
 		};
-		
+
 		this.transaction(function(transaction) {
 			transaction.executeSql("SELECT id FROM feeds ORDER BY feedOrder", [],
 								   handleResult, onFail);
 		});
 	},
-	
+
 	/**
 	 * Retrieve a feed.
 	 *
@@ -682,7 +682,7 @@ enyo.kind({
 					[feedTypes.ftStarred, feedTypes.ftAllItems, id],
 					function(transaction, result) {
 						if(result.rows.length > 0) {
-							onSuccess(result.rows.item(0));
+							onSuccess(new Feed(result.rows.item(0)));
 						}
 					}, onFail);
 			});
@@ -699,7 +699,7 @@ enyo.kind({
 	getStoryCount: function(feed, filter, onSuccess, onFail) {
 		enyo.application.assert(onSuccess, "DB> getStoryCount needs data handler");
 		onFail = onFail || this.errorHandler;
-			
+
 		// This function will assemble the result set.
 		var handleResult = function(transaction, result) {
 			var count = 0;
@@ -708,7 +708,7 @@ enyo.kind({
 			}
 			onSuccess(count);
 		};
-		
+
 		// Build the SELECT statement.
 		var selectStmt = "SELECT COUNT(id) AS storyCount" +
 						 "  FROM stories" +
@@ -718,21 +718,21 @@ enyo.kind({
 			case 1:	selectStmt += " AND isRead = 0";	break;
 			case 2: selectStmt += " AND isNew = 1";	break;
 		}
-		
+
 		switch(feed.feedType) {
 			case feedTypes.ftAllItems:
 				this.transaction(function(transaction) {
 					transaction.executeSql(selectStmt, [filter], handleResult, onFail);
 				});
 				break;
-			
+
 			case feedTypes.ftStarred:
 				this.transaction(function(transaction) {
 					transaction.executeSql(selectStmt + " AND isStarred = 1",
 										   [filter], handleResult, onFail);
 				});
 				break;
-			
+
 			default:
 				this.transaction(function(transaction) {
 					transaction.executeSql(selectStmt + " AND fid = ?",
@@ -742,7 +742,7 @@ enyo.kind({
 				break;
 		}
 	},
-	
+
 	/**
 	 * Get the count of new stories.
 	 *
@@ -752,7 +752,7 @@ enyo.kind({
 	getNewStoryCount: function(onSuccess, onFail) {
 		enyo.application.assert(onSuccess, "DB> getNewStoryCount needs data handler");
 		onFail = onFail || this.errorHandler;
-		
+
 		this.transaction(function(transaction) {
 			transaction.executeSql("SELECT COUNT(*) AS newCount FROM stories WHERE (isNew = 1) AND (deleted = 0)", [],
 				function(transaction, result) {
@@ -764,7 +764,7 @@ enyo.kind({
 				}, onFail);
 		});
 	},
-	
+
 	/**
 	 * Retrieve a list of stories matching a filter string.
 	 *
@@ -778,12 +778,12 @@ enyo.kind({
 	getStories: function(feed, filter, offset, limit, onSuccess, onFail) {
 		enyo.application.assert(onSuccess, "DB> getStories needs data handler");
 		onFail = onFail || this.errorHandler;
-		
+
 		// This function will assemble the result set.
 		var handleResult = function(transaction, result) {
 			var list = [];
 			for(var i = 0; i < result.rows.length; i++) {
-				list.push(result.rows.item(i));
+				list.push(new Story(result.rows.item(i)));
 			}
 			onSuccess(offset, list);
 		};
@@ -800,14 +800,14 @@ enyo.kind({
 			case 1:	selectStmt += " AND s.isRead = 0";	break;
 			case 2: selectStmt += " AND s.isNew = 1";	break;
 		}
-		
+
 		// Build the ORDER clause.
 		var orderAndLimit = " ORDER BY ";
 		if((feed.sortMode & 0xFF00) != 0x0100) {
 			orderAndLimit += "f.feedOrder, ";
 		}
 		orderAndLimit += "s.pubdate DESC LIMIT ? OFFSET ?";
-		
+
 		switch(feed.feedType) {
 			case feedTypes.ftAllItems:
 				this.transaction(function(transaction) {
@@ -816,14 +816,14 @@ enyo.kind({
 										   handleResult, onFail);
 				});
 				break;
-			
+
 			case feedTypes.ftStarred:
 				this.transaction(function(transaction) {
 					transaction.executeSql(selectStmt + " AND s.isStarred = 1" + orderAndLimit,
 										   [filter, limit, offset], handleResult, onFail);
 				});
 				break;
-			
+
 			default:
 				this.transaction(function(transaction) {
 					transaction.executeSql(selectStmt + " AND s.fid = ?" + orderAndLimit,
@@ -833,7 +833,7 @@ enyo.kind({
 				break;
 		}
 	},
-	
+
 	/**
 	 * Retrieve a list of urls of stories.
 	 *
@@ -844,7 +844,7 @@ enyo.kind({
 	getFeedURLList: function(feed, onSuccess, onFail) {
 		enyo.application.assert(onSuccess, "DB> getFeedURLList needs data handler");
 		onFail = onFail || this.errorHandler;
-		
+
 		// This function will assemble the result set.
 		var handleResult = function(transaction, result) {
 			var list = [];
@@ -861,10 +861,10 @@ enyo.kind({
 		var selectStmt = "SELECT s.title, su.href" +
 						 "  FROM stories AS s" +
 						 "  INNER JOIN storyurls AS su ON (s.id = su.sid)";
-		
+
 		// Build the ORDER clause.
 		var orderAndLimit = " ORDER BY s.pubdate DESC";
-		
+
 		switch(feed.feedType) {
 			case feedTypes.ftAllItems:
 				this.transaction(function(transaction) {
@@ -872,14 +872,14 @@ enyo.kind({
 										   [], handleResult, onFail);
 				});
 				break;
-			
+
 			case feedTypes.ftStarred:
 				this.transaction(function(transaction) {
 					transaction.executeSql(selectStmt + " WHERE s.isStarred = 1" + orderAndLimit,
 										   [], handleResult, onFail);
 				});
 				break;
-			
+
 			default:
 				this.transaction(function(transaction) {
 					transaction.executeSql(selectStmt + " WHERE s.fid = ?" + orderAndLimit,
@@ -900,7 +900,7 @@ enyo.kind({
 	getStoryIDList: function(feed, onSuccess, onFail) {
 		enyo.application.assert(onSuccess, "DB> getStoryIDList needs data handler");
 		onFail = onFail || this.errorHandler;
-		
+
 		// This function will assemble the result set.
 		var handleResult = function(transaction, result) {
 			var list = [];
@@ -915,20 +915,20 @@ enyo.kind({
 						 "  FROM stories AS s" +
 						 "  INNER JOIN feeds AS f ON (f.id = s.fid)" +
 						 "  WHERE (s.deleted = 0)";
-		
+
 		var whereClauseAddOn = null;
 		switch(feed.sortMode & 0xFF) {
 			case 1:	whereClauseAddOn = " AND (s.isRead = 0)";	break;
 			case 2: whereClauseAddOn = " AND (s.isNew = 1)";	break;
 		}
-		
+
 		// Build the ORDER clause.
 		var orderAndLimit = " ORDER BY ";
 		if((feed.sortMode & 0xFF00) != 0x0100) {
 			orderAndLimit += "f.feedOrder, ";
 		}
 		orderAndLimit += "s.pubdate DESC";
-		
+
 		switch(feed.feedType) {
 			case feedTypes.ftAllItems:
 				this.transaction(function(transaction) {
@@ -938,7 +938,7 @@ enyo.kind({
 										   handleResult, onFail);
 				});
 				break;
-			
+
 			case feedTypes.ftStarred:
 				this.transaction(function(transaction) {
 					transaction.executeSql(selectStmt + " AND (s.isStarred = 1)" +
@@ -947,7 +947,7 @@ enyo.kind({
 										   [], handleResult, onFail);
 				});
 				break;
-			
+
 			default:
 				this.transaction(function(transaction) {
 					transaction.executeSql(selectStmt + " AND (s.fid = ?) " +
@@ -958,7 +958,7 @@ enyo.kind({
 				break;
 		}
 	},
-	
+
 	/**
 	 * Retrieve a story.
 	 *
@@ -969,11 +969,11 @@ enyo.kind({
 	getStory: function(id, onSuccess, onFail) {
 		enyo.application.assert(onSuccess, "DB> getStory needs data handler");
 		onFail = onFail || this.errorHandler;
-		
+
 		var urls = [];
 		var feed = null;
 		var story = null;
-		
+
 		var getURLs = function(transaction) {
 			transaction.executeSql("SELECT title, href" +
 								   "  FROM storyurls" +
@@ -991,7 +991,7 @@ enyo.kind({
 					onSuccess(feed, story, urls);
 				}, onFail);
 		};
-		
+
 		var getFeedData = function(transaction) {
 			transaction.executeSql("SELECT *" +
 								   "  FROM feeds" +
@@ -1000,20 +1000,20 @@ enyo.kind({
 								   [id],
 				function(transaction, result) {
 					if(result.rows.length > 0) {
-						feed = result.rows.item(0);
+						feed = new Feed(result.rows.item(0));
 						getURLs(transaction);
 					} else {
 						enyo.error("DB> Unable to retrieve feed for story", id);
 					}
 				}, onFail);
 		};
-		
+
 		this.transaction(function(transaction) {
 			transaction.executeSql("SELECT * FROM stories WHERE id = ?",
 				[id],
 				function(transaction, result) {
 					if(result.rows.length > 0) {
-						story = result.rows.item(0);
+						story = new Story(result.rows.item(0));
 						getFeedData(transaction);
 					} else {
 						enyo.error("DB> Unable to retrieve story data of story", id);
@@ -1021,7 +1021,7 @@ enyo.kind({
 				}, onFail);
 		});
 	},
-	
+
 	/**
 	 * Called to indicate a beginning update.
 	 *
@@ -1034,11 +1034,11 @@ enyo.kind({
 		onFail = onFail || this.errorHandler;
 		var nullData = this.nullData;
 		var onNotify = enyo.bind(this, this.notifyOfUpdate, true);
-		
+
 		var date = new Date();
-		var keepthreshold = date.getTime() - (enyo.application.prefs.storyKeepTime * 60 * 60 * 1000); 
+		var keepthreshold = date.getTime() - (enyo.application.prefs.storyKeepTime * 60 * 60 * 1000);
 		var newthreshold = date.getTime() - (24 * 60 * 60 * 1000);
-		
+
 		this.transaction(function(transaction) {
 			transaction.executeSql("UPDATE stories" +
 								   "  SET isNew = 0" +
@@ -1058,7 +1058,7 @@ enyo.kind({
 								   [feed.id], onNotify, onFail);
 		});
 	},
-	
+
 	/**
 	 * Send a notification of the update state of a feed.
 	 *
@@ -1068,10 +1068,10 @@ enyo.kind({
 	 */
 	notifyOfUpdate: function(state, transaction, result) {
 		if(result.rows.length > 0) {
-			enyo.application.notifyFeedUpdated(state, result.rows.item(0).feedOrder); 
+			enyo.application.notifyFeedUpdated(state, result.rows.item(0).feedOrder);
 		}
 	},
-	
+
 	/**
 	 * Called to indicate a finished update.
 	 *
@@ -1084,7 +1084,7 @@ enyo.kind({
 		onSuccess = onSuccess || this.nullData;
 		onFail = onFail || this.errorHandler;
 		var onNotify = enyo.bind(this, this.notifyOfUpdate, false);
-		
+
 		this.transaction(function(transaction) {
 			if(successful) {
 				transaction.executeSql("DELETE FROM stories" +
@@ -1102,7 +1102,7 @@ enyo.kind({
 								   [feed.id], onNotify, onFail);
 		});
 	},
-	
+
 	/**
 	 * Add or edit a story.
 	 *
@@ -1114,10 +1114,10 @@ enyo.kind({
 	addOrEditStory: function(feed, story, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullData;
 		onFail = onFail || this.errorHandler;
-		
+
 		var nullData = this.nullData;
 		var error = this.errorHandler;
-		
+
 		var insertURLs = function(transaction, result) {
 			var sid = result.insertId;
 			transaction.executeSql("DELETE FROM storyurls WHERE sid = ?",
@@ -1130,7 +1130,7 @@ enyo.kind({
 			}
 			onSuccess();
 		};
-		
+
 		this.transaction(
 			function(transaction) {
 				transaction.executeSql("SELECT id" +
@@ -1180,7 +1180,7 @@ enyo.kind({
 	 * @param	story		{Object}		story object
 	 * @param	onSuccess	{function}		function to be called on success
 	 * @param	onFail		{function}		function to be called on failure
-	 */	
+	 */
 	markStarred: function(story, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullData;
 		onFail = onFail || this.errorHandler;
@@ -1189,35 +1189,35 @@ enyo.kind({
 								   [story.isStarred ? 1 : 0, story.id], onSuccess, onFail);
 		});
 	},
-	
+
 	/**
 	 * Reset the starred flag all stories of a feed.
 	 *
 	 * @param	story		{Object}		story object
 	 * @param	onSuccess	{function}		function to be called on success
 	 * @param	onFail		{function}		function to be called on failure
-	 */	
+	 */
 	markAllUnStarred: function(feed, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullData;
 		onFail = onFail || this.errorHandler;
-		
+
 		var sql = "UPDATE stories SET isStarred = 0";
 		if(feed.feedType >= feedTypes.ftUnknown) {
 			sql += " WHERE fid = " + feed.id;
 		}
-		
+
 		this.transaction(function(transaction) {
 			transaction.executeSql(sql, [], onSuccess, onFail);
 		});
 	},
-	
+
 	/**
 	 * Mark a story as being read.
 	 *
 	 * @param	story		{Object}		story object
 	 * @param	onSuccess	{function}		function to be called on success
 	 * @param	onFail		{function}		function to be called on failure
-	 */	
+	 */
 	markStoryRead: function(story, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullData;
 		onFail = onFail || this.errorHandler;
@@ -1226,7 +1226,7 @@ enyo.kind({
 								   [story.id], onSuccess, onFail);
 		});
 	},
-	
+
 	/**
 	 * Mark all stories of a feed as being read.
 	 *
@@ -1234,33 +1234,33 @@ enyo.kind({
 	 * @param	state		{boolean}		state of the flag
 	 * @param	onSuccess	{function}		function to be called on success
 	 * @param	onFail		{function}		function to be called on failure
-	 */	
+	 */
 	markAllRead: function(feed, state, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullData;
 		onFail = onFail || this.errorHandler;
-		
+
 		state = state ? 1 : 0;
-		
+
 		this.transaction(function(transaction) {
 			switch(feed.feedType) {
 				case feedTypes.ftAllItems:
 					transaction.executeSql("UPDATE stories SET isRead = ?, isNew = 0",
 										   [state], onSuccess, onFail);
 					break;
-				
+
 				case feedTypes.ftStarred:
 					transaction.executeSql("UPDATE stories SET isRead = ?, isNew = 0 WHERE isStarred = 1",
 										   [state], onSuccess, onFail);
 					break;
-				
+
 				default:
 					transaction.executeSql("UPDATE stories SET isRead = ?, isNew = 0 WHERE fid = ?",
 										   [state, feed.id], onSuccess, onFail);
 					break;
-			}			
-		});		
+			}
+		});
 	},
-	
+
 	/**
 	 * Delete a story.
 	 * This does no "real" delete as the item would come back on the next
@@ -1274,9 +1274,9 @@ enyo.kind({
 	deleteStory: function(story, onSuccess, onFail) {
 		onSuccess = onSuccess || this.nullData;
 		onFail = onFail || this.errorHandler;
-		
+
 		this.log("DB> deleting story", story.id);
-		
+
 		this.transaction(function(transaction) {
 			transaction.executeSql("UPDATE stories SET deleted = 1 WHERE id = ?",
 				[story.id], onSuccess, onFail);
