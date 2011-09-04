@@ -21,32 +21,88 @@
  */
 
 enyo.kind({
+	name:	"HeaderInfoLabel",
+	kind:	"HFlexBox",
+
+	align:	"center",
+	pack:	"center",
+
+	published:	{
+		caption:	"",
+		label:		""
+	},
+
+	components:	[{
+		name:			"caption",
+		className:		"enyo-label story-header-label"
+	}, {
+		name:			"label",
+		flex:			1
+	}],
+
+	captionChanged: function() {
+		this.$.caption.setContent(this.caption);
+	},
+
+	labelChanged: function() {
+		this.$.label.setContent(this.label);
+	},
+
+	create: function() {
+		this.inherited(arguments);
+		this.captionChanged();
+		this.labelChanged();
+	}
+});
+
+enyo.kind({
 	name:		"StoryView",
 	kind:		"VFlexBox",
-	
+	className:	"story-body",
+
 	isRefresh:	false,
-	
+
 	published:	{
 		feed:	null,
 		story:	null
 	},
-	
+
 	components:	[{
 		name:			"header",
-		kind:			"PageHeader",
-		content:		$L("Story")
+		kind:			"Toolbar",
+		className:		"enyo-toolbar-light",
+		components:		[{
+			kind:		"Spacer"
+		}, {
+			name:		"starButton",
+			kind:		"StarButton",
+			disabled:	true,
+			onChange:	"storyStarred"
+		}]
 	}, {
 		name:			"storyContainer",
 		kind:			"VFlexBox",
-		style:			"margin: 15px",
 		flex:			1,
 		showing:		false,
+		defaultKind:	"Control",
 		components:		[{
-			name:			"date",
-			className:		"story-date",
-			style:			"font-size: 15px"
+			className:	"story-body-header",
+			components:	[{
+				name:		"date",
+				kind:		"HeaderInfoLabel",
+				caption:	$L("Date")
+			}, {
+				kind:		"DottedSeparator"
+			}, {
+				name:		"caption",
+				kind:		"HeaderInfoLabel",
+				caption:	$L("Caption")
+			}, {
+				className:	"header-shadow"
+			}]
 		}, {
 			kind:			"Scroller",
+			style:			"margin: 10px",
 			flex:			1,
 			components:		[{
 				name:		"pictureBox",
@@ -66,7 +122,7 @@ enyo.kind({
 				kind:			"HtmlContent",
 				onLinkClick:	"innerLinkClicked"
 			}, {
-				style:			"border-top: 1px solid silver; margin: 5px;"
+				kind:				"SilverSeparator"
 			}, {
 				kind:				"IconButton",
 				icon:				"weblink-image",
@@ -79,10 +135,11 @@ enyo.kind({
 	}, {
 		name:		"bgContainer",
 		kind:		"HFlexBox",
+		className:	"basic-back",
 		align:		"center",
 		pack:		"center",
 		flex:		1,
-		
+
 		components:	[{
 			name:	"bgImage",
 			kind:	"Image",
@@ -93,71 +150,83 @@ enyo.kind({
 		components:		[{
 			kind:		"GrabButton"
 		}]
+	}, {
+		name:			"linkMenu",
+		kind:			"Menu"
 	}],
-	
+
 	storyChanged: function() {
 		if(!this.story) {
-			this.$.header.setContent($L("Story"));
+			this.$.starButton.setChecked(false);
+			this.$.starButton.setDisabled(true);
 			this.$.bgContainer.show();
 			this.$.storyContainer.hide();
 		} else {
-			this.$.date.setContent(enyo.application.feeds.getDateFormatter().formatDateTime(this.story.pubdate));
-			this.$.header.setContent(this.story.title);
+			this.$.date.setLabel(enyo.application.feeds.getDateFormatter().formatDateTime(this.story.pubdate));
+			this.$.caption.setLabel(this.story.title);
 			this.$.content.setContent(this.story.summary);
-			
+			this.$.starButton.setChecked(this.story.isStarred);
+			this.$.starButton.setDisabled(false);
+
 			if(!this.story.picture || (this.story.picture.length <= 0)) {
 				this.$.picture.hide();
 				this.$.pictureSpinner.hide();
 			} else {
 				this.log("STORY> retrieving picture from", this.story.picture);
-				this.$.picture.setSrc(this.story.picture);
+				this.$.picture.setSrc("");
 				this.$.picture.show();
 				if(!this.isRefresh) {
 					this.$.pictureSpinner.show();
 				}
+				this.$.picture.setSrc(this.story.picture);
 			}
-			
+
 			// Mark the story as being read.
 			enyo.application.feeds.markStoryRead(this.story);
-			
+
 			// Show the story container.
 			this.$.bgContainer.hide();
 			this.$.storyContainer.show();
 		}
-		
+
 		this.isRefresh = false;
 	},
-	
-	innerLinkClicked: function(sender, url) {
-		enyo.application.openLink(url);
-	},
-	
-	linkClicked: function(sender, event) {
-		enyo.application.feeds.getStory(this.story.id, this.gotStory);
-	},
-	
+
 	pictureLoaded: function() {
 		this.log("STORY> picture loaded");
 		this.$.pictureSpinner.hide();
 	},
-	
+
+	storyStarred: function() {
+		this.story.isStarred = this.$.starButton.getChecked();
+		this.log("STORY>", this.story.isStarred);
+		enyo.application.feeds.markStarred(this.story);
+	},
+
+	innerLinkClicked: function(sender, url) {
+		enyo.application.openLink(url);
+	},
+
+	linkClicked: function(sender, event) {
+		enyo.application.feeds.getStory(this.story.id, this.gotStory);
+	},
+
 	gotStory: function(feed, story, urls) {
 		this.feed = feed;
 		this.story = story;
-		
+
 		if(urls.length == 1) {
 			enyo.application.openLink(urls[0].href);
 		} else if(urls.length > 1) {
 			// show a menu
 		}
-		
+
 		this.isRefresh = true;
 		this.storyChanged();
 	},
-	
+
 	create: function() {
 		this.inherited(arguments);
-		
 		this.gotStory = enyo.bind(this, this.gotStory);
 	}
 });
