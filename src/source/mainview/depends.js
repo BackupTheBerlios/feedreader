@@ -9,6 +9,8 @@ enyo.depends(
 	"../controls/reorderablelist.js",
 	"../controls/enhancedlist.js",
 	"../controls/listviewskeleton.js",
+	"../controls/dottedseparator.js",
+	"../controls/silverseparator.js",
 	
 	"../models/feed.js",
 	
@@ -17,5 +19,5 @@ enyo.depends(
 	"../story/story.js",
 	"../editfeed/editfeed.js",
 	
-	"../../css/feedreader_enyo.css"
+	"../../stylesheets/feedreader_enyo.css"
 );

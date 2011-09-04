@@ -19,5 +19,5 @@ enyo.depends(
 	"source/utils/simplehtmlparser.js",
 	
 	// Stylesheets
-	"css/feedreader_enyo.css"
+	"stylesheets/feedreader_enyo.css"
 );
