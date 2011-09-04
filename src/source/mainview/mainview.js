@@ -24,11 +24,11 @@ enyo.kind({
 	name:			"mainView",
 	kind:			"Pane",
 	transitionKind: "enyo.transitions.Fade",
-	
+
 	components: [{
 		kind:	"SlidingPane",
 		name:	"mainPane",
-	
+
 		components:	[{
 			name:		"feedListContainer",
 			width:		"320px",
@@ -52,7 +52,7 @@ enyo.kind({
 		}, {
 			name:		"storyContainer",
 			flex:		1,
-			components:	[{			
+			components:	[{
 				name:		"storyView",
 				kind:		"StoryView",
 				flex:		1
@@ -70,32 +70,34 @@ enyo.kind({
 	}, {
 		name:					"applicationEvents",
 		kind:					"ApplicationEvents",
-		
+
 		onWindowActivated:		"windowActivated",
 		onWindowDeactivated:	"windowDeActivated",
 		onUnload:				"unloaded"
 	}],
-	
+
 	//
 	// FeedList events
 	//
-	
+
 	feedSelected: function(sender, feed) {
 		this.$.storyList.setFeed(feed);
 		this.$.storyView.setFeed(feed);
-		
-		if(this.$.storyView.getFeed().id == feed.id) {
+
+		var selectedFeed = this.$.storyList.getFeed();
+		if(selectedFeed && (selectedFeed.id == feed.id)) {
 			// Reset story view.
 			this.$.storyView.setFeed(null);
 			this.$.storyView.setStory(null);
 		}
 	},
-	
+
 	feedDeleted: function(sender, feed) {
-		if(this.$.storyList.getFeed().id == feed.id) {
+		var selectedFeed = this.$.storyList.getFeed();
+		if(selectedFeed && (selectedFeed.id == feed.id)) {
 			// Reset story list.
 			this.$.storyList.setFeed(null);
-			
+
 			// Reset story view.
 			this.$.storyView.setFeed(null);
 			this.$.storyView.setStory(null);
@@ -105,7 +107,7 @@ enyo.kind({
 	addFeed: function(sender) {
 		this.$.editFeedDialog.openAtCenter(null);
 	},
-	
+
 	editFeed: function(sender, feed) {
 		this.$.editFeedDialog.openAtCenter(feed);
 	},
@@ -113,66 +115,66 @@ enyo.kind({
 	//
 	// StoryList events
 	//
-	
+
 	storySelected: function(sender, story) {
 		this.$.storyView.setStory(story);
 	},
-	
+
 	//
 	// Application events
 	//
-	
+
 	windowActivated: function() {
 		this.log("ACTIVATED");
 		enyo.application.mainView = this;
 		enyo.application.isActive = true;
-		
+
 		if(!enyo.application.db.isReady) {
 			this.$.scrim.show();
 		} else {
 			this.notifyDBReady();
 		}
 	},
-	
+
 	windowDeActivated: function() {
 		this.log("DE-ACTIVATED");
 		enyo.application.isActive = false;
 	},
-	
+
 	unloaded: function() {
 		this.log("UN-LOADED");
 		enyo.application.mainView = undefined;
 	},
-	
+
 	//
-	// 
 	//
-	
+	//
+
 	notifyDBReady: function() {
 		this.$.scrim.hide();
 		this.$.feedList.refresh();
 	},
-	
+
 	notifyFeedUpdated: function(state, index) {
 		this.$.feedList.setFeedUpdateState(state, index);
 	},
-	
+
 	notifyFeedListChanged: function() {
 		this.log("MAINVIEW> feedlist changed");
 		this.$.feedList.refresh();
 	},
-	
+
 	notifyStoryListChanged: function() {
 		this.log("MAINVIEW> storylist changed");
 		this.$.storyList.refresh();
 	},
-	
+
 	showError: function(errorMsg, data) {
 		var msg = errorMsg;
 		if(data !== undefined) {
 			msg = enyo.macroize(msg, data);
 		}
-		
+
 		enyo.nextTick(this, function() {
 			this.$.errorDialog.openAtCenter(msg);
 		});
