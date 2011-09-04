@@ -789,9 +789,7 @@ enyo.kind({
 		};
 
 		// Build the basic SELECT statement.
-		var selectStmt = "SELECT s.id, s.title, s.summary," +
-						 "       s.picture, s.audio, s.video," +
-						 "       s.pubdate, s.isRead, s.isNew, s.isStarred," +
+		var selectStmt = "SELECT s.*," +
 						 "       f.title AS feedTitle, f.showListCaption AS showCaption," +
 						 "       f.showListSummary AS showSummary, f.fullStory" +
 						 "  FROM stories AS s" +
