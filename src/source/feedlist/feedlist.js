@@ -205,8 +205,9 @@ enyo.kind({
 		if((index < 0) || (index >= this.items.length) || (!this.items[index])) {
 			return;
 		}
-
 		this.setFeedSpinner(index, state);
-//		{ enyo.asyncMethod(this, "startSpinner", inIndex, state); } },
+		if(!state) {
+			this.refresh();
+		}
 	}
 });
