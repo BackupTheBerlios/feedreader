@@ -83,6 +83,12 @@ enyo.kind({
 	feedSelected: function(sender, feed) {
 		this.$.storyList.setFeed(feed);
 		this.$.storyView.setFeed(feed);
+		
+		if(this.$.storyView.getFeed().id == feed.id) {
+			// Reset story view.
+			this.$.storyView.setFeed(null);
+			this.$.storyView.setStory(null);
+		}
 	},
 	
 	feedDeleted: function(sender, feed) {

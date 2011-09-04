@@ -80,7 +80,12 @@ enyo.kind({
 	},
 	
 	itemClicked: function(sender, event) {
+		if(event.rowIndex == this.selectedIndex) {
+			return false;
+		}
+		
 		this.selectRow(event.rowIndex);
+		return true;
 	},
 	
 	itemDeleted: function(sender, index) {

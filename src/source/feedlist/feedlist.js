@@ -36,74 +36,74 @@ enyo.kind({
 	components:	[{
 		kind:		"ViewHeader",
 		name:		"Header",
-		title:		$L("Feed Subscriptions"),
+		title:		$L("Feed Subscriptions")
 	}, {
-			kind:					"EnhancedList",
-			name:					"list",
-			reorderable:			true,
-			dragBackgroundColor:	"rgb(200, 200, 200)",
-			dragOpacity:			0.7,
-			flex:					1,
-			
-			onSetupRow:		"setupFeed",
-			onAcquirePage:	"acquirePage",
-			onDiscardPage:	"discardPage",
-			onReorder:		"reorderFeed",
-			
-			components: [{
-				kind: 		"SwipeableItem",
-				name:		"item",
-				onclick:	"itemClicked",
-				onConfirm:	"itemDeleted",
+		kind:					"EnhancedList",
+		name:					"list",
+		reorderable:			true,
+		dragBackgroundColor:	"rgb(200, 200, 200)",
+		dragOpacity:			0.7,
+		flex:					1,
+		
+		onSetupRow:		"setupFeed",
+		onAcquirePage:	"acquirePage",
+		onDiscardPage:	"discardPage",
+		onReorder:		"reorderFeed",
+		
+		components: [{
+			kind: 		"SwipeableItem",
+			name:		"item",
+			onclick:	"itemClicked",
+			onConfirm:	"itemDeleted",
+			components:	[{
+				kind:		"HFlexBox",
 				components:	[{
-					kind:		"HFlexBox",
+					name:		"feedInfoBox",
+					nodeTag:	"div",
+					className:	"feed-infobox",
 					components:	[{
-						name:		"feedInfoBox",
-						nodeTag:	"div",
-						className:	"feed-infobox",
+						kind:	"Image",
+						name:	"feedIcon",
+						src:	"../../images/lists/icon-rss.png",
+						style:	"max-width: 40px; max-height: 40px;"
+					}, {
+						kind:	"Spinner",
+						name:	"feedSpinner",
+						style:	"position: absolute; left: 4px; top: 5px; z-index: 10000000"
+					}, {
+						name:		"unreadItemBadge",
+						className:	"feed-unreaditem",
 						components:	[{
-							kind:	"Image",
-							name:	"feedIcon",
-							src:	"../../images/lists/icon-rss.png",
-							style:	"max-width: 40px; max-height: 40px;"
-						}, {
-							kind:	"Spinner",
-							name:	"feedSpinner",
-							style:	"position: absolute; left: 4px; top: 5px; z-index: 10000000"
-						}, {
-							name:		"unreadItemBadge",
-							className:	"feed-unreaditem",
-							components:	[{
-								name:		"unreadCount",
-								className:	"feed-countlabel",
-								content:	"0"
-							}]
-						}, {
-							name:		"newCountBadge",
-							className:	"feed-newitem",
-							components:	[{
-								name:		"newCount",
-								className:	"feed-countlabel",
-								content:	"0"								
-							}]
+							name:		"unreadCount",
+							className:	"feed-countlabel",
+							content:	"0"
 						}]
 					}, {
-						kind:	"VFlexBox",
-						flex:	1,
-						components: [{
-							name:		"feedTitle",
-							className:	"feed-title"
-						}, {
-							name:		"feedURL",
-							className:	"feed-url"
+						name:		"newCountBadge",
+						className:	"feed-newitem",
+						components:	[{
+							name:		"newCount",
+							className:	"feed-countlabel",
+							content:	"0"								
 						}]
-					}, {
-						kind:		"IconButton",
-						icon:		"../../images/lists/icon-edit.png",
-						onclick:	"editFeedClicked"
 					}]
+				}, {
+					kind:	"VFlexBox",
+					flex:	1,
+					components: [{
+						name:		"feedTitle",
+						className:	"feed-title"
+					}, {
+						name:		"feedURL",
+						className:	"feed-url"
+					}]
+				}, {
+					kind:		"IconButton",
+					icon:		"../../images/lists/icon-edit.png",
+					onclick:	"editFeedClicked"
 				}]
 			}]
+		}]
 	}, {
 		kind:		"Toolbar",
 		pack:		"justify",
@@ -153,8 +153,9 @@ enyo.kind({
 	},
 	
 	itemClicked: function(sender, event) {
-		this.inherited(arguments);
-		this.doFeedSelected(this.items[event.rowIndex]);
+		if(this.inherited(arguments)) {
+			this.doFeedSelected(this.items[event.rowIndex]);
+		}
 	},
 	
 	editFeedClicked: function(sender, event) {
