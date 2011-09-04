@@ -21,33 +21,34 @@
  */
 
 enyo.kind({
-	name:		"storyList",
-	kind:		"ListViewSkeleton",
-	
+	name:			"storyList",
+	kind:			"ListViewSkeleton",
+
+	isRefreshing:	false,
+
 	published:	{
 		feed:	undefined
 	},
-	
+
 	events:	{
 		onStorySelected:	""
 	},
-	
+
 	components:	[{
-		kind:		"ViewHeader",
+		kind:		"Toolbar",
 		name:		"header",
-		icon:		"../../images/lists/icon-rss.png",
-		title:		enyo.application.appName
+		className:	"enyo-toolbar-light"
 	}, {
 			kind:		"EnhancedList",
 			name:		"list",
 			flex:		1,
-			
+
 			onSetupRow: 	"setupStory",
 			onAcquirePage:	"acquirePage",
 			onDiscardPage:	"discardPage",
-			
+
 			showing:	false,
-			
+
 			components: [{
 				name:		"divider",
 				kind:		"Divider"
@@ -75,7 +76,7 @@ enyo.kind({
 		align:	"center",
 		pack:	"center",
 		flex:	1,
-		
+
 		components:	[{
 			name:	"bgImage",
 			kind:	"Image",
@@ -104,18 +105,18 @@ enyo.kind({
 			onclick:	"shareClicked"
 		}]
 	}],
-	
+
 	//
 	// List handling
 	//
-	
+
 	setupStory: function(sender, index) {
 		if((index < 0) || (index >= this.items.length) || (!this.items[index])) {
 			return false;
 		}
-		
+
 		var story = this.items[index];
-		
+
 		var summary = "";
 		if(this.feed.showListSummary) {
 			var summaryLength = parseInt(enyo.application.prefs.summaryLength, 10);
@@ -124,17 +125,19 @@ enyo.kind({
 				summary = summary.slice(0, summaryLength - 1) + "...";
 			}
 		}
-		
+
 		this.$.item.setSwipeable(true);
 		this.$.storyTitle.setContent(story.title);
 		this.$.storyText.setContent(summary);
-		
+
 		if(!story.isRead) {
 			this.$.storyTitle.applyStyle("font-weight", "bold");
+		} else {
+			this.$.storyTitle.applyStyle("font-weight", "normal");
 		}
 
 		// orderMode!!!!
-		
+
 		if((index == 0) ||
 		   (!enyo.application.feeds.getDateFormatter().datesEqual(this.items[index].pubdate, this.items[index - 1].pubdate))) {
 			this.$.divider.setCaption(enyo.application.feeds.getDateFormatter().formatDate(story.pubdate));
@@ -145,18 +148,18 @@ enyo.kind({
 			this.$.divider.canGenerate = false;
 			this.$.item.applyStyle("border-top", "1px solid silver;");
 		}
-		
+
 		this.$.storyDate.setContent(enyo.application.feeds.getDateFormatter().formatTime(story.pubdate));
-		
+
 		return true;
 	},
-	
+
 	acquirePage: function(sender, page) {
 		if(this.feed) {
 			this.inherited(arguments);
 		}
 	},
-	
+
 	acquireData: function(filter, offset, count, inserter) {
 		enyo.application.feeds.getStories(this.feed, filter, offset, count, inserter);
 	},
@@ -165,69 +168,65 @@ enyo.kind({
 		this.inherited(arguments);
 		this.doStorySelected(this.items[event.rowIndex]);
 	},
-	
+
 	//
 	// Property handling
 	//
-	
+
 	feedChanged: function() {
 		var feedInvalid = !this.feed;
 		if(feedInvalid) {
-			this.$.header.setIcon("../../images/lists/icon-rss.png");
-			this.$.header.setTitle($L("Story list"));
-			this.$.header.setNewCount(-1);
-			this.$.header.setUnreadCount(-1);
+			this.$.header.setContent($L("Story list"));
 		} else {
-			this.$.header.setIcon("../../" + enyo.application.feeds.getFeedIcon(this.feed));
-			this.$.header.setTitle(enyo.application.feeds.getFeedTitle(this.feed));
-			this.$.header.setNewCount(this.feed.numNew);
-			this.$.header.setUnreadCount(this.feed.numUnRead);
+			this.$.header.setContent(enyo.application.feeds.getFeedTitle(this.feed));
 		}
-		
+
 		this.$.list.setShowing(!feedInvalid);
 		this.$.bgContainer.setShowing(feedInvalid);
-		
+
 		this.$.editButton.setDisabled(feedInvalid);
 		this.$.refreshButton.setDisabled(feedInvalid);
 		this.$.shareButton.setDisabled(feedInvalid);
-		
-		this.clear();
+
+		if(!this.isRefreshing) {
+			this.clear();
+		}
+		this.isRefreshing = false;
 	},
-	
+
 	//
 	// Database handling
 	//
-	
+
 	updateCount: function(setter) {
 		enyo.application.feeds.getStoryCount(this.feed, this.filter, setter);
 	},
-	
+
+	gotFeed: function(feed) {
+		this.feed = feed;
+		this.isRefreshing = true;
+		this.feedChanged();
+	},
+
 	//
 	// Public functions
 	//
-	
-	refresh: function() {
-		if(!this.feed) {
-			return;
-		}
 
-		this.inherited(arguments);
-		// Reset internal data.
-		this.storyCount = 0;
-		
-		// And now refresh the list.
-		this.$.list.reAcquirePages();
+	refresh: function() {
+		if(this.feed) {
+			this.inherited(arguments);
+		}
 	},
-	
+
 	//
 	// Initialization
 	//
-	
+
 	create: function() {
 		this.inherited(arguments);
-		
-		enyo.bind(this, this.setStoryCount);
-		
+
+		this.gotFeed = enyo.bind(this, this.gotFeed);
+
 		this.feedChanged();
 	}
 });
