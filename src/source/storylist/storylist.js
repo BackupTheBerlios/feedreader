@@ -57,6 +57,11 @@ enyo.kind({
 				kind: 		"SwipeableItem",
 				onclick:	"itemClicked",
 				components:	[{
+					name:		"starButton",
+					kind:		"StarButton",
+					style:		"float: right",
+					onclick:	"storyStarred"
+				}, {
 					name:		"storyDate",
 					nodeTag:	"div",
 					className:	"story-date"
@@ -129,6 +134,7 @@ enyo.kind({
 		this.$.item.setSwipeable(true);
 		this.$.storyTitle.setContent(story.title);
 		this.$.storyText.setContent(summary);
+		this.$.starButton.setChecked(story.isStarred);
 
 		if(!story.isRead) {
 			this.$.storyTitle.applyStyle("font-weight", "bold");
@@ -167,6 +173,13 @@ enyo.kind({
 	itemClicked: function(sender, event) {
 		this.inherited(arguments);
 		this.doStorySelected(this.items[event.rowIndex]);
+	},
+
+	storyStarred: function(sender, event) {
+		var story = this.items[event.rowIndex];
+		story.isStarred = sender.getChecked();
+		enyo.application.feeds.markStarred(story);
+		this.doStorySelected(story);
 	},
 
 	//
