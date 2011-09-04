@@ -15,7 +15,7 @@ span.underline {
 }
 
 span.italic {
-	font-style: italic;	
+	font-style: italic;
 }
 
 /* lists */
@@ -89,6 +89,7 @@ span.italic {
 }
 
 /* styles for the story list */
+
 .story-date {
 	color: gray;
 	font-size: 12px;
@@ -132,15 +133,28 @@ span.italic {
 
 /* styles for the story view */
 
-.story-nodata {
-	background-image: -webkit-linear-gradient(
-		rgb(255,255,255),
-		rgb(230,230,230)
-	);
+.star-checkbox {
+	background: url(../images/button/star-toggle.png) -1px -1px;
 }
 
-.story-summary {
-	font-size:	17px;
+.story-body {
+	font-family: Prelude, Prelude Medium, Segoe UI, Arial, Helvetica, Sans-Serif;
+	font-size: 14pt;
+	background-color: #e4e4e2;
+}
+
+.story-body-header {
+	overflow:hidden;
+	background: transparent url(../images/paper.png) repeat;
+	color: grey;
+	font-size: 15px;
+	vertical-align: middle;
+}
+
+.story-header-label {
+	text-transform: none;
+	margin: 10px;
+	font-weight: bold;
 }
 
 .weblink-button {
@@ -150,7 +164,7 @@ span.italic {
 }
 
 .weblink-image {
-	background-image: url(../images/web-icon.png);
+	background-image: url('../images/web-icon.png');
 	float: left;
 	margin-right: 5px;
 }
@@ -172,21 +186,45 @@ h3 {
 	font-weight: bold;
 }
 
-#licenseBody {
-	font-size: 15px;
+.header-shadow,
+.footer-shadow,
+.search-shadow {
+	position: absolute;
+	z-index: 100;
+	pointer-events: none;
 }
 
-.webImage {
-	position:relative;
-	left: 8px;
-	top: 10px;
-	width: 32px; 
-	height: 32px;
-	background: url(../images/web-icon.png) no-repeat bottom;
-	vertical-align: bottom;
-	padding: 0px 0px 0px 5px;
-	float:left;
+.header-shadow {
+	height: 7px;
+	width: 100%;
+	background: transparent url('../images/header-shadow.png') top repeat-x;
 }
+
+.footer-shadow {
+	height: 7px;
+	width: 100%;
+	background:transparent url('../images/footer-shadow.png') bottom repeat-x;
+}
+
+.search-shadow {
+	top: 0;
+	height: 107px;
+	width: 100%;
+	background:transparent url('../images/header-shadow') bottom repeat-x;
+}
+
+.dotted-separator {
+	height: 2px;
+	background: transparent url(../images/dots.png) bottom repeat-x;
+	border: 1px transparent;
+}
+
+.silver-separator {
+	height: 2px;
+	border-bottom: 1px solid silver;
+	margin: 4px;
+}
+
 
 /*
  * Header design

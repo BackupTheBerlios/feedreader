@@ -1,6 +1,6 @@
 enyo.depends(
 	"mainview.js",
-	
+
 	"../controls/viewheader.js",
 	"../controls/toggleitem.js",
 	"../controls/selectoritem.js",
@@ -11,13 +11,14 @@ enyo.depends(
 	"../controls/listviewskeleton.js",
 	"../controls/dottedseparator.js",
 	"../controls/silverseparator.js",
-	
+	"../controls/starbutton.js",
+
 	"../models/feed.js",
-	
+
 	"../feedlist/feedlist.js",
 	"../storylist/storylist.js",
 	"../story/story.js",
 	"../editfeed/editfeed.js",
-	
+
 	"../../stylesheets/feedreader_enyo.css"
 );
