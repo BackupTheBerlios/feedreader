@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+	"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title>FeedReader</title>
+	<script src="enyo/1.0/framework/enyo.js" type="text/javascript" />
+</head>
+<body>
+	<script type="text/javascript">
+		(function () {
+			enyo.application.launcher = new FeedReaderAppLauncher();
+			enyo.applicationRelaunchHandler = function (params) {
+				enyo.application.launcher.relaunch(params);
+			};
+			enyo.application.launcher.startup();
+		})();
+	</script>	
+</body>
+</html>

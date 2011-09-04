@@ -1,0 +1,213 @@
+.enyo-modaldialog > * {
+	height:100%;
+}
+
+/*
+ * Custom styles
+ */
+
+span.bold {
+	font-weight: bold;
+}
+
+span.underline {
+	text-decoration: underline;
+}
+
+span.italic {
+	font-style: italic;	
+}
+
+/* lists */
+.feed-title {
+	padding-left: 4px;
+    font-size: 18px;
+	font-weight: bold;
+	margin-bottom: 0px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow:hidden;
+}
+
+.feed-url {
+	font-weight: lighter;
+	margin-top: -2px;
+	padding-left: 4px;
+    font-size: 14px;
+    color: gray;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow:hidden;
+}
+
+.list-text.large {
+	font-size: 16px;
+}
+
+/* item badges */
+.feed-infobox {
+	position: relative;
+	margin-right: 10px;
+	margin-top: 2px;
+}
+
+.feed-countlabel {
+	margin: 2px -4px;
+	font-size: 16px;
+	color: white;
+	font-weight: bold;
+}
+
+.feed-newitem {
+	position: absolute;
+	left: -8px;
+	bottom: -5px;
+	line-height: 24px;
+	height: 28px;
+	-webkit-border-image: url(../images/lists/icon-newitem.png) 0 12 0 12 repeat stretch;
+	-webkit-box-sizing: border-box;
+	border-width: 0px 12px 0px 12px;
+	text-align:	center;
+ 	vertical-align: baseline;
+}
+
+.feed-unreaditem {
+	position: absolute;
+	right: -8px;
+	top: -10px;
+	line-height: 24px;
+	height: 28px;
+	-webkit-border-image: url(../images/lists/icon-unreaditem.png) 0 12 0 12 repeat stretch;
+	-webkit-box-sizing: border-box;
+	border-width: 0px 12px 0px 12px;
+	text-align:	center;
+ 	vertical-align: baseline;
+}
+
+.feed-count {
+	color: white;
+}
+
+/* styles for the story list */
+.story-date {
+	color: gray;
+	font-size: 12px;
+}
+
+.story-title {
+	color: black;
+	font-size: 16px;
+}
+
+.story-content {
+	color: gray;
+	font-size: 15px;
+}
+
+/* Text styling */
+
+.red {
+	color: red;
+}
+
+.green {
+	color: green;
+}
+
+.blue {
+	color: blue;
+}
+
+.yellow {
+	color: yellow;
+}
+
+.purple {
+	color: #800080;
+}
+
+.black {
+	color: black;
+}
+
+/* styles for the story view */
+
+.story-nodata {
+	background-image: -webkit-linear-gradient(
+		rgb(255,255,255),
+		rgb(230,230,230)
+	);
+}
+
+.story-summary {
+	font-size:	17px;
+}
+
+.weblink-button {
+	text-align: left;
+	vertical-align: middle;
+	font-weight: bold;
+}
+
+.weblink-image {
+	background-image: url(../images/web-icon.png);
+	float: left;
+	margin-right: 5px;
+}
+
+/* misc */
+
+h1 {
+	font-size: 20px;
+	font-weight: bold;
+}
+
+h2 {
+	font-size: 18px;
+	font-weight: bold;
+}
+
+h3 {
+	font-size: 16px;
+	font-weight: bold;
+}
+
+#licenseBody {
+	font-size: 15px;
+}
+
+.webImage {
+	position:relative;
+	left: 8px;
+	top: 10px;
+	width: 32px; 
+	height: 32px;
+	background: url(../images/web-icon.png) no-repeat bottom;
+	vertical-align: bottom;
+	padding: 0px 0px 0px 5px;
+	float:left;
+}
+
+/*
+ * Header design
+ */
+
+.header-icon {
+	max-height:	32px;
+	max-width: 32px;
+	padding-right: 10px;
+}
+
+/*
+ * Dialogs
+ */
+
+.warning-icon {
+	background: url(../images/dialogs/warning.png) 0 0 no-repeat;
+	height: 25px;
+}
+
+.enyo-text-error.warning-icon{
+	padding-left: 28px;
+	font-size: 20px;
+}

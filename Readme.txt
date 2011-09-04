@@ -31,6 +31,10 @@ Contributors
 Changelog
 =========
 
+Version 3.0.0 (feature release)
+-------------------------------
+ * support for TouchPad added
+
 Version 2.1.4 (maintenance release)
 -----------------------------------
  * improved ATOM compatibility

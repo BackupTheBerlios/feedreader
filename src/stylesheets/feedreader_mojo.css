@@ -3,7 +3,7 @@
  */
 
 .palm-dashboard-icon {
-    background: url(../midicon.png) center center no-repeat;	
+    background: url(../icon48.png) center center no-repeat;	
 }
 
 .icon.rss {
@@ -461,6 +461,4 @@ h3 {
 
 .load-scrim {
 	z-index: 1000000;
-	/*background-color: gray;
-	opacity: 0.8;*/
 }
