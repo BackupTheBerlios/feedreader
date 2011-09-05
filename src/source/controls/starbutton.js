@@ -24,6 +24,8 @@ enyo.kind({
 	name:		"StarButton",
 	kind:		"CustomButton",
 
+	onClick:	"clicked",
+
 	published:	{
 		checked:	false
 	},
@@ -44,11 +46,15 @@ enyo.kind({
 		this.$.image.setSrc(image);
 	},
 
-	mousedownHandler: function(sender, event, node) {
-		if (!this.disabled) {
+	clickHandler: function(sender, event) {
+		// Prevent any further handling. As a result, no
+		// 'onclick' event will be triggered. Instead, we
+		// fire the custom 'onChange' event here.
+		if(!this.disabled) {
 			this.setChecked(!this.checked);
-			this.doChange();
+			this.doChange(event);
 		}
+		return true;
 	},
 
 	create: function() {

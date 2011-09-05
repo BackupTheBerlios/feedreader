@@ -60,7 +60,7 @@ enyo.kind({
 					name:		"starButton",
 					kind:		"StarButton",
 					style:		"float: right",
-					onclick:	"storyStarred"
+					onChange:	"storyStarred"
 				}, {
 					name:		"storyDate",
 					nodeTag:	"div",
@@ -178,8 +178,9 @@ enyo.kind({
 	storyStarred: function(sender, event) {
 		var story = this.items[event.rowIndex];
 		story.isStarred = sender.getChecked();
+		this.log(event.rowIndex, story.isStarred);
+
 		enyo.application.feeds.markStarred(story);
-		this.doStorySelected(story);
 	},
 
 	//
