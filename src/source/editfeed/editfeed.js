@@ -25,17 +25,17 @@ enyo.kind({
 	kind:			"ModalDialog",
 	layoutKind:		"VFlexLayout",
 	contentHeight:	"100%",
-	style:			"width: 500px; height: 80%",
-	
+	style:			"width: 500px; height: 85%; min-height: 500px;",
+
 	events:	{
 		onFeedSaved:	"",
 		onCanceled:		""
 	},
-	
+
 	published:	{
 		feed:			null
 	},
-	
+
 	components:	[{
 		kind:		"Scroller",
 		className:	"group",
@@ -151,14 +151,14 @@ enyo.kind({
 		caption:	$L("Cancel"),
 		onclick:	"cancelClicked"
 	}],
-	
+
 	create: function() {
 		this.inherited(arguments);
-		
+
 		this.updateSuccess = enyo.bind(this, this.updateSuccess);
 		this.updateFailed = enyo.bind(this, this.updateFailed);
 	},
-	
+
 	saveClicked: function() {
 		if(!this.$.url.getValue || (this.$.url.getValue().length <= 0)) {	// In case no url is entered, simply exit the scene.
 			this.doCanceled();
@@ -170,36 +170,36 @@ enyo.kind({
 		this.$.saveButton.setActive(true);
 		this.$.saveButton.setCaption(this.adding ? $L("Adding Feed...") : $L("Updating Feed..."));
 		this.$.saveButton.setDisabled(true);
-	
+
 		// Update the feed object.
 		this.feed.url = this.$.url.getValue();
 		this.feed.title = this.$.name.getValue();
 		this.feed.enabled = this.$.activateFeed.getValue();
-	
+
 		this.feed.username = this.$.username.getValue();
 		this.feed.password = this.$.password.getValue();
-	
+
 		this.feed.showListCaption = (this.$.listMode.getValue() == 0) || ((this.$.listMode.getValue() % 2) == 1);
 		this.feed.showListSummary = (this.$.listMode.getValue() % 2) == 0;
-	
+
 		this.feed.showDetailCaption = (this.$.detailMode.getValue() == 0) || ((this.$.detailMode.getValue() % 2) == 1);
 		this.feed.showDetailSummary = (this.$.detailMode.getValue() % 2) == 0;
-	
+
 		this.feed.showPicture = this.$.showPicture.getValue();
 		this.feed.showMedia = this.$.showMedia.getValue();
 		this.feed.sortMode = this.$.sortMode.getValue();
 		this.feed.allowHTML = this.$.allowHTML.getValue();
-		
+
 		if(/^[a-z]{1,5}:/.test(this.feed.url) === false) {
-			this.feed.url = this.feed.url.replace(/^\/{1,2}/, "");                                
+			this.feed.url = this.feed.url.replace(/^\/{1,2}/, "");
 			this.feed.url = "http://" + this.feed.url;
 		}
-		
+
 		// Update the entered URL
 		this.$.url.setValue(this.feed.url);
-	
+
 		// Save the feed.
-		enyo.application.feeds.addOrEditFeed(this.feed, this.updateSuccess, this.updateFailed);		
+		enyo.application.feeds.addOrEditFeed(this.feed, this.updateSuccess, this.updateFailed);
 	},
 
 	resetButtons: function() {
@@ -207,22 +207,22 @@ enyo.kind({
 		this.$.saveButton.setCaption($L("Save"));
 		this.$.saveButton.setDisabled(false);
 	},
-	
+
 	updateSuccess: function() {
 		this.doFeedSaved();
 		this.resetButtons();
 		this.close();
 	},
-	
+
 	updateFailed: function() {
 		this.resetButtons();
 	},
-	
+
 	cancelClicked: function() {
 		this.doCanceled();
 		this.close();
 	},
-	
+
 	feedChanged: function() {
 		if(this.feed == null) {
 			this.adding = true;
@@ -232,10 +232,10 @@ enyo.kind({
 			this.adding = false;
 			this.setCaption($L("Edit feed"));
 		}
-		
+
 		var listMode = 0;
 		var detailMode = 0;
-		
+
 		if(this.feed.showListSummary && this.feed.showListCaption) {
 			listMode = 0;
 		} else if(this.feed.showListCaption) {
@@ -243,7 +243,7 @@ enyo.kind({
 		} else if(this.feed.showListSummary) {
 			listMode = 2;
 		}
-	
+
 		if(this.feed.showDetailSummary && this.feed.showDetailCaption) {
 			detailMode = 0;
 		} else if(this.feed.showDetailCaption) {
@@ -251,23 +251,23 @@ enyo.kind({
 		} else if(this.feed.showDetailSummary) {
 			detailMode = 2;
 		}
-		
+
 		this.$.name.setValue(this.feed.title);
 		this.$.url.setValue(this.feed.url);
 		this.$.activateFeed.setValue(this.feed.enabled);
-		
+
 		this.$.username.setValue(this.feed.username);
 		this.$.password.setValue(this.feed.password);
-		
+
 		this.$.listMode.setValue(listMode);
 		this.$.detailMode.setValue(detailMode);
 		this.$.sortMode.setValue(this.feed.sortMode);
-		
+
 		this.$.showPicture.setValue(this.feed.showPicture);
 		this.$.showMedia.setValue(this.feed.showMedia);
 		this.$.allowHTML.setValue(this.feed.allowHTML);
 	},
-	
+
 	openAtCenter: function(feed) {
 		this.feed = feed;
 		this.inherited(arguments);
