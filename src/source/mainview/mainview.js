@@ -117,6 +117,12 @@ enyo.kind({
 	//
 
 	storySelected: function(sender, story) {
+		var orientation = enyo.getWindowOrientation();
+		this.log("OR>", orientation);
+		if(story && ((orientation == "left") || (orientation == "right"))) {
+			this.$.mainPane.selectViewByIndex(1);
+		}
+
 		this.$.storyView.setStory(story);
 	},
 
