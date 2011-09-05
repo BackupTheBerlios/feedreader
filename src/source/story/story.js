@@ -179,6 +179,8 @@ enyo.kind({
 					this.$.pictureSpinner.show();
 				}
 				this.$.picture.setSrc(this.story.picture);
+
+				enyo.application.connChecker.checkConnection(enyo.application.nop, this.noConnection);
 			}
 
 			// Mark the story as being read.
@@ -225,8 +227,14 @@ enyo.kind({
 		this.storyChanged();
 	},
 
+	noConnection: function() {
+		this.$.picture.hide();
+		this.$.pictureSpinner.hider();
+	},
+
 	create: function() {
 		this.inherited(arguments);
 		this.gotStory = enyo.bind(this, this.gotStory);
+		this.noConnection = enyo.bind(this, this.noConnection);
 	}
 });
