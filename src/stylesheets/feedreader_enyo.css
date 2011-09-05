@@ -192,21 +192,22 @@ h3 {
 .header-shadow,
 .footer-shadow,
 .search-shadow {
-	position: absolute;
 	z-index: 100;
 	pointer-events: none;
 }
 
 .header-shadow {
+	margin-top: -5px;
 	height: 7px;
 	width: 100%;
-	background: transparent url('../images/header-shadow.png') top repeat-x;
+	background: transparent url('../images/header-shadow.png') bottom repeat-x;
 }
 
 .footer-shadow {
+	margin-bottom: -5px;
 	height: 7px;
 	width: 100%;
-	background:transparent url('../images/footer-shadow.png') bottom repeat-x;
+	background:transparent url('../images/footer-shadow.png') top repeat-x;
 }
 
 .search-shadow {

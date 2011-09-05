@@ -97,9 +97,9 @@ enyo.kind({
 				name:		"caption",
 				kind:		"HeaderInfoLabel",
 				caption:	$L("Caption")
-			}, {
-				className:	"header-shadow"
 			}]
+		}, {
+			className:	"header-shadow"
 		}, {
 			kind:			"Scroller",
 			style:			"margin: 10px",
