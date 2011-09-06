@@ -60,11 +60,10 @@ enyo.kind({
 	kind:		"VFlexBox",
 	className:	"story-body",
 
-	isRefresh:	false,
-
 	published:	{
-		feed:	null,
-		story:	null
+		feed:		null,
+		story:		null,
+		isRefresh:	false
 	},
 
 	components:	[{
@@ -149,16 +148,38 @@ enyo.kind({
 		kind:			"Toolbar",
 		components:		[{
 			kind:		"GrabButton"
+		}, {
+			kind:		"Spacer"
+		}, {
+			name:		"shareButton",
+			kind:		"ToolButton",
+			icon:		"../../images/toolbars/icon-share.png",
+			onclick:	"shareClicked"
 		}]
 	}, {
 		name:			"linkMenu",
 		kind:			"Menu"
+	}, {
+		name:			"shareMenu",
+		kind:			"Menu",
+		components:		[{
+			caption:	$L("Send via E-Mail"),
+			onclick:	"shareViaEmail"
+		}, {
+			caption:	$L("Send via SMS/IM"),
+			onclick:	"shareViaIM"
+		}]
 	}],
+
+	//
+	// Property handling
+	//
 
 	storyChanged: function() {
 		if(!this.story) {
 			this.$.starButton.setChecked(false);
 			this.$.starButton.setDisabled(true);
+			this.$.shareButton.setDisabled(true);
 			this.$.bgContainer.show();
 			this.$.storyContainer.hide();
 		} else {
@@ -167,6 +188,7 @@ enyo.kind({
 			this.$.content.setContent(this.story.summary);
 			this.$.starButton.setChecked(this.story.isStarred);
 			this.$.starButton.setDisabled(false);
+			this.$.shareButton.setDisabled(false);
 
 			if(!this.story.picture || (this.story.picture.length <= 0)) {
 				this.$.picture.hide();
@@ -184,7 +206,9 @@ enyo.kind({
 			}
 
 			// Mark the story as being read.
-			enyo.application.feeds.markStoryRead(this.story);
+			if(!this.isRefresh && !this.story.isRead) {
+				enyo.application.feeds.markStoryRead(this.story);
+			}
 
 			// Show the story container.
 			this.$.bgContainer.hide();
@@ -194,24 +218,9 @@ enyo.kind({
 		this.isRefresh = false;
 	},
 
-	pictureLoaded: function() {
-		this.log("STORY> picture loaded");
-		this.$.pictureSpinner.hide();
-	},
-
-	storyStarred: function() {
-		this.story.isStarred = this.$.starButton.getChecked();
-		this.log("STORY>", this.story.isStarred);
-		enyo.application.feeds.markStarred(this.story);
-	},
-
-	innerLinkClicked: function(sender, url) {
-		enyo.application.openLink(url);
-	},
-
-	linkClicked: function(sender, event) {
-		enyo.application.feeds.getStory(this.story.id, this.gotStory);
-	},
+	//
+	// Story handling
+	//
 
 	gotStory: function(feed, story, urls) {
 		this.feed = feed;
@@ -232,9 +241,54 @@ enyo.kind({
 		this.$.pictureSpinner.hider();
 	},
 
+	pictureLoaded: function() {
+		this.log("STORY> picture loaded");
+		this.$.pictureSpinner.hide();
+	},
+
+	innerLinkClicked: function(sender, url) {
+		enyo.application.openLink(url);
+	},
+
+	linkClicked: function(sender, event) {
+		enyo.application.feeds.getStory(this.story.id, this.gotStory);
+	},
+
+	//
+	// Toolbar handling
+	//
+
+	storyStarred: function() {
+		this.story.isStarred = this.$.starButton.getChecked();
+		enyo.application.feeds.markStarred(this.story);
+	},
+
+	shareClicked: function(sender, event) {
+		this.$.shareMenu.openAtEvent(event);
+	},
+
+	//
+	// Sharing
+	//
+
+	shareViaEmail: function(sender, event) {
+
+	},
+
+	shareViaIM: function(sender, email) {
+
+	},
+
+	//
+	// Initialization
+	//
+
 	create: function() {
 		this.inherited(arguments);
+
 		this.gotStory = enyo.bind(this, this.gotStory);
 		this.noConnection = enyo.bind(this, this.noConnection);
+
+		this.storyChanged();
 	}
 });

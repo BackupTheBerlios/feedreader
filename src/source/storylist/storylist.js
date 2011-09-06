@@ -24,10 +24,9 @@ enyo.kind({
 	name:			"storyList",
 	kind:			"ListViewSkeleton",
 
-	isRefreshing:	false,
-
 	published:	{
-		feed:	undefined
+		feed:		undefined,
+		isRefresh:	false
 	},
 
 	events:	{
@@ -43,9 +42,10 @@ enyo.kind({
 			name:		"list",
 			flex:		1,
 
-			onSetupRow: 	"setupStory",
-			onAcquirePage:	"acquirePage",
-			onDiscardPage:	"discardPage",
+			onSetupRow: 		"setupStory",
+			onAcquirePage:		"acquirePage",
+			onDiscardPage:		"discardPage",
+			onFinishReAcquire:	"finishReAcquire",
 
 			showing:	false,
 
@@ -109,6 +109,16 @@ enyo.kind({
 			icon:		"../../images/toolbars/icon-share.png",
 			onclick:	"shareClicked"
 		}]
+	}, {
+		name:			"shareMenu",
+		kind:			"Menu",
+		components:		[{
+			caption:	$L("Send via E-Mail"),
+			onclick:	"shareViaEmail"
+		}, {
+			caption:	$L("Send via SMS/IM"),
+			onclick:	"shareViaIM"
+		}]
 	}],
 
 	//
@@ -170,6 +180,13 @@ enyo.kind({
 		enyo.application.feeds.getStories(this.feed, filter, offset, count, inserter);
 	},
 
+	finishReAcquire: function(sender) {
+		if(this.selectedIndex >= 0) {
+			this.log("SL> refreshing story view");
+			this.doStorySelected(this.items[this.selectedIndex]);
+		}
+	},
+
 	itemClicked: function(sender, event) {
 		this.inherited(arguments);
 		this.doStorySelected(this.items[event.rowIndex]);
@@ -178,9 +195,38 @@ enyo.kind({
 	storyStarred: function(sender, event) {
 		var story = this.items[event.rowIndex];
 		story.isStarred = sender.getChecked();
-		this.log(event.rowIndex, story.isStarred);
-
 		enyo.application.feeds.markStarred(story);
+
+		if(this.selectedIndex == event.rowIndex) {
+			// Refresh the story view.
+			this.doStorySelected(story);
+		}
+	},
+
+	//
+	// Toolbar handling
+	//
+
+	refreshClicked: function(sender, event) {
+		if(this.feed) {
+			enyo.application.feeds.enqueueUpdate(this.feed);
+		}
+	},
+
+	shareClicked: function(sender, event) {
+		this.$.shareMenu.openAtEvent(event);
+	},
+
+	//
+	// Sharing
+	//
+
+	shareViaEmail: function(sender, event) {
+
+	},
+
+	shareViaIM: function(sender, email) {
+
 	},
 
 	//
@@ -199,13 +245,15 @@ enyo.kind({
 		this.$.bgContainer.setShowing(feedInvalid);
 
 		this.$.editButton.setDisabled(feedInvalid);
-		this.$.refreshButton.setDisabled(feedInvalid);
+		this.$.refreshButton.setDisabled(feedInvalid || !this.feed.enabled);
 		this.$.shareButton.setDisabled(feedInvalid);
 
-		if(!this.isRefreshing) {
+		if(!this.isRefresh) {
 			this.clear();
+		} else {
+			this.refresh();
 		}
-		this.isRefreshing = false;
+		this.isRefresh = false;
 	},
 
 	//

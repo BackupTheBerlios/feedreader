@@ -81,15 +81,13 @@ enyo.kind({
 	//
 
 	feedSelected: function(sender, feed) {
-		this.$.storyList.setFeed(feed);
-		this.$.storyView.setFeed(feed);
-
 		var selectedFeed = this.$.storyList.getFeed();
 		if(selectedFeed && (selectedFeed.id == feed.id)) {
-			// Reset story view.
-			this.$.storyView.setFeed(null);
-			this.$.storyView.setStory(null);
+			this.$.storyList.setIsRefresh(true);
 		}
+
+		this.$.storyList.setFeed(feed);
+		this.$.storyView.setFeed(feed);
 	},
 
 	feedDeleted: function(sender, feed) {
@@ -117,12 +115,15 @@ enyo.kind({
 	//
 
 	storySelected: function(sender, story) {
-		var orientation = enyo.getWindowOrientation();
-		this.log("OR>", orientation);
-		if(story && ((orientation == "left") || (orientation == "right"))) {
-			this.$.mainPane.selectViewByIndex(1);
+		var selectedStory = this.$.storyView.getStory();
+		if(selectedStory && (selectedStory.id == story.id)) {
+			this.$.storyView.setIsRefresh(true);
+		} else {
+			var orientation = enyo.getWindowOrientation();
+			if(story && ((orientation == "left") || (orientation == "right"))) {
+				this.$.mainPane.selectViewByIndex(1);
+			}
 		}
-
 		this.$.storyView.setStory(story);
 	},
 

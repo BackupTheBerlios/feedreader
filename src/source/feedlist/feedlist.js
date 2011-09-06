@@ -46,10 +46,11 @@ enyo.kind({
 		dragOpacity:			0.7,
 		flex:					1,
 
-		onSetupRow:		"setupFeed",
-		onAcquirePage:	"acquirePage",
-		onDiscardPage:	"discardPage",
-		onReorder:		"reorderFeed",
+		onSetupRow:			"setupFeed",
+		onAcquirePage:		"acquirePage",
+		onDiscardPage:		"discardPage",
+		onFinishReAcquire:	"finishReAcquire",
+		onReorder:			"reorderFeed",
 
 		components: [{
 			kind: 		"SwipeableItem",
@@ -151,6 +152,13 @@ enyo.kind({
 
 	reorderFeed: function(sender, fromIndex, toIndex) {
 		enyo.application.feeds.moveFeed(fromIndex, toIndex);
+	},
+
+	finishReAcquire: function(sender) {
+		if(this.selectedIndex >= 0) {
+			this.log("FL> Refreshing story list");
+			this.doFeedSelected(this.items[this.selectedIndex]);
+		}
 	},
 
 	itemClicked: function(sender, event) {

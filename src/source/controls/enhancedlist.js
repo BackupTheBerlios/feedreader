@@ -29,26 +29,27 @@
 enyo.kind({
 	name:	"EnhancedList",
 	kind:	"ReorderableVirtualList",
-	
+
 	updateCounter:	0,
-	
+
 	events: {
-		onAcquirePage: "",
-		onDiscardPage: ""
+		onAcquirePage: 		"",
+		onDiscardPage: 		"",
+		onFinishReAcquire:	""
 	},
-	
+
 	reAcquirePages: function() {
 		for(var i = this.$.buffer.firstPage; i <= this.$.buffer.lastPage; i++) {
 			this.discardPage(this, i);
 			this.acquirePage(this, i);
 		}
 	},
-	
+
 	acquirePage: function(sender, index) {
 		this.updateCounter++;
 		this.doAcquirePage(index);
 	},
-	
+
 	acquiredPage: function(page) {
 		this.updateCounter--;
 		if(this.updateCounter == 0) {
@@ -56,13 +57,14 @@ enyo.kind({
 			enyo.nextTick(this, function() {
 				this.refresh();
 			});
+			this.doFinishReAcquire();
 		}
 	},
-	
+
 	discardPage: function(sender, index) {
 		this.doDiscardPage(index);
 	},
-	
+
 	initComponents: function() {
 		this.inherited(arguments);
 		this.$.buffer.onAcquirePage = "acquirePage";
