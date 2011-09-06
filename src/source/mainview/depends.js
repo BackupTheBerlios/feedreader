@@ -8,6 +8,7 @@ enyo.depends(
 	"../controls/errordialog.js",
 	"../controls/reorderablelist.js",
 	"../controls/enhancedlist.js",
+	"../controls/enhancedmenu.js",
 	"../controls/listviewskeleton.js",
 	"../controls/dottedseparator.js",
 	"../controls/silverseparator.js",

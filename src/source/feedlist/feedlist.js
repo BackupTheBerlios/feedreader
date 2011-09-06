@@ -24,7 +24,7 @@ enyo.kind({
 	name:		"FeedList",
 	kind:		"ListViewSkeleton",
 
-	feedState:		[],
+	menuIndex:	0,
 
 	events:		{
 		onFeedSelected:	"",
@@ -120,6 +120,9 @@ enyo.kind({
 			icon:		"../../images/toolbars/icon-sync.png",
 			onclick:	"refreshClicked"
 		}]
+	}, {
+		name:	"feedMenu",
+		kind:	"EnhancedMenu"
 	}],
 
 	//
@@ -168,8 +171,40 @@ enyo.kind({
 	},
 
 	editFeedClicked: function(sender, event) {
-		this.doEditFeed(this.items[event.rowIndex]);
-		event.stopPropagation();
+		// Store the menu index.
+		this.menuIndex = event.rowIndex;
+
+		// Build the menu items.
+		var feed = this.items[event.rowIndex];
+		var items = new Array({
+			caption:	$L("Mark all stories read"),
+			onclick:	"menuMarkAllRead"
+		}, {
+			caption:	$L("Mark all stories unread"),
+			onclick:	"menuMarkAllUnRead"
+		}, {
+			caption:	$L("Unstar all stories"),
+			onclick:	"menuMarkAllUnStarred"
+		});
+
+		if((feed.feedType != feedTypes.ftStarred) && (feed.feedType != feedTypes.ftAllItems)) {
+			items.push({
+				caption:	$L("Edit feed settings"),
+				onclick:	"menuEditFeed"
+			}, {
+				caption:	$L("Delete feed"),
+				onclick:	"menuDeleteFeed"
+			});
+		}
+		items.push({
+			caption:	$L("Update feed"),
+			onclick:	"menuUpdateFeed"
+		});
+
+		this.$.feedMenu.setItems(items);
+		this.$.feedMenu.openAtEvent(event);
+
+		return true;
 	},
 
 	itemDeleted: function(sender, index) {
@@ -183,6 +218,34 @@ enyo.kind({
 	setFeedSpinner: function(index, state) {
 		this.$.list.prepareRow(index);
 		this.$.feedSpinner.setShowing(state);
+	},
+
+	//
+	// Menu handling
+	//
+
+	menuMarkAllRead: function(sender, event) {
+		enyo.application.feeds.markAllRead(this.items[this.menuIndex]);
+	},
+
+	menuMarkAllUnRead: function(sender, event) {
+		enyo.application.feeds.markAllUnRead(this.items[this.menuIndex]);
+	},
+
+	menuMarkAllUnStarred: function(sender, event) {
+		enyo.application.feeds.markAllUnStarred(this.items[this.menuIndex]);
+	},
+
+	menuEditFeed: function(sender, event) {
+		this.doEditFeed(this.items[this.menuIndex]);
+	},
+
+	menuUpdateFeed: function(sender, event) {
+		enyo.application.feeds.enqueueUpdate(this.items[this.menuIndex]);
+	},
+
+	menuDeleteFeed: function(sender, event) {
+		this.itemDeleted(sender, event.rowIndex);
 	},
 
 	//
