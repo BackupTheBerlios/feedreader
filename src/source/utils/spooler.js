@@ -21,36 +21,23 @@
  */
 
 enyo.kind({
-	
+
 	name:			"Spooler",
 	kind:			"Component",
-	
+
 	components:	[{
 		name:		"powerService",
 		kind:		"PalmService",
 		service:	"palm://com.palm.power/com/palm/power/",
 		subscribe:	true
 	}],
-	
+
 	list: 			[],
 	actionRunning:	false,
 	actionIdent:	"",
 	updateCounter:	0,
 	key:			"com.tegi-stuff.app.feedreader",
-	
-	/** @private
-	 *
-	 * Constructor.
-	 */
-	create: function() {
-		this.inherited(arguments);
-		
-		this.setActivitySuccessHandler = enyo.bind(this, "setActivitySuccess");
-		this.setActivityFailedHandler = enyo.bind(this, "setActivityFailed");
-		this.leaveActivitySuccessHandler = enyo.bind(this, "leaveActivitySuccess");
-		this.leaveActivityFailedHandler = enyo.bind(this, "leaveActivityFailed");
-	},
-	
+
 	/**
 	 * Enter update state. This will prevent the spooler from starting an
 	 * activity until the update state is left.
@@ -58,7 +45,7 @@ enyo.kind({
 	beginUpdate: function() {
 		this.updateCounter++;
 	},
-	
+
 	/**
 	 * Leave update state. If actions were added while being in update state
 	 * the spooler will start the first action from the list.
@@ -66,12 +53,11 @@ enyo.kind({
 	endUpdate: function() {
 		this.updateCounter--;
 		if(!this.actionRunning && (this.list.length >= 1)) {
-//			DashboardControl.createUpdateDashboard();
 //			Mojo.Controller.getAppController().sendToNotificationChain({ type: "updatestate-changed" });
 			this.nextAction();
 		}
 	},
-	
+
 	/**
 	 * Add an action to the spooler list.
 	 *
@@ -86,7 +72,7 @@ enyo.kind({
 			if(!identifier) {
 				identifier = "anon-action";
 			}
-			
+
 			if(unique) {
 				var skip = false;
 				if(this.actionIdent == identifier) {
@@ -99,27 +85,26 @@ enyo.kind({
 						}
 					}
 				}
-				
+
 				if(skip) {
 					return;
 				}
 			}
-			
+
 			this.list.push({
 				execute: action,
 				ident: identifier
 			});
-			
+
 			if((this.updateCounter === 0) && (this.list.length == 1) && !this.actionRunning)  {
 //				DashboardControl.createUpdateDashboard();
-//				Mojo.Controller.getAppController().sendToNotificationChain({ type: "updatestate-changed" });
 				this.nextAction();
 			}
 		} catch(e) {
 			this.error(e);
 		}
 	},
-	
+
 	/** @private
 	 *
 	 * Tell the system, that we enter a phase of activity.
@@ -128,17 +113,17 @@ enyo.kind({
 		if(duration === undefined) {
 			duration = 60000;
 		}
-		
+
 		this.$.powerService.call({
 			id:				this.key,
 			duration_ms: 	duration
 		}, {
-			method: "activityStart",
-			onSuccess: this.setActivitySuccessHandler,
-			onFailure: this.setActivityFailedHandler
+			method:		"activityStart",
+			onSuccess:	"setActivitySuccess",
+			onFailure:	"setActivityFailed"
 		});
 	},
-	
+
 	/** @private
 	 *
 	 * Gets called when setting the activity was successful.
@@ -146,7 +131,7 @@ enyo.kind({
 	setActivitySuccess: function(response) {
 		this.log("SPOOLER> Successfully set activity");
 	},
-	
+
 	/** @private
 	 *
 	 * Gets called when setting the acitivity failed.
@@ -164,9 +149,9 @@ enyo.kind({
 			id:			this.key
 		}, {
 			method: 	"activityEnd",
-			onSuccess: 	this.leaveActivitySuccessHandler,
-			onFailure: 	this.leaveActivityFailedHandler
-		});		
+			onSuccess: 	"leaveActivitySuccess",
+			onFailure: 	"leaveActivityFailed"
+		});
 	},
 
 	/** @private
@@ -176,7 +161,7 @@ enyo.kind({
 	leaveActivitySuccess: function(response) {
 		this.log("SPOOLER> Successfully left activity");
 	},
-	
+
 	/** @private
 	 *
 	 * Gets called when setting the acitivity failed.
@@ -184,7 +169,7 @@ enyo.kind({
 	leaveActivityFailed: function(response) {
 		this.error("SPOOLER> Unable to leave activity", response);
 	},
-	
+
 	/**
 	 * Called to indicate a spooled action has finished. The next spooled
 	 * activity will be started if any.
@@ -209,13 +194,13 @@ enyo.kind({
 			this.error(e);
 		}
 	},
-	
+
 	hasWork: function() {
 		return ((this.list.length > 0) ||
 				(this.actionRunning) ||
 				(this.updateCounter > 0));
 	},
-	
+
 	/**
 	 * Called to indicate that the app is about to be closed.
 	 */
