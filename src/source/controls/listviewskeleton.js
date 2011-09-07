@@ -24,17 +24,17 @@ enyo.kind({
 	name:			"ListViewSkeleton",
 	kind:			"VFlexBox",
 	flex:			1,
-	
+
 	items:			[],
 	itemCount:		-1,
 	filter:			"",
-	
+
 	selectedIndex:	-1,
 
 	//
 	// List handling
 	//
-	
+
 	selectRow: function(index) {
 		this.deselectRow();
 		this.$.list.select(index);
@@ -42,26 +42,26 @@ enyo.kind({
 		this.$.item.addClass("enyo-item-selected");
 		this.selectedIndex = index;
 	},
-	
+
 	deselectRow: function() {
 		if(this.selectedIndex >= 0) {
-			this.$.list.getSelection().clear();			
+			this.$.list.getSelection().clear();
 			this.$.list.prepareRow(this.selectedIndex);
 			this.$.item.removeClass("enyo-item-selected");
 			this.selectedIndex = -1;
 		}
 	},
-	
+
 	acquirePage: function(sender, page) {
 		var count = this.$.list.getPageSize();
 		var offset = count * page;
-				
+
 		// If we have the total count, check it first.
 		if((this.itemCount >= 0) && (offset + count <= this.itemCount)) {
 			this.$.list.acquiredPage(page);
 			return;
 		}
-		
+
 		// Check if we already have the data.
 		if((this.items.length <= offset) || (!this.items[offset])) {
 			this.acquireData(this.filter, offset, count, enyo.bind(this, this.insertItems, page));
@@ -69,25 +69,25 @@ enyo.kind({
 			this.$.list.acquiredPage(page);
 		}
 	},
-	
+
 	discardPage: function(sender, page) {
 		var count = this.$.list.getPageSize();
 		var offset = count * page;
-		
+
 		for(var i = offset; i < offset + count; i++) {
 			this.items[i] = null; // delete items
 		}
 	},
-	
+
 	itemClicked: function(sender, event) {
 		if(event.rowIndex == this.selectedIndex) {
 			return false;
 		}
-		
+
 		this.selectRow(event.rowIndex);
 		return true;
 	},
-	
+
 	itemDeleted: function(sender, index) {
 		if(this.selectedIndex == index) {
 			this.index = -1;
@@ -95,13 +95,14 @@ enyo.kind({
 		}
 		return false;
 	},
-	
+
 	//
 	// Database interaction
 	//
-	
+
 	setItemCount: function(count) {
 		this.itemCount = count;
+		//this.log(this.kindName+"> Got item count", count);
 	},
 
 	insertItems: function(page, offset, items) {
@@ -109,6 +110,8 @@ enyo.kind({
 			if(items.length > 0) {
 				var count = offset + items.length;
 				for(var i = offset; i < count; i++) {
+//					if(this.kindName == "FeedList")
+//						this.log("ITEM>", items[i - offset].feedType, items[i - offset].title, items[i - offset].numNew, items[i - offset].numUnRead);
 					this.items[i] = items[i - offset];
 				}
 			}
@@ -117,20 +120,20 @@ enyo.kind({
 			this.error("LV EXCEPTION>", e);
 		}
 	},
-	
+
 	//
 	// Public functions
 	//
-	
+
 	refresh: function() {
 		// Reset internal data.
 		this.itemCount = -1;
-		
+
 		// And now refresh the list.
 		this.updateCount(this.setItemCount);
 		this.$.list.reAcquirePages();
 	},
-	
+
 	clear: function() {
 		this.itemCount = -1;
 		this.items = [];
@@ -138,14 +141,14 @@ enyo.kind({
 		this.selectedIndex = -1;
 		this.$.list.punt();
 	},
-	
+
 	//
 	// Initialization
 	//
-	
+
 	create: function() {
 		this.inherited(arguments);
-		
+
 		this.setItemCount = enyo.bind(this, this.setItemCount);
 	}
 });

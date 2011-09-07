@@ -53,7 +53,6 @@ enyo.kind({
 	endUpdate: function() {
 		this.updateCounter--;
 		if(!this.actionRunning && (this.list.length >= 1)) {
-//			Mojo.Controller.getAppController().sendToNotificationChain({ type: "updatestate-changed" });
 			this.nextAction();
 		}
 	},
@@ -97,7 +96,7 @@ enyo.kind({
 			});
 
 			if((this.updateCounter === 0) && (this.list.length == 1) && !this.actionRunning)  {
-//				DashboardControl.createUpdateDashboard();
+				enyo.application.launcher.openUpdateDashboard();
 				this.nextAction();
 			}
 		} catch(e) {
@@ -185,9 +184,8 @@ enyo.kind({
 			} else {
 				this.actionRunning = false;
 				this.actionIdent = "";
-//				DashboardControl.removeUpdateDashboard();
+				enyo.application.launcher.closeUpdateDashboard();
 				enyo.application.feeds.interactiveUpdate = false;
-//				Mojo.Controller.getAppController().sendToNotificationChain({ type: "updatestate-changed" });
 				this.leaveActivity();
 			}
 		} catch(e) {
@@ -206,9 +204,10 @@ enyo.kind({
 	 */
 	aboutToClose: function() {
 		try {
-/*			if(this.hasWork()) {
-				DashboardControl.createUpdateDashboard(true);
-			}*/
+			if(this.hasWork()) {
+				this.log("SPOOLER> creating dashboard");
+				enyo.application.launcher.openUpdateDashboard(true);
+			}
 		} catch(e) {
 			this.error(e);
 		}

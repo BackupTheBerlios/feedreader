@@ -1,0 +1,73 @@
+body {
+	background:	transparent;
+	margin:	0;
+}
+
+.dashboard-container {
+	height: 50px;
+	display: -webkit-box;
+}
+
+.dashboard-icon-container {
+	width: 50px;
+	margin-right: 4px;
+	margin-left: 6px;
+	margin-top: 2px;
+	position: relative;
+}
+
+.dashboard-icon {
+	width: 48px;
+	height: 48px;
+}
+
+.dashboard-count {
+	position: absolute;
+	right: -3px;
+	top: -3px;
+	line-height: 24px;
+	font-weight: bold;
+	height: 28px;
+	-webkit-border-image: url('../../images/lists/icon-newitem.png') 0 12 0 12 repeat stretch;
+	-webkit-box-sizing: border-box;
+	border-width: 0px 12px 0px 12px;
+}
+
+.dashboard-count-label {
+	margin: 0 -4px;
+	font-size: 16px;
+	color: #FFF;
+}
+
+.dashboard-content-container {
+	padding-top: 4px;
+	padding-left: 17px;
+	padding-right: 10px;
+	color: #FFF;
+}
+
+.dashboard-title,
+.dashboard-text {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.dashboard-title {
+	font-size: 18px;
+	font-weight: bold;
+}
+
+.dashboard-text {
+	font-size: 14px;
+	margin-top: -2px;
+}
+
+/*
+ * Style overrides
+ */
+
+.enyo-swipeableitem {
+	padding: 0px;
+	border: none;
+}

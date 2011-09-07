@@ -138,9 +138,12 @@ enyo.kind({
 
 		if(!enyo.application.db.isReady) {
 			this.$.scrim.show();
+			this.$.scrim.render();
 		} else {
 			this.notifyDBReady();
 		}
+
+		enyo.application.launcher.closeDashboard();
 	},
 
 	windowDeActivated: function() {
@@ -149,12 +152,15 @@ enyo.kind({
 	},
 
 	unloaded: function() {
-		this.log("UN-LOADED");
+		if(!enyo.application.updateDashboardVisible){
+			enyo.application.launcher.closeDashboard();
+		}
+		enyo.application.spooler.aboutToClose();
 		enyo.application.mainView = undefined;
 	},
 
 	//
-	//
+	// Notifications
 	//
 
 	notifyDBReady: function() {

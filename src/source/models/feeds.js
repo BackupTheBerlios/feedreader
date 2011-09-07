@@ -555,7 +555,7 @@ enyo.kind({
 			if(count > 0) {
 				if((!enyo.application.isActive) && (!this.interactiveUpdate) && (enyo.application.prefs.notificationEnabled)) {
 					this.log("FEEDS> About to post notification for new items; count =", count);
-//					enyo.application.dashboard.postNotification(count);
+					enyo.application.launcher.openItemDashboard(count);
 				}
 			}
 		} catch(e) {

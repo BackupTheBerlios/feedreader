@@ -43,10 +43,12 @@ enyo.kind({
 
 	cleanup: function() {
 		enyo.application.prefs.save();
-		this.log("FEEDREADER> exiting NOW");
+		enyo.application.spooler.aboutToClose();
 	},
 
 	startup: function() {
+		this.log("FEEDREAD starting up...");
+
 		// Set some globals.
 		enyo.application.appName 		= "FeedReader";
 		enyo.application.appAuthor 		= "Timo Tegtmeier";
@@ -92,27 +94,62 @@ enyo.kind({
 	relaunch: function(sender) {
 		var params = enyo.windowParams;
 
-		this.log("LAUNCHER> params", params);
-
- 		if(params.action) {
-			switch(params.action) {
-				case "feedUpdate":
-					enyo.application.feeds.enqueueUpdateAll();
-					break;
-
-				case "bannerPressed":
-					this.log("LAUNCHER> banner has been pressed");
-					break;
-			}
+ 		if(params.action && (params.action = "feedUpdate")) {
+			this.log("LAUNCHER> scheduled feed update triggered");
+			enyo.application.feeds.enqueueUpdateAll();
 		} else {
-			this.openCard("mainview", "FeedReaderMainView", params);
+			this.openMainView(params);
 		}
 		return true;
+	},
+
+	openMainView: function(params) {
+		this.openCard("mainview", "FeedReaderMainView", params);
 	},
 
 	openCard: function(name, windowName, windowParams) {
 		var cardPath = "source/" + name + "/index.html";
 		return enyo.windows.activate(cardPath, windowName, windowParams);
+	},
+
+	openItemDashboard: function(newCount) {
+		return this._doOpenDashboard({
+			newCount:	newCount,
+			isUpdate:	false
+		})
+	},
+
+	openUpdateDashboard: function(force) {
+		var dbWindow = enyo.windows.fetchWindow("dashboard");
+		if(dbWindow) {
+			return dbWindow;
+		}
+		return this._doOpenDashboard({
+			newCount:	-1,
+			isUpdate:	true
+		}, force)
+	},
+
+	_doOpenDashboard: function(params, force) {
+		if(!force && enyo.application.isActive) {
+			return undefined;
+		}
+
+		enyo.application.updateDashboardVisible = params.isUpdate;
+		return enyo.windows.openDashboard("source/dashboard/index.html", "dashboard", params);
+	},
+
+	closeDashboard: function() {
+		var dbWindow = enyo.windows.fetchWindow("dashboard");
+		if(dbWindow) {
+			dbWindow.close();
+		}
+	},
+
+	closeUpdateDashboard: function() {
+		if(enyo.application.updateDashboardVisible) {
+			this.closeDashboard();
+		}
 	},
 
 	notifyFeedUpdated: function(state, index) {
