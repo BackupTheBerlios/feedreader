@@ -105,7 +105,7 @@ enyo.kind({
 
 			// The Mojo version used a launch parameter here. I currently see
 			// no reason to add one, thus we pass empty parameters here.
-			if(this.params.newCount != oldCount) {
+			if((this.params.newCount != oldCount) && (!enyo.application.prefs.unobtrusiveNotifications)) {
 				enyo.windows.addBannerMessage(msg, "{}");
 			}
 			this.updateLEDThrobber(this.params.newCount != oldCount);

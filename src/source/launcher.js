@@ -113,6 +113,10 @@ enyo.kind({
 	},
 
 	openItemDashboard: function(newCount) {
+		if(enyo.application.mainView && (!enyo.application.prefs.notifyWhileRunning)) {
+			return undefined;
+		}
+
 		return this._doOpenDashboard({
 			newCount:	newCount,
 			isUpdate:	false
