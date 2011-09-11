@@ -139,6 +139,7 @@ enyo.kind({
 		this.$.item.setSwipeable((feed.feedType != feedTypes.ftAllItems) &&
 								 (feed.feedTypr != feedTypes.ftStarred));
 
+		this.$.feedTitle.applyStyle("color", enyo.application.prefs.getCSSTitleColor());
 		this.$.feedTitle.setContent(enyo.application.feeds.getFeedTitle(feed));
 		this.$.feedURL.setContent(enyo.application.feeds.getFeedURL(feed));
 		this.$.feedIcon.setSrc("../../" + enyo.application.feeds.getFeedIcon(feed));

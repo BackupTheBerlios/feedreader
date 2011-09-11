@@ -122,5 +122,15 @@ enyo.kind({
 		});
 		enyo.setCookie(this.cookieName, settings);
 		enyo.application.timer.setTimer();
+	},
+
+	getCSSTitleColor: function() {
+		switch(this.titleColor) {
+			case "purple":
+				return "#800080";
+
+			default:
+				return this.titleColor || "black";
+		}
 	}
 });

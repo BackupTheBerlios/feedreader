@@ -146,6 +146,7 @@ enyo.kind({
 		this.$.storyText.setContent(summary);
 		this.$.starButton.setChecked(story.isStarred);
 
+		this.$.storyTitle.applyStyle("color", enyo.application.prefs.getCSSTitleColor());
 		if(!story.isRead) {
 			this.$.storyTitle.applyStyle("font-weight", "bold");
 		} else {
