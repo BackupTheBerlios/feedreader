@@ -103,6 +103,7 @@ enyo.kind({
 
 		onWindowActivated:		"windowActivated",
 		onWindowDeactivated:	"windowDeActivated",
+		onWindowRotated:		"optimizeSpace",
 		onUnload:				"unloaded"
 	}],
 
@@ -119,6 +120,8 @@ enyo.kind({
 
 			this.$.storyList.setFeed(feed);
 			this.$.storyView.setFeed(feed);
+
+			this.optimizeSpace();
 		});
 	},
 
@@ -132,6 +135,8 @@ enyo.kind({
 				// Reset story view.
 				this.$.storyView.setFeed(null);
 				this.$.storyView.setStory(null);
+
+				this.optimizeSpace();
 			}
 		});
 	},
@@ -164,6 +169,7 @@ enyo.kind({
 				}
 			}
 			this.$.storyView.setStory(story);
+			this.optimizeSpace();
 		});
 	},
 
@@ -234,6 +240,15 @@ enyo.kind({
 		enyo.application.isActive = false;
 	},
 
+	optimizeSpace: function() {
+		if((window.innerWidth < window.innerHeight) &&
+		   (this.$.storyView.getStory())) {
+			this.$.storyContainer.setMinWidth("448px");
+		} else {
+			this.$.storyContainer.setMinWidth("");
+		}
+	},
+
 	unloaded: function() {
 		if(!enyo.application.updateDashboardVisible){
 			enyo.application.launcher.closeDashboard();
@@ -271,8 +286,19 @@ enyo.kind({
 			msg = enyo.macroize(msg, data);
 		}
 
-		enyo.nextTick(this, function() {
+		enyo.asyncMethod(this, function() {
 			this.$.errorDialog.openAtCenter(msg);
 		});
+	},
+
+	//
+	// Initialization
+	//
+
+	create: function() {
+		this.inherited(arguments);
+
+		enyo.keyboard.setResizesWindow(false);
+		this.optimizeSpace();
 	}
 });
