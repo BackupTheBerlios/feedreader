@@ -39,13 +39,13 @@ enyo.kind({
 	},
 
 	reAcquirePages: function() {
-		for(var i = this.$.buffer.firstPage; i <= this.$.buffer.lastPage; i++) {
-			this.discardPage(this, i);
-			this.acquirePage(this, i);
+		for(var i = this.$.buffer.top; i <= this.$.buffer.bottom; i++) {
+			this._discardPage(this, i);
+			this._acquirePage(this, i);
 		}
 	},
 
-	acquirePage: function(sender, index) {
+	_acquirePage: function(sender, index) {
 		this.updateCounter++;
 		this.doAcquirePage(index);
 	},
@@ -54,20 +54,21 @@ enyo.kind({
 		this.updateCounter--;
 		if(this.updateCounter == 0) {
 			// It seems, this needs to be executed asynchronously...
-			enyo.nextTick(this, function() {
+			enyo.asyncMethod(this, function() {
 				this.refresh();
 			});
 			this.doFinishReAcquire();
 		}
 	},
 
-	discardPage: function(sender, index) {
+	_discardPage: function(sender, index) {
+		this.log("DISCARDING", index);
 		this.doDiscardPage(index);
 	},
 
 	initComponents: function() {
 		this.inherited(arguments);
-		this.$.buffer.onAcquirePage = "acquirePage";
-		this.$.buffer.onDiscardPage = "discardPage";
+		this.$.buffer.onAcquirePage = "_acquirePage";
+		this.$.buffer.onDiscardPage = "_discardPage";
 	}
 });
