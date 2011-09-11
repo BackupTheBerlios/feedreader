@@ -25,7 +25,7 @@ enyo.kind({
 	kind:		"RowItem",
 	layoutKind:	"HFlexLayout",
 	align:		"center",
-	
+
 	components:	[{
 		name:		"caption",
 		className:	"enyo-label"
@@ -33,34 +33,39 @@ enyo.kind({
 		name:			"selector",
 		kind:			"ListSelector",
 		contentPack:	"end",
-		flex:			1
+		flex:			1,
+		onChange:		"doChange"
 	}],
-	
+
+	events:		[{
+		onChange:	""
+	}],
+
 	published:	[{
 		caption:	"",
 		items:		[],
 		value:		0
 	}],
-	
+
 	captionChanged: function() {
 		this.$.caption.setContent(this.caption);
 	},
-	
+
 	itemsChanged: function() {
 		this.$.selector.setItems(this.items);
 	},
-	
+
 	getValue: function() {
 		return this.$.selector.getValue();
 	},
-	
+
 	setValue: function(value) {
 		this.$.selector.setValue(value);
 	},
-	
+
 	create: function() {
 		this.inherited(arguments);
-		
+
 		this.captionChanged();
 		this.itemsChanged();
 		this.setValue(this.value);

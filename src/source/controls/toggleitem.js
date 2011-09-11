@@ -25,49 +25,60 @@ enyo.kind({
 	kind:		"RowItem",
 	layoutKind:	"HFlexLayout",
 	align:		"center",
-	
+
 	components:	[{
 		content:	$L("Activate Feed"),
 		name:		"caption",
 		flex:		1
 	}, {
 		name: 		"button",
-		kind: 		"ToggleButton"
+		kind: 		"ToggleButton",
+		onChange:	"doChange"
 	}],
-	
+
 	published: {
 		caption:	"",
 		value:		false,
-		trueLabel:	$L("On"),
-		falseLabel:	$L("Off")
+		trueLabel:	$L("Yes"),
+		falseLabel:	$L("No"),
+		disabled:	false
 	},
-	
+
+	events: {
+		onChange:	""
+	},
+
 	getValue: function() {
 		return this.$.button.getState();
 	},
-	
+
 	setValue: function(state) {
 		this.$.button.setState(state);
 	},
-	
+
 	captionChanged: function() {
 		this.$.caption.setContent(this.caption);
 	},
-	
+
 	trueLabelChanged: function() {
 		this.$.button.setOnLabel(this.trueLabel);
 	},
-	
+
 	falseLabelChanged: function() {
 		this.$.button.setOffLabel(this.falseLabel);
 	},
-	
+
+	disabledChanged: function() {
+		this.$.button.setDisabled(this.disabled);
+	},
+
 	create: function() {
 		this.inherited(arguments);
-		
+
 		this.setValue(this.value);
 		this.captionChanged();
 		this.trueLabelChanged();
 		this.falseLabelChanged();
+		this.disabledChanged();
 	}
 });
