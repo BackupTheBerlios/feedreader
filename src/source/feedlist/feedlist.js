@@ -140,7 +140,9 @@ enyo.kind({
 								 (feed.feedTypr != feedTypes.ftStarred));
 
 		this.$.feedTitle.applyStyle("color", enyo.application.prefs.getCSSTitleColor());
+		this.$.feedTitle.applyStyle("font-size", enyo.application.prefs.largeFont ? "20px" : "18px");
 		this.$.feedTitle.setContent(enyo.application.feeds.getFeedTitle(feed));
+		this.$.feedURL.applyStyle("font-size", enyo.application.prefs.largeFont ? "16px" : "14px");
 		this.$.feedURL.setContent(enyo.application.feeds.getFeedURL(feed));
 		this.$.feedIcon.setSrc("../../" + enyo.application.feeds.getFeedIcon(feed));
 

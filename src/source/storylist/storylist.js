@@ -130,8 +130,13 @@ enyo.kind({
 			return false;
 		}
 
+		// Every item is deleable.
+		this.$.item.setSwipeable(true);
+
+		// Make the story easily available.
 		var story = this.items[index];
 
+		// If necessary, shorten the summary.
 		var summary = "";
 		if(this.feed.showListSummary) {
 			var summaryLength = parseInt(enyo.application.prefs.summaryLength, 10);
@@ -141,17 +146,16 @@ enyo.kind({
 			}
 		}
 
-		this.$.item.setSwipeable(true);
 		this.$.storyTitle.setContent(story.title);
 		this.$.storyText.setContent(summary);
 		this.$.starButton.setChecked(story.isStarred);
 
 		this.$.storyTitle.applyStyle("color", enyo.application.prefs.getCSSTitleColor());
-		if(!story.isRead) {
-			this.$.storyTitle.applyStyle("font-weight", "bold");
-		} else {
-			this.$.storyTitle.applyStyle("font-weight", "normal");
-		}
+		this.$.storyTitle.applyStyle("font-weight", story.isRead ? "normal" : "bold");
+
+		this.$.storyDate.applyStyle("font-size", enyo.application.prefs.largeFont ? "14px" : "12px");
+		this.$.storyTitle.applyStyle("font-size", enyo.application.prefs.largeFont ? "18px" : "16px");
+		this.$.storyText.applyStyle("font-size", enyo.application.prefs.largeFont ? "17px" : "15px");
 
 		// orderMode!!!!
 

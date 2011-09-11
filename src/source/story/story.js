@@ -176,6 +176,11 @@ enyo.kind({
 	//
 
 	storyChanged: function() {
+		// Handle the largeFont setting.
+		this.$.date.applyStyle("font-size", enyo.application.prefs.largeFont ? "120%" : "100%");
+		this.$.caption.applyStyle("font-size", enyo.application.prefs.largeFont ? "120%" : "100%");
+		this.$.content.applyStyle("font-size", enyo.application.prefs.largeFont ? "120%" : "100%");
+
 		if(!this.story) {
 			this.$.starButton.setChecked(false);
 			this.$.starButton.setDisabled(true);
