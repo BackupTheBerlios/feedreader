@@ -24,7 +24,7 @@ enyo.kind({
 
 	name:		"DateFormatter",
 	kind:		"Component",
-	
+
 	dateFormatter:		null,
 	timeFormatter:		null,
 	datetimeFormatter:	null,
@@ -33,12 +33,12 @@ enyo.kind({
 		var d = new Date(dateString);
 		return d.getTime();
 	},
-	
+
 	_convertRFC2822: function(dateString) {
 		// Wed Mar 31 12:00 EDT 2010
 		var d = new Date();
 		var parts = dateString.split(" ");
-		
+
 		switch(parts[1]) {
 			case "Jan":	d.setMonth(0); break;
 			case "Feb": d.setMonth(1); break;
@@ -55,7 +55,7 @@ enyo.kind({
 		}
 		d.setDate(parseInt(parts[2], 10));
 		d.setYear(parseInt(parts[5], 10));
-		
+
 		parts = parts[3].split(":");
 		if(parts[0]) {
 			d.setHours(parts[0]);
@@ -68,13 +68,13 @@ enyo.kind({
 		} else {
 			d.setSeconds(0);
 		}
-		
+
 		return d.getTime();
 	},
 
 	_convertDCDate: function(dateString) {
 		var d = new Date();
-		
+
 		// Dublin core date. See: http://www.w3.org/TR/NOTE-datetime
 		var parts = dateString.split("T");
 		if(parts[0]) {
@@ -114,7 +114,7 @@ enyo.kind({
 		}
 		return d.getTime();
 	},
-	
+
 	_convertSimpleDate: function(dateString) {
 		var d = new Date();
 		var parts = dateString.split('.');
@@ -127,19 +127,19 @@ enyo.kind({
 		if(parts[2]) {
 			d.setFullYear(parseInt(parts[2], 10));
 		}
-		
+
 		d.setHours(0);
 		d.setMinutes(0);
 		d.setSeconds(0);
-		
+
 		return d.getTime();
 	},
-	
+
 	_convertDiggDate: function(dateString) {
 		// example: Thu, 04 November 2010 09:25:28
 		var d = new Date();
 		var parts = dateString.split(" ");
-		
+
 		switch(parts[2]) {
 			case "January":		d.setMonth(0); break;
 			case "February": 	d.setMonth(1); break;
@@ -156,7 +156,7 @@ enyo.kind({
 		}
 		d.setDate(parseInt(parts[1], 10));
 		d.setYear(parseInt(parts[3], 10));
-		
+
 		parts = parts[4].split(":");
 		if(parts[0]) {
 			d.setHours(parts[0]);
@@ -169,15 +169,15 @@ enyo.kind({
 		} else {
 			d.setSeconds(0);
 		}
-		
+
 		return d.getTime();
 	},
-	
+
 	_convertSimpleDate2: function(dateString) {
 		// example: 26 Nov 2010 02:30:00 +0100
 		var d = new Date();
 		var parts = dateString.split(" ");
-		
+
 		switch(parts[1]) {
 			case "Jan":		d.setMonth(0); break;
 			case "Feb": 	d.setMonth(1); break;
@@ -194,7 +194,7 @@ enyo.kind({
 		}
 		d.setDate(parseInt(parts[0], 10));
 		d.setYear(parseInt(parts[2], 10));
-		
+
 		parts = parts[3].split(":");
 		if(parts[0]) {
 			d.setHours(parts[0]);
@@ -207,20 +207,20 @@ enyo.kind({
 		} else {
 			d.setSeconds(0);
 		}
-		
+
 		return d.getTime();
 	},
 
 	/**
 	 * Convert a date string to an integer; supports dc:date and RFC 822 format.
-	 * 
+	 *
 	 * @param {String}		date string to reformat
 	 */
 	dateToInt: function(dateString, storyFormatter) {
 		var intDate;
-		
+
 		dateString = storyFormatter.stripBreaks(dateString);
-		
+
 		try {
 			dateString = storyFormatter.stripCDATA(dateString);
 			if(!dateString) {
@@ -246,17 +246,17 @@ enyo.kind({
 				intDate = this._convertDCDate(dateString);
 			}
 		} catch(e) {
-			
+
 			this.error("DATE EXCEPTION>", e);
 			var d2 = new Date();
 			intDate = d2.getTime();
-			
+
 		}
 		return intDate;
 	},
-	
+
 	formatDate: function(date) {
-		if(date > 0) {		
+		if(date > 0) {
 			var d = new Date();
 			d.setTime(date);
 			return this.dateFormatter.format(d);
@@ -264,9 +264,9 @@ enyo.kind({
 			return $L("No date provided");
 		}
 	},
-	
+
 	formatTime: function(date) {
-		if(date > 0) {		
+		if(date > 0) {
 			var d = new Date();
 			d.setTime(date);
 			return this.timeFormatter.format(d);
@@ -274,9 +274,9 @@ enyo.kind({
 			return $L("No time provided");
 		}
 	},
-	
+
 	formatDateTime: function(date) {
-		if(date > 0) {		
+		if(date > 0) {
 			var d = new Date();
 			d.setTime(date);
 			return this.datetimeFormatter.format(d);
@@ -284,24 +284,24 @@ enyo.kind({
 			return $L("No time provided");
 		}
 	},
-	
+
 	datesEqual: function(d1, d2) {
 		if((d1 <= 0) && (d2 <= 0)) {
 			return true;
 		}
 		var date1 = new Date(d1);
 		var date2 = new Date(d2);
-		
+
 		return (date1.getFullYear() == date2.getFullYear()) &&
 			   (date1.getMonth() == date2.getMonth()) &&
 			   (date1.getDate() == date2.getDate());
 	},
-	
+
 	formatTimeString: function(secs) {
         if(secs > 0) {
 			var mins = Math.floor(secs / 60);
 			secs = Math.floor(secs % 60);
-			
+
 			// Pad with zeros if needed.
 			// ToDo: Replace this, once a proper sprintf() replacement is found.
 			if (mins < 10) {
@@ -314,11 +314,11 @@ enyo.kind({
 		}
 		return "00:00";
 	},
-	
+
 	create: function() {
 		this.inherited(arguments);
 		this.dateFormatter = new enyo.g11n.DateFmt({
-			date:	"medium",
+			date:	"long",
 			time:	""
 		});
 		this.timeFormatter = new enyo.g11n.DateFmt({
@@ -327,6 +327,6 @@ enyo.kind({
 		});
 		this.datetimeFormatter = new enyo.g11n.DateFmt({
 			format:	"medium"
-		});		
+		});
 	}
 });
