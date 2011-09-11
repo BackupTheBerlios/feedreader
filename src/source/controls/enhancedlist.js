@@ -62,7 +62,6 @@ enyo.kind({
 	},
 
 	_discardPage: function(sender, index) {
-		this.log("DISCARDING", index);
 		this.doDiscardPage(index);
 	},
 

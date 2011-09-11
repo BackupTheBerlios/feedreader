@@ -60,13 +60,14 @@ enyo.kind({
 		enyo.application.notifyDBReady = enyo.bind(this, this.notifyDBReady);
 		enyo.application.notifyFeedListChanged = enyo.bind(this, this.notifyFeedListChanged);
 		enyo.application.notifyStoryListChanged = enyo.bind(this, this.notifyStoryListChanged);
+		enyo.application.notifySpoolerRunningChanged = enyo.bind(this, this.notifySpoolerRunningChanged);
 
 		enyo.application.assert = enyo.bind(this, this.assert);
+		enyo.application.nop = function() {};
 		enyo.application.showError = enyo.bind(this, this.showError);
 		enyo.application.openLink = enyo.bind(this, this.openLink);
 		enyo.application.openEMail = enyo.bind(this, this.openEMail);
 		enyo.application.openMessaging = enyo.bind(this, this.openMessaging);
-		enyo.application.nop = function() {};
 
 		// Create the necessary helper objects.
 		enyo.application.connChecker = new ConnectionChecker();
@@ -177,6 +178,12 @@ enyo.kind({
 	notifyStoryListChanged: function() {
 		if(enyo.application.mainView) {
 			enyo.application.mainView.notifyStoryListChanged();
+		}
+	},
+
+	notifySpoolerRunningChanged: function(state) {
+		if(enyo.application.mainView) {
+			enyo.application.mainView.notifySpoolerRunningChanged(state);
 		}
 	},
 

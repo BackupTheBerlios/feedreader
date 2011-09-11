@@ -271,13 +271,16 @@ enyo.kind({
 	},
 
 	notifyFeedListChanged: function() {
-		this.log("MAINVIEW> feedlist changed");
 		this.$.feedList.refresh();
 	},
 
 	notifyStoryListChanged: function() {
-		this.log("MAINVIEW> storylist changed");
 		this.$.storyList.refresh();
+	},
+
+	notifySpoolerRunningChanged: function(state) {
+		this.$.feedList.spoolerRunningChanged(state);
+		this.$.storyList.spoolerRunningChanged(state);
 	},
 
 	showError: function(errorMsg, data) {

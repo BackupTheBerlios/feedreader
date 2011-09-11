@@ -249,7 +249,7 @@ enyo.kind({
 		this.$.bgContainer.setShowing(feedInvalid);
 
 		this.$.editButton.setDisabled(feedInvalid);
-		this.$.refreshButton.setDisabled(feedInvalid || !this.feed.enabled);
+		this.$.refreshButton.setDisabled(enyo.application.spooler.actionRunning || feedInvalid || !this.feed.enabled);
 		this.$.shareButton.setDisabled(feedInvalid);
 
 		if(!this.isRefresh) {
@@ -282,6 +282,10 @@ enyo.kind({
 		if(this.feed) {
 			this.inherited(arguments);
 		}
+	},
+
+	spoolerRunningChanged: function(state) {
+		this.$.refreshButton.setDisabled(state || !this.feed || !this.feed.enabled);
 	},
 
 	//

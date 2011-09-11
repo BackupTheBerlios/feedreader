@@ -176,12 +176,18 @@ enyo.kind({
 	nextAction: function() {
 		try {
 			if(this.list.length >= 1) {
+				if(!this.actionRunning) {
+					enyo.application.notifySpoolerRunningChanged(true);
+				}
 				var action = this.list.shift();
 				this.actionRunning = true;
 				this.actionIdent = action.ident;
 				this.enterActivity();
 				action.execute();
 			} else {
+				if(this.actionRunning) {
+					enyo.application.notifySpoolerRunningChanged(false);
+				}
 				this.actionRunning = false;
 				this.actionIdent = "";
 				enyo.application.launcher.closeUpdateDashboard();

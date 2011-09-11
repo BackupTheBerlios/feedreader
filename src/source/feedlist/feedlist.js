@@ -21,10 +21,11 @@
  */
 
 enyo.kind({
-	name:		"FeedList",
-	kind:		"ListViewSkeleton",
+	name:			"FeedList",
+	kind:			"ListViewSkeleton",
 
-	menuIndex:	0,
+	menuIndex:		0,
+	spinningIndex:	-1,
 
 	events:		{
 		onFeedSelected:	"",
@@ -116,6 +117,7 @@ enyo.kind({
 		}, {
 			kind:		"Spacer"
 		}, {
+			name:		"refreshButton",
 			kind:		"ToolButton",
 			icon:		"../../images/toolbars/icon-sync.png",
 			onclick:	"refreshClicked"
@@ -162,7 +164,6 @@ enyo.kind({
 
 	finishReAcquire: function(sender) {
 		if(this.selectedIndex >= 0) {
-			this.log("FL> Refreshing story list");
 			this.doFeedSelected(this.items[this.selectedIndex]);
 		}
 	},
@@ -219,8 +220,14 @@ enyo.kind({
 	},
 
 	setFeedSpinner: function(index, state) {
+		if(state && (this.spinningIndex >= 0) && (this.spinningIndex != index)) {
+			this.setFeedSpinner(this.spinningIndex, false);
+			enyo.nextTick(this, this.setFeedSpinner, index, state);
+			return;
+		}
 		this.$.list.prepareRow(index);
 		this.$.feedSpinner.setShowing(state);
+		this.spinningIndex = state ? index : -1;
 	},
 
 	//
@@ -276,12 +283,16 @@ enyo.kind({
 	//
 
 	setFeedUpdateState: function(state, index) {
-		if((index < 0) || (index >= this.items.length) || (!this.items[index])) {
+		if((index < 0) || (index >= this.items.length)) {
 			return;
 		}
 		this.setFeedSpinner(index, state);
 		if(!state) {
 			this.refresh();
 		}
+	},
+
+	spoolerRunningChanged: function(state) {
+		this.$.refreshButton.setDisabled(state);
 	}
 });

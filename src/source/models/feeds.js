@@ -457,10 +457,17 @@ enyo.kind({
 		var feed = request.feed;
 		this.log("FEEDS> Got new content from", feed.url);
 		try {
-			if((response === null) && (request.xhr.responseText !== null)) {
-				this.log("FEEDS> Manually converting feed info to xml for", feed.url);
-				response = new DOMParser().parseFromString(request.xhr.responseText, "text/xml");
-				this.log(request.xhr.responseText);
+			if(response === null) {
+				if(request.xhr.responseText.length <= 0) {
+					this.log("FEEDS> No response at all... maybe no connection available");
+					enyo.application.db.endStoryUpdate(feed, false);
+					enyo.application.spooler.nextAction();
+					return;
+				} else if(request.xhr.responseText !== null) {
+					this.log("FEEDS> Manually converting feed info to xml for", feed.url);
+					response = new DOMParser().parseFromString(request.xhr.responseText, "text/xml");
+					this.log(request.xhr.responseText);
+				}
 			}
 
 			var type = this.determineFeedType(feed, response, request);
