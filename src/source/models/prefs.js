@@ -21,46 +21,47 @@
  */
 
 enyo.kind({
-	
+
 	name:					"Prefs",
 	kind:					"Component",
-	
+
 	cookieName:				"comtegi-stuffAppFeedReaderPrefs",
-	
-	updateInterval:			30,
-	storyKeepTime:			24 * 3,
-	updateOnStart:			true,
-	notificationEnabled:	true,
-	blinkingEnabled:		true,
-	notifyWhileRunning:		true,
-	wakingEnabled:			false,
-	titleColor:				"red",
-	summaryLength: 			120,
-	largeFont: 				false,
-	showChanges: 			false,
-	leftHanded: 			true,
-	enableRotation: 		true,
-	
+
+	updateInterval:				30,
+	storyKeepTime:				24 * 3,
+	updateOnStart:				true,
+	notificationEnabled:		true,
+	blinkingEnabled:			true,
+	notifyWhileRunning:			true,
+	unobtrusiveNotifications:	true,
+	wakingEnabled:				false,
+	titleColor:					"black",
+	summaryLength: 				120,
+	largeFont: 					false,
+	leftHanded: 				true,		// not used in enyo version
+	enableRotation: 			true,		// not used in enyo version
+	showChanges: 				false,
+
 	rilUser: 				"",	// Read it Later
 	rilPassword:			"",
-	
+
 	gReaderUser:			"",	// Google Reader
 	gReaderPassword:		"",
-	
+
 	timer: 					null,
-	
+
 	constructor: function() {
 		this.cookie = enyo.getCookie(this.cookieName);
 	},
-	
+
 	load: function() {
 		if(this.cookie) {
 			var settings = enyo.json.parse(this.cookie);
-			
+
 			this.updateInterval = settings.updateInterval;
 			this.notificationEnabled = settings.notificationEnabled;
 			this.wakingEnabled = settings.wakingEnabled;
-			
+
 			if(settings.version > 0) {
 				this.summaryLength = settings.summaryLength;
 				this.titleColor = settings.titleColor;
@@ -82,38 +83,42 @@ enyo.kind({
 			if(settings.storyKeepTime !== undefined) {
 				this.storyKeepTime = settings.storyKeepTime;
 			}
-			
+			if(settings.unobtrusiveNotifications !== undefined) {
+				this.unobtrusiveNotifications = settings.unobtrusiveNotifications;
+			}
+
 			this.rilUser = settings.rilUser || "";
 			this.rilPassword = settings.rilPassword || "";
 			this.gReaderUser = settings.gReaderUser || "";
 			this.gReaderPassword = settings.gReaderPassword || "";
-			
+
 			if(settings.version < enyo.application.versionInt) {
 				this.showChanges = true;
 				this.save(false);
 			}
 		}
 	},
-	
+
 	save: function(showCredentialsWarning) {
 		var settings = enyo.json.stringify({
-			version: 				enyo.application.versionInt,
-			updateInterval: 		this.updateInterval,
-			updateOnStart:			this.updateOnStart,
-			notificationEnabled: 	this.notificationEnabled,
-			blinkingEnabled:		this.blinkingEnabled,
-			notifyWhileRunning:		this.notifyWhileRunning,
-			wakingEnabled: 			this.wakingEnabled,
-			summaryLength: 			this.summaryLength,
-			titleColor: 			this.titleColor,
-			largeFont:				this.largeFont,
-			leftHanded:				this.leftHanded,
-			enableRotation:			this.enableRotation,
-			storyKeepTime:			this.storyKeepTime,
-			rilUser:				this.rilUser,
-			rilPassword:			this.rilPassword,
-			gReaderUser:			this.gReaderUser,
-			gReaderPassword:		this.gReaderPassword
+			version: 					enyo.application.versionInt,
+			updateInterval: 			this.updateInterval,
+			updateOnStart:				this.updateOnStart,
+			notificationEnabled: 		this.notificationEnabled,
+			blinkingEnabled:			this.blinkingEnabled,
+			notifyWhileRunning:			this.notifyWhileRunning,
+			unobtrusiveNotifications:	this.unobtrusiveNotifications,
+			wakingEnabled: 				this.wakingEnabled,
+			summaryLength: 				this.summaryLength,
+			titleColor: 				this.titleColor,
+			largeFont:					this.largeFont,
+			leftHanded:					this.leftHanded,
+			enableRotation:				this.enableRotation,
+			storyKeepTime:				this.storyKeepTime,
+			rilUser:					this.rilUser,
+			rilPassword:				this.rilPassword,
+			gReaderUser:				this.gReaderUser,
+			gReaderPassword:			this.gReaderPassword
 		});
 		enyo.setCookie(this.cookieName, settings);
 		enyo.application.timer.setTimer();

@@ -280,6 +280,15 @@ enyo.kind({
 	},
 
 	//
+	// Public functions
+	//
+
+	refresh: function() {
+		this.isRefresh = true;
+		this.storyChanged();
+	},
+
+	//
 	// Initialization
 	//
 

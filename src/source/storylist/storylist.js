@@ -182,7 +182,6 @@ enyo.kind({
 
 	finishReAcquire: function(sender) {
 		if(this.selectedIndex >= 0) {
-			this.log("SL> refreshing story view");
 			this.doStorySelected(this.items[this.selectedIndex]);
 		}
 	},

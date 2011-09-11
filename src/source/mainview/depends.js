@@ -20,6 +20,7 @@ enyo.depends(
 	"../storylist/storylist.js",
 	"../story/story.js",
 	"../editfeed/editfeed.js",
+	"../preferences/preferences.js",
 
 	"../../stylesheets/feedreader_enyo.css"
 );
