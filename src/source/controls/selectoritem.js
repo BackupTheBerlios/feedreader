@@ -37,9 +37,9 @@ enyo.kind({
 		onChange:		"doChange"
 	}],
 
-	events:		[{
+	events:		{
 		onChange:	""
-	}],
+	},
 
 	published:	[{
 		caption:	"",
