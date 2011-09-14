@@ -146,8 +146,8 @@ enyo.kind({
 			}
 		}
 
-		this.$.storyTitle.setContent(story.title);
-		this.$.storyText.setContent(summary);
+		this.$.storyTitle.setContent(this.feed.showListCaption ? story.title : "");
+		this.$.storyText.setContent(this.feed.showListSummary ? summary : "");
 		this.$.starButton.setChecked(story.isStarred);
 
 		this.$.storyTitle.applyStyle("color", enyo.application.prefs.getCSSTitleColor());
