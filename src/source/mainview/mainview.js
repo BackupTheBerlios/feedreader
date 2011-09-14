@@ -116,10 +116,13 @@ enyo.kind({
 			var selectedFeed = this.$.storyList.getFeed();
 			if(selectedFeed && (selectedFeed.id == feed.id)) {
 				this.$.storyList.setIsRefresh(true);
+			} else {
+				this.$.storyView.setStory(null);
 			}
 
 			this.$.storyList.setFeed(feed);
 			this.$.storyView.setFeed(feed);
+
 
 			this.optimizeSpace();
 		});
