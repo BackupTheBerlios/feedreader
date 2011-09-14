@@ -62,20 +62,20 @@ enyo.kind({
 			return;
 		}
 
-		// Check if we already have the data.
-		if((this.items.length <= offset) || (!this.items[offset])) {
-			this.acquireData(this.filter, offset, count, enyo.bind(this, this.insertItems, page));
-		} else {
-			this.$.list.acquiredPage(page);
-		}
+		this.acquireData(this.filter, offset, count, enyo.bind(this, this.insertItems, page));
 	},
 
 	discardPage: function(sender, page) {
-		var count = this.$.list.getPageSize();
-		var offset = count * page;
+		// Do not discard pages currently visible to avoid flicker.
+		if((page < this.$.list.getTopPage()) || (page > this.$.list.getBottomPage())) {
+			this.log("DISCARDING page", page);
 
-		for(var i = offset; i < offset + count; i++) {
-			this.items[i] = null; // delete items
+			var count = this.$.list.getPageSize();
+			var offset = count * page;
+
+			for(var i = offset; i < offset + count; i++) {
+				this.items[i] = null; // delete items
+			}
 		}
 	},
 
@@ -89,6 +89,8 @@ enyo.kind({
 	},
 
 	itemDeleted: function(sender, index) {
+		this.items.splice(index, 1);
+
 		if(this.selectedIndex == index) {
 			this.index = -1;
 			return true;
@@ -102,7 +104,6 @@ enyo.kind({
 
 	setItemCount: function(count) {
 		this.itemCount = count;
-		//this.log(this.kindName+"> Got item count", count);
 	},
 
 	insertItems: function(page, offset, items) {
@@ -110,8 +111,6 @@ enyo.kind({
 			if(items.length > 0) {
 				var count = offset + items.length;
 				for(var i = offset; i < count; i++) {
-//					if(this.kindName == "FeedList")
-//						this.log("ITEM>", items[i - offset].feedType, items[i - offset].title, items[i - offset].numNew, items[i - offset].numUnRead);
 					this.items[i] = items[i - offset];
 				}
 			}

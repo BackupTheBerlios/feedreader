@@ -158,7 +158,8 @@ enyo.kind({
 		enyo.application.feeds.getFeeds(filter, offset, count, inserter);
 	},
 
-	reorderFeed: function(sender, fromIndex, toIndex) {
+	reorderFeed: function(sender, toIndex, fromIndex) {
+		this.log("REORDER> from", fromIndex, "to", toIndex);
 		enyo.application.feeds.moveFeed(fromIndex, toIndex);
 	},
 
