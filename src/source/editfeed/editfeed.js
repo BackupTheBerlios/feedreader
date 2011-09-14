@@ -110,16 +110,14 @@ enyo.kind({
 				name:	"detailMode",
 				kind:	"SelectorItem",
 				items:	[{
-					caption:	$L("Captions and summaries"),
+					caption:	$L("Show story"),
 					value:		0
 				}, {
-					caption:	$L("Only captions"),
+					caption:	$L("Show webpage"),
 					value:		1
-				}, {
-					caption:	$L("Only summaries"),
-					value:		2
 				}],
-				caption:	$L("Show")
+				caption:	$L("Show"),
+				onChange:	"detailModeChanged"
 			}, {
 				name:		"showPicture",
 				kind:		"ToggleItem",
@@ -182,8 +180,9 @@ enyo.kind({
 		this.feed.showListCaption = (this.$.listMode.getValue() == 0) || ((this.$.listMode.getValue() % 2) == 1);
 		this.feed.showListSummary = (this.$.listMode.getValue() % 2) == 0;
 
-		this.feed.showDetailCaption = (this.$.detailMode.getValue() == 0) || ((this.$.detailMode.getValue() % 2) == 1);
-		this.feed.showDetailSummary = (this.$.detailMode.getValue() % 2) == 0;
+		this.feed.showDetailCaption = true;
+		this.feed.showDetailSummary = true;
+		this.feed.fullStory = this.$.detailMode == 0;
 
 		this.feed.showPicture = this.$.showPicture.getValue();
 		this.feed.showMedia = this.$.showMedia.getValue();
@@ -200,6 +199,14 @@ enyo.kind({
 
 		// Save the feed.
 		enyo.application.feeds.addOrEditFeed(this.feed, this.updateSuccess, this.updateFailed);
+	},
+
+	detailModeChanged: function() {
+		var state = this.$.detailMode.getValue() == 1;
+		this.log("DETAILMODE CHANGED", state);
+		this.$.showPicture.setDisabled(state);
+		this.$.showMedia.setDisabled(state);
+		this.$.allowHTML.setDisabled(state);
 	},
 
 	resetButtons: function() {
@@ -244,13 +251,7 @@ enyo.kind({
 			listMode = 2;
 		}
 
-		if(this.feed.showDetailSummary && this.feed.showDetailCaption) {
-			detailMode = 0;
-		} else if(this.feed.showDetailCaption) {
-			detailMode = 1;
-		} else if(this.feed.showDetailSummary) {
-			detailMode = 2;
-		}
+		detailMode = this.feed.fullStory ? 0 : 1;
 
 		this.$.name.setValue(this.feed.title);
 		this.$.url.setValue(this.feed.url);
@@ -266,6 +267,8 @@ enyo.kind({
 		this.$.showPicture.setValue(this.feed.showPicture);
 		this.$.showMedia.setValue(this.feed.showMedia);
 		this.$.allowHTML.setValue(this.feed.allowHTML);
+
+		this.detailModeChanged();
 	},
 
 	openAtCenter: function(feed) {

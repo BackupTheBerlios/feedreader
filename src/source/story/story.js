@@ -66,11 +66,29 @@ enyo.kind({
 		isRefresh:	false
 	},
 
+	urls:			[],
+	originFeed:		null,
+
 	components:	[{
 		name:			"header",
 		kind:			"Toolbar",
 		className:		"enyo-toolbar-light",
 		components:		[{
+			name:		"backButton",
+			icon:		"../../images/header/icon-back.png",
+			enabled:	false,
+			showing:	false,
+			onclick:	"backClicked"
+		}, {
+			name:		"forwardButton",
+			icon:		"../../images/header/icon-forward.png",
+			enabled:	false,
+			showing:	false,
+			onclick:	"forwardClicked"
+		}, {
+			name:		"loadSpinner",
+			kind:		"Spinner"
+		}, {
 			kind:		"Spacer"
 		}, {
 			name:		"starButton",
@@ -108,9 +126,6 @@ enyo.kind({
 				nodeTag:	"div",
 				style:		"text-align: center;",
 				components:	[{
-					name:			"pictureSpinner",
-					kind:			"Spinner"
-				}, {
 					name:			"picture",
 					kind:			"Image",
 					style:			"max-width: 98%",
@@ -123,6 +138,7 @@ enyo.kind({
 			}, {
 				kind:				"SilverSeparator"
 			}, {
+				name:				"linkButton",
 				kind:				"IconButton",
 				icon:				"weblink-image",
 				iconIsClassName:	true,
@@ -132,13 +148,27 @@ enyo.kind({
 			}]
 		}]
 	}, {
+		name:				"webView",
+		kind:				"WebView",
+		flex:				1,
+		showing:			false,
+		ignoreMetaTags:		true,
+		blockPopups:		true,
+		enableJavascript: 	true,
+		onLoadStarted:		"loadStarted",
+		onLoadStopped:		"loadFinished",
+		onLoadComplete:		"loadFinished",
+		onPageTitleChanged: "pageTitleChanged"
+	}, {
+		name:		"mediaControls",
+		showing:	false
+	}, {
 		name:		"bgContainer",
 		kind:		"HFlexBox",
 		className:	"basic-back",
 		align:		"center",
 		pack:		"center",
 		flex:		1,
-
 		components:	[{
 			name:	"bgImage",
 			kind:	"Image",
@@ -176,51 +206,25 @@ enyo.kind({
 	//
 
 	storyChanged: function() {
-		// Handle the largeFont setting.
-		this.$.date.applyStyle("font-size", enyo.application.prefs.largeFont ? "120%" : "100%");
-		this.$.caption.applyStyle("font-size", enyo.application.prefs.largeFont ? "120%" : "100%");
-		this.$.content.applyStyle("font-size", enyo.application.prefs.largeFont ? "120%" : "100%");
-
+		if(!this.isRefresh) {
+			this.$.loadSpinner.hide();
+			this.$.backButton.setDisabled(true);
+			this.$.forwardButton.setDisabled(true);
+		}
 		if(!this.story) {
 			this.$.starButton.setChecked(false);
 			this.$.starButton.setDisabled(true);
 			this.$.shareButton.setDisabled(true);
 			this.$.bgContainer.show();
 			this.$.storyContainer.hide();
+			this.$.webView.hide();
+
+			this.isRefresh = false;
+			this.originFeed = null;
+			this.urls = [];
 		} else {
-			this.$.date.setLabel(enyo.application.feeds.getDateFormatter().formatDateTime(this.story.pubdate));
-			this.$.caption.setLabel(this.story.title);
-			this.$.content.setContent(this.story.summary);
-			this.$.starButton.setChecked(this.story.isStarred);
-			this.$.starButton.setDisabled(false);
-			this.$.shareButton.setDisabled(false);
-
-			if(!this.story.picture || (this.story.picture.length <= 0)) {
-				this.$.picture.hide();
-				this.$.pictureSpinner.hide();
-			} else {
-				this.log("STORY> retrieving picture from", this.story.picture);
-				this.$.picture.setSrc("");
-				this.$.picture.show();
-				if(!this.isRefresh) {
-					this.$.pictureSpinner.show();
-				}
-				this.$.picture.setSrc(this.story.picture);
-
-				enyo.application.connChecker.checkConnection(enyo.application.nop, this.noConnection);
-			}
-
-			// Mark the story as being read.
-			if(!this.isRefresh && !this.story.isRead) {
-				enyo.application.feeds.markStoryRead(this.story);
-			}
-
-			// Show the story container.
-			this.$.bgContainer.hide();
-			this.$.storyContainer.show();
+			enyo.application.feeds.getStory(this.story.id, this.gotStory);
 		}
-
-		this.isRefresh = false;
 	},
 
 	//
@@ -228,27 +232,106 @@ enyo.kind({
 	//
 
 	gotStory: function(feed, story, urls) {
-		this.feed = feed;
+		this.originFeed = feed;
 		this.story = story;
+		this.urls = urls;
 
-		if(urls.length == 1) {
-			enyo.application.openLink(urls[0].href);
-		} else if(urls.length > 1) {
-			// show a menu
+		// Handle the largeFont setting.
+		this.$.date.applyStyle("font-size", enyo.application.prefs.largeFont ? "120%" : "100%");
+		this.$.caption.applyStyle("font-size", enyo.application.prefs.largeFont ? "120%" : "100%");
+		this.$.content.applyStyle("font-size", enyo.application.prefs.largeFont ? "120%" : "100%");
+
+		this.$.date.setLabel(enyo.application.feeds.getDateFormatter().formatDateTime(this.story.pubdate));
+		this.$.caption.setLabel(this.story.title);
+		this.$.starButton.setChecked(this.story.isStarred);
+		this.$.starButton.setDisabled(false);
+		this.$.shareButton.setDisabled(false);
+
+		if(this.originFeed.fullStory) {
+			this.$.content.setContent(this.story.summary);
+			if(!this.story.picture || (this.story.picture.length <= 0)) {
+				this.$.picture.hide();
+				this.$.loadSpinner.hide();
+			} else {
+				this.log("STORY> retrieving picture from", this.story.picture);
+				this.$.picture.setSrc("");
+				this.$.picture.show();
+				if(!this.isRefresh) {
+					this.$.loadSpinner.show();
+				}
+				this.$.picture.setSrc(this.story.picture);
+				enyo.application.connChecker.checkConnection(enyo.application.nop, this.noConnection);
+			}
+			this.$.backButton.hide();
+			this.$.forwardButton.hide();
+			this.$.loadSpinner.hide();
+		} else {
+			if(this.urls.length > 0) {
+				if(!this.isRefresh) {
+					this.$.webView.clearHistory();
+					this.$.webView.setUrl(this.urls[0].href);
+					this.$.loadSpinner.show();
+					this.$.backButton.show();
+					this.$.forwardButton.show();
+				}
+			}
 		}
 
-		this.isRefresh = true;
-		this.storyChanged();
+		// Mark the story as being read.
+		if(!this.isRefresh && !this.story.isRead) {
+			enyo.application.feeds.markStoryRead(this.story);
+		}
+
+		// Setup the visible elements.
+		this.$.bgContainer.hide();
+		if(this.originFeed.fullStory) {
+			this.$.webView.hide();
+			this.$.storyContainer.show();
+			this.$.linkButton.setDisabled(this.urls.length <= 0);
+			if(this.story.audio || this.story.video) {
+				this.$.mediaControls.show();
+			} else {
+				this.$.mediaControls.hide();
+			}
+		} else {
+			this.$.mediaControls.hide();
+			this.$.storyContainer.hide();
+			this.$.webView.show();
+		}
+		this.isRefresh = false;
 	},
 
 	noConnection: function() {
 		this.$.picture.hide();
-		this.$.pictureSpinner.hider();
+		this.$.loadSpinner.hide();
 	},
 
 	pictureLoaded: function() {
 		this.log("STORY> picture loaded");
-		this.$.pictureSpinner.hide();
+		this.$.loadSpinner.hide();
+	},
+
+	loadStarted: function() {
+		this.$.loadSpinner.show();
+	},
+
+	loadFinished: function() {
+		this.$.loadSpinner.hide();
+	},
+
+	pageTitleChanged: function(sender, title, url, canGoBack, canGoForward) {
+		if(this.$.loadSpinner.getShowing()) {
+			this.$.backButton.setDisabled(!canGoBack);
+			this.$.forwardButton.setDisabled(!canGoForward);
+		}
+	},
+
+	backClicked: function(sender, event) {
+		this.$.webView.goBack();
+	},
+
+	forwardClicked: function(sender, event) {
+		this.$.webView.goForward();
 	},
 
 	innerLinkClicked: function(sender, url) {
@@ -256,7 +339,11 @@ enyo.kind({
 	},
 
 	linkClicked: function(sender, event) {
-		enyo.application.feeds.getStory(this.story.id, this.gotStory);
+		if(this.urls.length == 1) {
+			enyo.application.openLink(this.urls[0].href);
+		} else if(this.urls.length > 1) {
+			// show a menu
+		}
 	},
 
 	//
