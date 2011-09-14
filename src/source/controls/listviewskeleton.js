@@ -30,6 +30,7 @@ enyo.kind({
 	filter:			"",
 
 	selectedIndex:	-1,
+	deletedItem:	null,
 
 	//
 	// List handling
@@ -89,13 +90,16 @@ enyo.kind({
 	},
 
 	itemDeleted: function(sender, index) {
-		this.items.splice(index, 1);
-
-		if(this.selectedIndex == index) {
-			this.index = -1;
-			return true;
+		var delSelected = this.selectedIndex == index;
+		if(delSelected) {
+			this.selectedIndex = -1;
 		}
-		return false;
+
+		this.deletedItem = this.items[index];
+		this.items.splice(index, 1);
+		this.$.list.refresh(); // Provide quick visual response.
+
+		return delSelected;
 	},
 
 	//

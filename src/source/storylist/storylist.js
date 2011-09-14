@@ -30,7 +30,8 @@ enyo.kind({
 	},
 
 	events:	{
-		onStorySelected:	""
+		onStorySelected:	"",
+		onStoryDeleted:		""
 	},
 
 	components:	[{
@@ -55,6 +56,7 @@ enyo.kind({
 			}, {
 				name:		"item",
 				kind: 		"SwipeableItem",
+				onConfirm:	"itemDeleted",
 				onclick:	"itemClicked",
 				components:	[{
 					name:		"starButton",
@@ -189,6 +191,15 @@ enyo.kind({
 		if(this.selectedIndex >= 0) {
 			this.doStorySelected(this.items[this.selectedIndex]);
 		}
+	},
+
+	itemDeleted: function(sender, index) {
+		if(this.inherited(arguments)) {
+			this.doStorySelected(null);
+		}
+		this.doStoryDeleted(this.deletedItem);
+		enyo.application.feeds.deleteStory(this.deletedItem);
+		this.deletedItem = null;
 	},
 
 	itemClicked: function(sender, event) {

@@ -216,8 +216,9 @@ enyo.kind({
 		if(this.inherited(arguments)) {
 			this.doFeedSelected(null);
 		}
-		this.doFeedDeleted(this.items[index]);
-		enyo.application.feeds.deleteFeed(this.items[index]);
+		this.doFeedDeleted(this.deletedItem);
+		enyo.application.feeds.deleteFeed(this.deletedItem);
+		this.deletedItem = null;
 	},
 
 	setFeedSpinner: function(index, state) {

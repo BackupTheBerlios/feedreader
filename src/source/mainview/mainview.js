@@ -42,7 +42,6 @@ enyo.kind({
 					kind:				"FeedList",
 					name:				"feedList",
 					onFeedSelected:		"feedSelected",
-					onFeedDeleted:		"feedDeleted",
 					onAddFeed:			"addFeed",
 					onEditFeed:			"editFeed"
 				}]
@@ -114,7 +113,7 @@ enyo.kind({
 	feedSelected: function(sender, feed) {
 		enyo.asyncMethod(this, function() {
 			var selectedFeed = this.$.storyList.getFeed();
-			if(selectedFeed && (selectedFeed.id == feed.id)) {
+			if(selectedFeed && feed && (selectedFeed.id == feed.id)) {
 				this.$.storyList.setIsRefresh(true);
 			} else {
 				this.$.storyView.setStory(null);
@@ -125,22 +124,6 @@ enyo.kind({
 
 
 			this.optimizeSpace();
-		});
-	},
-
-	feedDeleted: function(sender, feed) {
-		enyo.asyncMethod(this, function() {
-			var selectedFeed = this.$.storyList.getFeed();
-			if(selectedFeed && (selectedFeed.id == feed.id)) {
-				// Reset story list.
-				this.$.storyList.setFeed(null);
-
-				// Reset story view.
-				this.$.storyView.setFeed(null);
-				this.$.storyView.setStory(null);
-
-				this.optimizeSpace();
-			}
 		});
 	},
 
@@ -163,7 +146,7 @@ enyo.kind({
 	storySelected: function(sender, story) {
 		enyo.asyncMethod(this, function() {
 			var selectedStory = this.$.storyView.getStory();
-			if(selectedStory && (selectedStory.id == story.id)) {
+			if(selectedStory && story && (selectedStory.id == story.id)) {
 				this.$.storyView.setIsRefresh(true);
 			} else {
 				var orientation = enyo.getWindowOrientation();
