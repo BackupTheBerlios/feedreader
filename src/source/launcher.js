@@ -37,7 +37,7 @@ enyo.kind({
 		name:					"appMgr",
 		kind: 					"PalmService",
 		service:				"palm://com.palm.applicationManager/",
-		method:					"launch",
+		method:					"open",
 		subscribe:				true
 	}],
 
@@ -98,6 +98,7 @@ enyo.kind({
  		if(params.action && (params.action = "feedUpdate")) {
 			this.log("LAUNCHER> scheduled feed update triggered");
 			enyo.application.feeds.enqueueUpdateAll();
+			enyo.application.timer.setTimer();
 		} else {
 			this.openMainView(params);
 		}
@@ -202,10 +203,7 @@ enyo.kind({
 
 	openLink: function(url) {
 		this.$.appMgr.call({
-			id:		"com.palm.app.browser",
-			params:	{
-				target: url
-			}
+			target: url
 		});
 	},
 
