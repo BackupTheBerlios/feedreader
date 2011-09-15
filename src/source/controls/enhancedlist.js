@@ -35,9 +35,12 @@ enyo.kind({
 	events: {
 		onAcquirePage: 		"",
 		onDiscardPage: 		"",
-		onFinishReAcquire:	""
+		onFinishReAcquire:	""	// fired when all pages have been acquired
 	},
 
+	/**
+	 * Re-acquire all pages currently loaded.
+	 */
 	reAcquirePages: function() {
 		for(var i = this.$.buffer.top; i <= this.$.buffer.bottom; i++) {
 			this._discardPage(this, i);
@@ -45,11 +48,18 @@ enyo.kind({
 		}
 	},
 
+	/** @private
+	 * Custom acquire handler.
+	 */
 	_acquirePage: function(sender, index) {
 		this.updateCounter++;
 		this.doAcquirePage(index);
 	},
 
+	/**
+	 * Call this, once a page has been acquired. Once all pages requested
+	 * are acquired, the list will automatically be refreshed.
+	 */
 	acquiredPage: function(page) {
 		this.updateCounter--;
 		if(this.updateCounter == 0) {
@@ -61,13 +71,52 @@ enyo.kind({
 		}
 	},
 
+	/** @private
+	 * Custom discard handler.
+	 */
 	_discardPage: function(sender, index) {
 		this.doDiscardPage(index);
 	},
 
+	/** @protected
+	 * Overriden to change some events, so we get notified about acquiring and
+	 * discarding of pages.
+	 */
 	initComponents: function() {
 		this.inherited(arguments);
+
+		this.$.scroller.onScroll = "_scrolled";
+
+		// Connect page handling events.
 		this.$.buffer.onAcquirePage = "_acquirePage";
 		this.$.buffer.onDiscardPage = "_discardPage";
+	},
+
+	/**
+	 * Returns the top page of the display buffer.
+	 */
+	getTopPage: function() {
+		return this.$.buffer.top;
+	},
+
+	/**
+	 * Returns the bottom page of the display buffer.
+	 */
+	getBottomPage: function() {
+		return this.$.buffer.bottom;
+	},
+
+	/**
+	 * Returns the top item index of the display buffer.
+	 */
+	getTopItemIndex: function() {
+		return (this.$.buffer.top * this.getPageSize());
+	},
+
+	/**
+	 * Returns the bottom item index of the display buffer.
+	 */
+	getBottomItemIndex: function() {
+		return ((this.$.buffer.bottom + 1) * this.getPageSize() - 1);
 	}
 });
