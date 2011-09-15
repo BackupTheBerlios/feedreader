@@ -74,8 +74,11 @@ enyo.kind({
 			kind:					"ScrimSpinner"
 		}]
 	}, {
-		kind:					"ErrorDialog",
-		name:					"errorDialog"
+		name:					"errorDialog",
+		kind:					"ErrorDialog"
+	}, {
+		name:					"licenseDialog",
+		kind:					"LicenseDialog"
 	}, {
 		kind:					"AppMenu",
 		components:				[{
@@ -186,6 +189,7 @@ enyo.kind({
 
 	openLicense: function() {
 		enyo.asyncMethod(this, function() {
+			this.$.licenseDialog.openAtCenter();
 		});
 	},
 

@@ -21,6 +21,7 @@ enyo.depends(
 	"../story/story.js",
 	"../editfeed/editfeed.js",
 	"../preferences/preferences.js",
+	"../license/license.js",
 
 	"../../stylesheets/feedreader_enyo.css"
 );
