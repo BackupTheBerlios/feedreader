@@ -70,11 +70,13 @@ enyo.kind({
 				}, {
 					name:		"storyTitle",
 					nodeTag:	"div",
-					className:	"story-title"
+					className:	"story-title",
+					allowHtml:	true
 				}, {
 					name:		"storyText",
 					nodeTag:	"div",
-					className:	"story-content"
+					className:	"story-content",
+					allowHtml:	true
 				}]
 			}]
 	}, {
@@ -99,17 +101,22 @@ enyo.kind({
 		}, {
 			name:		"editButton",
 			kind:		"ToolButton",
-			icon:		"../../images/toolbars/icon-edit.png"
-		}, {
-			name:		"refreshButton",
-			kind:		"ToolButton",
-			icon:		"../../images/toolbars/icon-sync.png",
-			onclick:	"refreshClicked"
+			icon:		"../../images/toolbars/icon-settings.png"
 		}, {
 			name:		"shareButton",
 			kind:		"ToolButton",
 			icon:		"../../images/toolbars/icon-share.png",
 			onclick:	"shareClicked"
+		}, {
+			name:		"searchButton",
+			kind:		"ToolButton",
+			icon:		"../../images/toolbars/icon-search.png",
+			onclick:	"searchClicked"
+		}, {
+			name:		"refreshButton",
+			kind:		"ToolButton",
+			icon:		"../../images/toolbars/icon-sync.png",
+			onclick:	"refreshClicked"
 		}]
 	}, {
 		name:			"shareMenu",
@@ -237,11 +244,24 @@ enyo.kind({
 	//
 
 	shareViaEmail: function(sender, event) {
-
+		enyo.application.feeds.getFeedURLList(this.feed, function(urls) {
+			var text = '';
+			for(i = 0; i < urls.length; i++) {
+				text += '<li><a href="' + urls[i].url + '">' + urls[i].title + '</a></li>';
+			}
+			enyo.application.openEMail($L("Check out these stories"),
+									'<ul>' + text + '</ul>');
+		});
 	},
 
 	shareViaIM: function(sender, email) {
-
+		enyo.application.feeds.getFeedURLList(this.feed, function(urls) {
+			var text = $L("Check out these stories") + ': ' + urls[0].url;
+			for(i = 1; i < urls.length; i++) {
+				text += ', ' + urls[i].url;
+			}
+			enyo.application.openMessaging(text);
+		});
 	},
 
 	//
@@ -262,6 +282,7 @@ enyo.kind({
 		this.$.editButton.setDisabled(feedInvalid);
 		this.$.refreshButton.setDisabled(enyo.application.spooler.actionRunning || feedInvalid || !this.feed.enabled);
 		this.$.shareButton.setDisabled(feedInvalid);
+		this.$.searchButton.setDisabled(feedInvalid);
 
 		if(!this.isRefresh) {
 			this.clear();

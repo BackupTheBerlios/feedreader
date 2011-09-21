@@ -364,11 +364,21 @@ enyo.kind({
 	//
 
 	shareViaEmail: function(sender, event) {
-
+		text = this.story.summary + "<br><br>";
+		for(i = 0; i < this.urls.length; i++) {
+			text += (i > 0 ? "<br>" : "") +
+					'<a href="' + this.urls[i].href + '">' +
+					this.urls[i].title + '</a>';
+		}
+		enyo.application.openEMail($L("Check out this story"), text);
 	},
 
 	shareViaIM: function(sender, email) {
-
+		text = $L("Check out this story") + ": ";
+		for(i = 0; i < this.urls.length; i++) {
+			text += (i > 0 ? ", " : "") + this.urls[i].href;
+		}
+		enyo.application.openMessaging(text);
 	},
 
 	//

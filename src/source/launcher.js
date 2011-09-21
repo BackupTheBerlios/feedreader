@@ -103,6 +103,10 @@ enyo.kind({
 		return true;
 	},
 
+	//
+	// Dashboard and card handling
+	//
+
 	openMainView: function(params) {
 		this.openCard("mainview", "FeedReaderMainView", params);
 	},
@@ -156,6 +160,10 @@ enyo.kind({
 		}
 	},
 
+	//
+	// Global notifications
+	//
+
 	notifyFeedUpdated: function(state, index) {
 		if(enyo.application.mainView) {
 			enyo.application.mainView.notifyFeedUpdated(state, index);
@@ -186,6 +194,10 @@ enyo.kind({
 		}
 	},
 
+	//
+	// Helper functions
+	//
+
 	showError: function(errorMsg, data) {
 		if(enyo.application.mainView) {
 			enyo.application.mainView.showError(errorMsg, data);
@@ -207,23 +219,19 @@ enyo.kind({
 
 	openEMail: function(subject, text) {
 		this.$.appMgr.call({
-			parameters:  {
-				id:	"com.palm.app.email",
-				params: {
-					summary:	subject,
-					text:		text
-				}
+			id:	"com.palm.app.email",
+			params: {
+				summary:	subject,
+				text:		text
 			}
 		});
 	},
 
 	openMessaging: function(text) {
 		this.$.appMgr.call({
-			parameters: {
-				id:	"com.palm.app.messaging",
-				params: {
-					messageText: text
-				}
+			id:	"com.palm.app.messaging",
+			params: {
+				messageText: text
 			}
 		});
 	}

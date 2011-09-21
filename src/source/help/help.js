@@ -25,7 +25,6 @@ enyo.kind({
 	kind:			"ModalDialog",
 	layoutKind:		"VFlexLayout",
 	contentHeight:	"100%",
-//	style:			"width: 500px; height: 85%; min-height: 500px;",
 
 	components:	[{
 		content:	enyo.application.appName + ' v' + enyo.application.versionString,
