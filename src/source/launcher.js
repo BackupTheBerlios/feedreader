@@ -47,8 +47,6 @@ enyo.kind({
 	},
 
 	startup: function() {
-		this.log("FEEDREAD starting up...");
-
 		// Set some globals.
 		enyo.application.appName 		= "FeedReader";
 		enyo.application.appAuthor 		= "Timo Tegtmeier";
@@ -207,11 +205,26 @@ enyo.kind({
 		});
 	},
 
-	openEMail: function() {
-
+	openEMail: function(subject, text) {
+		this.$.appMgr.call({
+			parameters:  {
+				id:	"com.palm.app.email",
+				params: {
+					summary:	subject,
+					text:		text
+				}
+			}
+		});
 	},
 
-	openMessaging: function() {
-
+	openMessaging: function(text) {
+		this.$.appMgr.call({
+			parameters: {
+				id:	"com.palm.app.messaging",
+				params: {
+					messageText: text
+				}
+			}
+		});
 	}
 });

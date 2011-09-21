@@ -1,6 +1,8 @@
 enyo.depends(
 	"mainview.js",
 
+	"../utils/simplehtmlparser.js",
+
 	"../controls/viewheader.js",
 	"../controls/toggleitem.js",
 	"../controls/selectoritem.js",
@@ -22,6 +24,8 @@ enyo.depends(
 	"../editfeed/editfeed.js",
 	"../preferences/preferences.js",
 	"../license/license.js",
+	"../help/help.js",
+	"../importer/importer.js",
 
 	"../../stylesheets/feedreader_enyo.css"
 );

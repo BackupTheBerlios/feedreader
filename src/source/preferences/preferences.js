@@ -42,7 +42,7 @@ enyo.kind({
 			components:	[{
 				kind:		"RowGroup",
 				caption:	$L("Automatic updating"),
-				className:	"prefs-rowgroup",
+				className:	"additional-scene-width",
 				components:	[{
 					name:		"updateInterval",
 					kind:		"SelectorItem",
@@ -85,7 +85,7 @@ enyo.kind({
 			}, {
 				kind:		"RowGroup",
 				caption:	$L("Notifications"),
-				className:	"prefs-rowgroup",
+				className:	"additional-scene-width",
 				components:	[{
 					name:		"notificationEnabled",
 					kind:		"ToggleItem",
@@ -107,7 +107,7 @@ enyo.kind({
 			}, {
 				kind:		"RowGroup",
 				caption:	$L("Miscellaneous"),
-				className:	"prefs-rowgroup",
+				className:	"additional-scene-width",
 				components:	[{
 					name:		"titleColor",
 					kind:		"SelectorItem",
@@ -139,7 +139,7 @@ enyo.kind({
 			}, {
 				kind:		"RowGroup",
 				caption:	$L("Read It Later"),
-				className:	"prefs-rowgroup",
+				className:	"additional-scene-width",
 				components:	[{
 					name:	"rilUsername",
 					kind:	"Input",
@@ -150,7 +150,7 @@ enyo.kind({
 					hint:	$L("Password")
 				}]
 			}, {
-				className:	"enyo-paragraph enyo-subtext prefs-rowgroup",
+				className:	"enyo-paragraph enyo-subtext additional-scene-width",
 				content:	$L("If you provide <i>Read it Later</i> credentials, FeedReader will sync starred items to <i>Read it Later</i>.")
 			}]
 		}]

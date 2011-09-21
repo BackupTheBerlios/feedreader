@@ -1,5 +1,5 @@
 // Copyright 2004 Erik Arvidsson. All Rights Reserved.
-// 
+//
 // This code is dual licensed using Mozilla Public License or
 // Apache Software License 2.0
 //
@@ -20,9 +20,9 @@
 // basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
 // License for the specific language governing rights and limitations
 // under the License.
-// 
+//
 // The Original Code is Simple HTML Parser.
-// 
+//
 // The Initial Developer of the Original Code is Erik Arvidsson.
 // Portions created by Erik Arvidssson are Copyright (C) 2004. All Rights
 // Reserved.
@@ -52,6 +52,7 @@ var handler ={
 enyo.kind({
 
 	name:		"SimpleHtmlParser",
+	kind:		"Component",
 
 	finished:	false,
 
@@ -68,21 +69,21 @@ enyo.kind({
 		if (oHandler) {
 			this.contentHandler = oHandler;
 		}
-		
+
 		var i = 0;
 		var res, lc, lm, rc, index;
 		var treatAsChars = false;
 		var oThis = this;
-		
+
 		var parseStartTagCls = function () {
 			return oThis.parseStartTag.apply(oThis, arguments);
 		};
 		var parseEndTagCls = function () {
 			return oThis.parseEndTag.apply(oThis, arguments);
 		};
-		
+
 		this.finished = false;
-		
+
 		while ((s.length > 0) && !(this.finished))
 		{
 			// Comment

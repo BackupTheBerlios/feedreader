@@ -27,7 +27,7 @@ enyo.kind({
 	components: [{
 		name:			"outerPane",
 		kind:			"Pane",
-		transitionKind: "enyo.transitions.Fade",
+		transitionKind: "enyo.transitions.LeftRightFlyin",
 		style:			"width:100%; height:100%;",
 
 		components: [{
@@ -67,6 +67,10 @@ enyo.kind({
 			kind:					"Preferences",
 			onPrefsSaved:			"prefsSaved"
 		}, {
+			name:					"feedImporter",
+			kind:					"FeedImporter",
+			onBackClick:			"importerClosed"
+		}, {
 			name:					"editFeedDialog",
 			kind:					"EditFeedDialog"
 		}, {
@@ -80,12 +84,12 @@ enyo.kind({
 		name:					"licenseDialog",
 		kind:					"LicenseDialog"
 	}, {
+		name:					"helpDialog",
+		kind:					"HelpDialog"
+	}, {
 		kind:					"AppMenu",
 		components:				[{
 			kind:				"EditMenu"
-		}, {
-			caption:			$L("About FeedReader"),
-			onclick:			"openAbout"
 		}, {
 			caption:			$L("License"),
 			onclick:			"openLicense"
@@ -172,18 +176,16 @@ enyo.kind({
 		});
 	},
 
-	openAbout: function() {
-		enyo.asyncMethod(this, function() {
-		});
-	},
-
 	openImporter: function() {
 		enyo.asyncMethod(this, function() {
+			this.$.feedImporter.reInitialize();
+			this.$.outerPane.selectViewByName("feedImporter");
 		});
 	},
 
 	openHelp: function() {
 		enyo.asyncMethod(this, function() {
+			this.$.helpDialog.openAtCenter();
 		});
 	},
 
@@ -202,7 +204,20 @@ enyo.kind({
 			this.$.feedList.refresh();
 			this.$.storyList.refresh();
 			this.$.storyView.refresh();
-			this.$.outerPane.selectViewByName("mainPane");
+			this.$.outerPane.back();
+		});
+	},
+
+	//
+	// Importer events
+	//
+
+	importerClosed: function() {
+		enyo.asyncMethod(this, function() {
+			this.$.feedList.refresh();
+			this.$.storyList.refresh();
+			this.$.storyView.refresh();
+			this.$.outerPane.back();
 		});
 	},
 

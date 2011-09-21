@@ -229,8 +229,10 @@ h3 {
 	margin: 4px;
 }
 
-.prefs-rowgroup {
-	width:	640px;
+.additional-scene-width {
+	width: 640px;
+	margin-top: 20px;
+	margin-bottom: 20px;
 }
 
 /*
