@@ -51,7 +51,10 @@ enyo.kind({
 			showing:	false,
 
 			components: [{
-				name:		"divider",
+				name:		"feedDivider",
+				kind:		"Divider"
+			}, {
+				name:		"timeDivider",
 				kind:		"Divider"
 			}, {
 				name:		"item",
@@ -99,9 +102,10 @@ enyo.kind({
 		}, {
 			kind:		"Spacer"
 		}, {
-			name:		"editButton",
+			name:		"sortButton",
 			kind:		"ToolButton",
-			icon:		"../../images/toolbars/icon-settings.png"
+			icon:		"../../images/toolbars/icon-settings.png",
+			onclick:	"sortClicked"
 		}, {
 			name:		"shareButton",
 			kind:		"ToolButton",
@@ -128,6 +132,9 @@ enyo.kind({
 			caption:	$L("Send via SMS/IM"),
 			onclick:	"shareViaIM"
 		}]
+	}, {
+		name:			"sortMenu",
+		kind:			"EnhancedMenu"
 	}],
 
 	//
@@ -166,16 +173,20 @@ enyo.kind({
 		this.$.storyTitle.applyStyle("font-size", enyo.application.prefs.largeFont ? "18px" : "16px");
 		this.$.storyText.applyStyle("font-size", enyo.application.prefs.largeFont ? "17px" : "15px");
 
-		// orderMode!!!!
+		if((this.feed.sortMode & 0x0100) == 0x0100) {
+			// Check feed ids
+		} else {
+			this.$.feedDivider.canGenerate = false;
+		}
 
 		if((index == 0) ||
 		   (!enyo.application.feeds.getDateFormatter().datesEqual(this.items[index].pubdate, this.items[index - 1].pubdate))) {
-			this.$.divider.setCaption(enyo.application.feeds.getDateFormatter().formatDate(story.pubdate));
-			this.$.divider.canGenerate = true;
+			this.$.timeDivider.setCaption(enyo.application.feeds.getDateFormatter().formatDate(story.pubdate));
+			this.$.timeDivider.canGenerate = true;
 			this.$.item.applyStyle("border-top", "none;");
 		} else {
-			this.$.divider.setCaption("");
-			this.$.divider.canGenerate = false;
+			this.$.timeDivider.setCaption("");
+			this.$.timeDivider.canGenerate = false;
 			this.$.item.applyStyle("border-top", "1px solid silver;");
 		}
 
@@ -195,6 +206,7 @@ enyo.kind({
 	},
 
 	finishReAcquire: function(sender) {
+		this.inherited(arguments);
 		if(this.selectedIndex >= 0) {
 			this.doStorySelected(this.items[this.selectedIndex]);
 		}
@@ -223,6 +235,57 @@ enyo.kind({
 			// Refresh the story view.
 			this.doStorySelected(story);
 		}
+	},
+
+	//
+	// Ordering and filtering
+	//
+
+	sortClicked: function(sender, event) {
+		var items = [{
+			kind:		"MenuCheckItem",
+			caption:	$L("Show all stories"),
+			checked:	(this.feed.sortMode & 0x00FF) == 0,
+			onclick:	"showAll"
+		}, {
+			kind:		"MenuCheckItem",
+			caption:	$L("Show only unread stories"),
+			checked:	(this.feed.sortMode & 0x00FF) == 1,
+			onclick:	"showUnRead"
+		}, {
+			kind:		"MenuCheckItem",
+			caption:	$L("Show only new stories"),
+			checked:	(this.feed.sortMode & 0x00FF) == 2,
+			onclick:	"showNew"
+		}];
+		this.$.sortMenu.setItems(items);
+		this.$.sortMenu.openAtEvent(event);
+	},
+
+	setSortMode: function(value) {
+		this.feed.sortMode = value;
+		enyo.application.feeds.setSortMode(this.feed);
+		this.refresh();
+	},
+
+	showAll: function() {
+		this.setSortMode((this.feed.sortMode & 0xFF00) | 0);
+	},
+
+	showUnRead: function() {
+		this.setSortMode((this.feed.sortMode & 0xFF00) | 1);
+	},
+
+	showNew: function() {
+		this.setSortMode((this.feed.sortMode & 0xFF00) | 2);
+	},
+
+	orderToggled: function() {
+		this.setSortMode(this.feed.sortMode ^ 0x0100);
+	},
+
+	searchClicked: function() {
+
 	},
 
 	//
@@ -279,7 +342,7 @@ enyo.kind({
 		this.$.list.setShowing(!feedInvalid);
 		this.$.bgContainer.setShowing(feedInvalid);
 
-		this.$.editButton.setDisabled(feedInvalid);
+		this.$.sortButton.setDisabled(feedInvalid);
 		this.$.refreshButton.setDisabled(enyo.application.spooler.actionRunning || feedInvalid || !this.feed.enabled);
 		this.$.shareButton.setDisabled(feedInvalid);
 		this.$.searchButton.setDisabled(feedInvalid);

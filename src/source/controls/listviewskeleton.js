@@ -29,8 +29,12 @@ enyo.kind({
 	itemCount:		-1,
 	filter:			"",
 
+	lastSelIndex:	-1,
 	selectedIndex:	-1,
+	selectedId:		-1,
 	deletedItem:	null,
+
+	refreshInProgress:	false,
 
 	//
 	// List handling
@@ -44,10 +48,14 @@ enyo.kind({
 		this.selectedIndex = index;
 	},
 
-	deselectRow: function() {
-		if(this.selectedIndex >= 0) {
+	deselectRow: function(index) {
+		if(index === undefined) {
+			index = this.selectedIndex;
+		}
+
+		if(index >= 0) {
 			this.$.list.getSelection().clear();
-			this.$.list.prepareRow(this.selectedIndex);
+			this.$.list.prepareRow(index);
 			this.$.item.removeClass("enyo-item-selected");
 			this.selectedIndex = -1;
 		}
@@ -78,6 +86,31 @@ enyo.kind({
 				this.items[i] = null; // delete items
 			}
 		}
+	},
+
+	finishReAcquire: function(sender) {
+		this.refreshInProgress = false;
+		if(this.selectedId < 0) {
+			// nothing to do
+			return;
+		}
+
+		// Scan the items for the selected item; its position might have changed.
+		for(var i = 0; i < this.items.length; i++) {
+			if(this.items[i] && (this.items[i].id == this.selectedId)) {
+				this.selectRow(i);
+				break;
+			}
+		}
+
+		// Check if we couldn't find the item. If not, reset the item highlighting.
+		if(this.selectedIndex < 0) {
+			this.log(this.kindName, "LVS> Couldn't find selected item! Deselecting", this.lastSelIndex);
+			this.deselectRow(this.lastSelIndex);
+		}
+
+		this.selectedId = -1;
+		this.lastSelIndex = -1;
 	},
 
 	itemClicked: function(sender, event) {
@@ -131,8 +164,19 @@ enyo.kind({
 	//
 
 	refresh: function() {
+		if(this.refreshInProgress) {
+			return;
+		} else {
+			this.refreshInProgress = true;
+		}
+
+		// Remember selected id
+		this.selectedId = this.selectedIndex >= 0 ? this.items[this.selectedIndex].id : -1;
+		this.lastSelIndex = this.selectedIndex;
+
 		// Reset internal data.
 		this.itemCount = -1;
+		this.selectedIndex = -1;
 
 		// And now refresh the list.
 		this.updateCount(this.setItemCount);

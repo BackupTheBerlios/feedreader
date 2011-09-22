@@ -23,15 +23,15 @@
 function StorylistAssistant(feeds, feed) {
 	this.feeds = feeds;
 	this.feed = feed;
-	
+
 	this.dateConverter = this.feeds.dateConverter;
-	
+
 	this.filter = "dummyFilter";
 	this.viewMode = feed.sortMode;
 	this.commandModel = {};
 	this.feedList = null;
 	this.feedIndex = -1;
-	
+
 	this.listFindHandler = this.listFindHandler.bind(this);
 
 	this.updateItems = this.updateItems.bind(this);
@@ -46,21 +46,21 @@ function StorylistAssistant(feeds, feed) {
 	this.changeFeed = this.changeFeed.bind(this);
 	this.openBrowser = this.openBrowser.bind(this);
 	this.deleteStory = this.deleteStory.bind(this);
-	
-	this.setupComplete = false;	
+
+	this.setupComplete = false;
 	this.wasActiveBefore = false;
 	this.listRefreshNeeded = true;
-	
+
 	this.isFirst = true;
 	this.isLast = true;
 }
 
 StorylistAssistant.prototype.setup = function() {
 	SceneControl.beginSceneSetup(this, true);
-	
+
 	this.controller.get("feed-title").update(this.feeds.getFeedTitle(this.feed));
 	this.controller.get("appIcon").className += " " + this.feeds.getFeedIconClass(this.feed, true, true);
-	
+
 	this.feedDataHandler(this.feed);
 	this.feeds.getFeedIDList(this.listDataHandler);
 
@@ -89,10 +89,10 @@ StorylistAssistant.prototype.setup = function() {
 		delay:			500,
 		filterFunction: this.listFindHandler
 	}, {});
-	
+
 	this.controller.listen("storyList", Mojo.Event.listTap, this.showStory);
-    this.controller.listen("storyList", Mojo.Event.listDelete, this.deleteStory);	
-	
+    this.controller.listen("storyList", Mojo.Event.listDelete, this.deleteStory);
+
     this.controller.listen("sortIcon", Mojo.Event.tap, this.sortModeTap);
 
 	// Setup command menu.
@@ -131,7 +131,7 @@ StorylistAssistant.prototype.initCommandModel = function() {
 			]
 		}
 	];
-	
+
 	if(!FeedReader.prefs.leftHanded) {
 		this.commandModel.items.reverse();
 	}
@@ -140,7 +140,7 @@ StorylistAssistant.prototype.initCommandModel = function() {
 StorylistAssistant.prototype.activate = function(event) {
 	if(this.wasActiveBefore) {
 		this.refreshList();
-		
+
 		if(this.feedIndex >= 0) {
 			this.initCommandModel();
 			this.controller.modelChanged(this.commandModel);
@@ -164,7 +164,7 @@ StorylistAssistant.prototype.listFormatter = function(attribute, property, model
 	if(!model) {
 		return {};
 	}
-	
+
 	switch(attribute) {
 		case "date":			return { date: this.dateConverter.dateToLocalTime(model.pubdate) };
 		case "isRead":			return { titleStyle: property ? "normal-text" : "bold-text" };
@@ -174,7 +174,7 @@ StorylistAssistant.prototype.listFormatter = function(attribute, property, model
 		case "large":			return { large: FeedReader.prefs.largeFont ? "large": "" };
 		case "title":			return { title: model.showCaption ? model.title : "" };
 		case "starClass":		return { starClass: model.isStarred ? "starred" : "" };
-		
+
 		case "summary":
 			if(model.showSummary) {
 				var baseSummary = Formatting.stripHTML(property);
@@ -187,7 +187,7 @@ StorylistAssistant.prototype.listFormatter = function(attribute, property, model
 				return { shortSummary: "" };
 			}
 	}
-	
+
 	return {};
 };
 
@@ -205,17 +205,17 @@ StorylistAssistant.prototype.listFindHandler = function(filterString, listWidget
 
 StorylistAssistant.prototype.listDataHandler = function(ids) {
 	this.feedList = ids;
-	
+
 	for(var i = 0; i < this.feedList.length; i++) {
 		if(this.feedList[i] == this.feed.id) {
 			this.feedIndex = i;
 			break;
 		}
 	}
-		
+
 	this.isFirst = this.feedIndex <= 0;
 	this.isLast = this.feedIndex >= this.feedList.length - 1;
-	
+
 	this.initCommandModel();
 	this.controller.modelChanged(this.commandModel);
 };
@@ -249,7 +249,7 @@ StorylistAssistant.prototype.showStory = function(event) {
 		var item = {
 			id:			event.item.id,
 			isStarred:	event.item.isStarred ? 0 : 1
-		};	
+		};
 		this.feeds.markStarred(item);
 		this.refreshList();
 	} else if(event.item.fullStory) {
@@ -274,14 +274,14 @@ StorylistAssistant.prototype.listStoryURLs = function(event, feed, story, urls) 
 			placeNear:	event.target,
 			items: 		[]
 		};
-		
+
 		for(var i = 0; i < urls.length; i++) {
 			subMenu.items.push({
 				label:		urls[i].title,
 				command:	urls[i].href
 			});
 		}
-		
+
 		this.controller.popupSubmenu(subMenu);
 	}
 };
@@ -308,14 +308,14 @@ StorylistAssistant.prototype.sortModeTap = function(event) {
 			{ label: $L("Show new items"),		command: "sort-new", 	chosen: (this.feed.sortMode & 0xFF) === 2 }
 		]
 	};
-	
+
 	if(this.feed.feedType <= 0) {
 		subMenu.items.push({});
 		subMenu.items.push({
 			label: $L("Order by date"),			command: "sort-date",	chosen: (this.feed.sortMode & 0xFF00) == 0x0100
 		});
 	}
-	
+
 	subMenu.items.push({});
 	subMenu.items.push({label: $L("Unstar all"), command: "unstar-all" });
 	this.controller.popupSubmenu(subMenu);
@@ -323,28 +323,28 @@ StorylistAssistant.prototype.sortModeTap = function(event) {
 
 StorylistAssistant.prototype.sortModeChoose = function(command) {
 	var feed = new feedProto(this.feed);
-	
+
 	switch(command) {
 		case "sort-all":
 			feed.sortMode = (feed.sortMode & 0xFF00) | 0;
 			break;
-			
+
 		case "sort-unread":
 			feed.sortMode = (feed.sortMode & 0xFF00) | 1;
 			break;
-			
+
 		case "sort-new":
 			feed.sortMode = (feed.sortMode & 0xFF00) | 2;
 			break;
-		
+
 		case "sort-date":
 			feed.sortMode = feed.sortMode ^ 0x0100;
 			break;
-		
+
 		case "unstar-all":
 			this.feeds.markAllUnStarred(this.feed);
 			this.refreshList();
-			break;
+			return;
 	}
 	this.feeds.setSortMode(feed);
 	Mojo.Log.info("SL> setting sortMode to", feed.sortMode);
@@ -354,10 +354,10 @@ StorylistAssistant.prototype.doSendFeed = function(command, urls) {
 	if(urls.length <= 0) {
 		return;
 	}
-	
+
 	var i = 0;
 	var text = "";
-	
+
 	switch(command) {
 		case "send-sms":
 			text = $L("Check out these stories") + ': ' + urls[i].url;
@@ -366,7 +366,7 @@ StorylistAssistant.prototype.doSendFeed = function(command, urls) {
 			}
 			FeedReader.sendSMS(text);
 			break;
-		
+
 		case "send-email":
 			for(i = 0; i < urls.length; i++) {
 				text += '<li><a href="' + urls[i].url + '">' + urls[i].title + '</a></li>';
@@ -374,7 +374,7 @@ StorylistAssistant.prototype.doSendFeed = function(command, urls) {
 			FeedReader.sendEMail($L("Check out these stories"),
 								 	'<ul>' + text + '</ul>');
 			break;
-	}	
+	}
 };
 
 StorylistAssistant.prototype.sendChoose = function(command) {
@@ -394,11 +394,11 @@ StorylistAssistant.prototype.handleCommand = function(event) {
 			case "do-previousFeed":
 				this.feeds.getFeed(this.feedList[this.feedIndex - 1], this.changeFeed);
 				break;
-				
+
 			case "do-nextFeed":
 				this.feeds.getFeed(this.feedList[this.feedIndex + 1], this.changeFeed);
 				break;
-			
+
 			case "do-feedUpdate":
 				event.stopPropagation();
 				this.feeds.interactiveUpdate = true;
@@ -408,7 +408,7 @@ StorylistAssistant.prototype.handleCommand = function(event) {
 					this.feeds.enqueueUpdate(this.feed);
 				}
 				break;
-			
+
 			case "do-send":
 				this.controller.popupSubmenu({
 					onChoose:  this.sendChoose,
@@ -433,23 +433,23 @@ StorylistAssistant.prototype.considerForNotification = function(params){
 					Mojo.Log.info("SL> refreshing list");
 				}
 				break;
-			
+
 			case "storylist-changed":
 				Mojo.Log.info("SL> story list update received; refreshing list");
 				this.refreshList();
 				break;
-			
+
 			case "updatestate-changed":
 				this.initCommandModel();
 				this.controller.modelChanged(this.commandModel);
 				break;
-			
+
 			case "app-activate":
 				Mojo.Log.info("STORYLIST> App re-activated; updating display");
 				this.activate();
 				break;
 		}
 	}
-	
+
 	return params;
 };

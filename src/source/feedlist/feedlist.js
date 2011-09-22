@@ -164,6 +164,7 @@ enyo.kind({
 	},
 
 	finishReAcquire: function(sender) {
+		this.inherited(arguments);
 		if(this.selectedIndex >= 0) {
 			this.doFeedSelected(this.items[this.selectedIndex]);
 		}

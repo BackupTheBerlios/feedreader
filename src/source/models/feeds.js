@@ -836,7 +836,6 @@ enyo.kind({
 	 */
 	setSortMode: function(feed) {
 		enyo.application.db.setSortMode(feed, function() {
-			enyo.log("FEEDS> feedOrder", feed.feedOrder);
 			enyo.application.notifyStoryListChanged();
 		});
 	},
