@@ -21,11 +21,10 @@
  */
 
 enyo.kind({
+	name:						"Prefs",
+	kind:						"Component",
 
-	name:					"Prefs",
-	kind:					"Component",
-
-	cookieName:				"comtegi-stuffAppFeedReaderPrefs",
+	cookieName:					"comtegi-stuffAppFeedReaderPrefs",
 
 	updateInterval:				30,
 	storyKeepTime:				24 * 3,
@@ -122,6 +121,7 @@ enyo.kind({
 		});
 		enyo.setCookie(this.cookieName, settings);
 		enyo.application.timer.setTimer();
+		enyo.application.ril.checkCredentials(showCredentialsWarning);
 	},
 
 	getCSSTitleColor: function() {

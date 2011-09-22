@@ -21,44 +21,43 @@
  */
 
 enyo.kind({
-	
+
 	name:	"ConnectionChecker",
 	kind:	"Component",
-	
+
 	components:	[{
 		name:		"connectionService",
 		kind:		"PalmService",
 		service:	"palm://com.palm.connectionmanager/",
 		method:		"getstatus",
-		subscribe:	true,
 		onSuccess:	"getConnStatusSuccess",
 		onFailure:	"getConnStatusFailed"
 	}],
-	
+
 	/**
 	 * Check the internet connection status
 	 *
 	 * @param onSuccess		{function}	function to be called on success
 	 * @param onFail		{function}	function to be called on failure
-	 */	
+	 */
 	checkConnection: function(onSuccess, onFail) {
 		onFail = onFail || this.defaultOnFail;
-		
+
 		this.log("CONN> checking internet connection availability");
 		this.$.connectionService.call({}, {
 			onSuccessHandler: onSuccess,
 			onFailureHandler: onFail
 		});
 	},
-	
+
 	/** @private
-	 * 
+	 *
 	 * Called when the connection status could be retrieved.
 	 *
 	 * @param sender		{object}	sender (the service)
 	 * @param result		{object}	result object
 	 * @param request		{object}	information about the request
-	 */	
+	 */
 	getConnStatusSuccess: function(sender, result, request) {
 		try {
 			if(result.isInternetConnectionAvailable) {
@@ -71,15 +70,15 @@ enyo.kind({
 			this.error("CONN EXCEPTION>", e);
 		}
 	},
-	
+
 	/** @private
-	 * 
+	 *
 	 * Called when the connection status could not be retrieved.
 	 *
 	 * @param sender		{object}	sender (the service)
 	 * @param result		{object}	result object
 	 * @param request		{object}	information about the request
-	 */	
+	 */
 	getConnStatusFailed: function(sender, result, request) {
 		try {
 			this.warn("CONN> Unable to determine connection status");
@@ -88,7 +87,7 @@ enyo.kind({
 			this.error("CONN EXCEPTION>", e);
 		}
 	},
-	
+
 	/** @private
 	 *
 	 * Default onFail-Handler.

@@ -251,10 +251,10 @@ h3 {
 
 .warning-icon {
 	background: url(../images/dialogs/warning.png) 0 0 no-repeat;
-	height: 25px;
 }
 
 .enyo-text-error.warning-icon{
-	padding-left: 28px;
+	padding-left: 35px;
 	font-size: 20px;
+	width: 90%;
 }

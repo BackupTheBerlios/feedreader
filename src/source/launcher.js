@@ -42,7 +42,7 @@ enyo.kind({
 	}],
 
 	cleanup: function() {
-		enyo.application.prefs.save();
+		enyo.application.prefs.save(false);
 		enyo.application.spooler.aboutToClose();
 	},
 
@@ -68,16 +68,14 @@ enyo.kind({
 		enyo.application.openMessaging = enyo.bind(this, this.openMessaging);
 
 		// Create the necessary helper objects.
-		enyo.application.connChecker = new ConnectionChecker();
 		enyo.application.spooler = new Spooler();
 		enyo.application.ril = new RILService();
-
-		// Load preferences
 		enyo.application.prefs = new Prefs();
-		enyo.application.prefs.load();
-
-		// Create the timer
 		enyo.application.timer = new Timer();
+
+		// Initialize helper objects.
+		enyo.application.prefs.load();
+		enyo.application.ril.checkCredentials(false);
 		enyo.application.timer.setTimer();
 
 		// Create the feeds object

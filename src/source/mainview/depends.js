@@ -2,6 +2,7 @@ enyo.depends(
 	"mainview.js",
 
 	"../utils/simplehtmlparser.js",
+	"../utils/connection.js",
 
 	"../controls/viewheader.js",
 	"../controls/toggleitem.js",

@@ -1,5 +1,5 @@
 /*
- *		source/models/readitlater.js - Read it Later support
+ *		source/controls/errordialog.js
  */
 
 /* FeedReader - A RSS Feed Aggregator for Palm WebOS
@@ -21,26 +21,21 @@
  */
 
 enyo.kind({
-	
 	name:			"ErrorDialog",
 	kind:			"ModalDialog",
 	layoutKind:		"VFlexLayout",
-	contentHeight:	"98%",
-	style:			"height: 30%; width: 35%",
-	
+	contentHeight:	"95%",
+	style:			"width: 320px; height: 270px;",
+
 	published:	{
 		message:	"",
 		buttonText:	$L("OK")
 	},
 
 	components:	[{
-		kind:		"Scroller",
-		className:	"group",
-		flex:		1,
-		components:	[{
-			name:			"message",
-			className:		"enyo-text-error warning-icon"
-		}]
+		name:			"message",
+		className:		"enyo-text-error warning-icon",
+		flex:			1
 	 }, {
 		kind:			"Button",
 		name:			"dismissButton",
@@ -50,20 +45,20 @@ enyo.kind({
 	dismissClick: function() {
 		this.close();
 	},
-	
+
 	messageChanged: function() {
 		this.$.message.setContent(this.message);
 	},
-	
+
 	buttonTextChanged: function() {
 		this.$.dismissButton.setCaption(this.buttonText);
 	},
-	
+
 	openAtCenter: function(message, caption, buttonText) {
 		this.message = message;
 		this.caption = caption || $L("Error");
 		this.buttonText = buttonText || this.buttonText;
-		
+
 		this.inherited(arguments);
 		this.messageChanged();
 		this.buttonTextChanged();

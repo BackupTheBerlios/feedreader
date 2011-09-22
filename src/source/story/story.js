@@ -199,6 +199,9 @@ enyo.kind({
 			caption:	$L("Send via SMS/IM"),
 			onclick:	"shareViaIM"
 		}]
+	}, {
+		name:	"connChecker",
+		kind:	"ConnectionChecker"
 	}],
 
 	//
@@ -260,7 +263,7 @@ enyo.kind({
 					this.$.loadSpinner.show();
 				}
 				this.$.picture.setSrc(this.story.picture);
-				enyo.application.connChecker.checkConnection(enyo.application.nop, this.noConnection);
+				this.$.Checker.checkConnection(enyo.application.nop, this.noConnection);
 			}
 			this.$.backButton.hide();
 			this.$.forwardButton.hide();

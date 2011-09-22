@@ -41,6 +41,9 @@ enyo.kind({
 	}, {
 		name:		"cpConverter",
 		kind:		"CodePageConverter"
+	}, {
+		name:		"connChecker",
+		kind:		"ConnectionChecker"
 	}],
 
 	interactiveUpdate: false,		// true if the update is interactive
@@ -110,7 +113,7 @@ enyo.kind({
 	 */
 	doUpdateFeed: function(feed) {
 		try {
-			enyo.application.connChecker.checkConnection(
+			this.$.connChecker.checkConnection(
 				enyo.bind(this, this.haveConnection, feed),
 				enyo.bind(this, this.haveNoConnection, feed)
 			);
@@ -642,7 +645,10 @@ enyo.kind({
 			}
 		};
 		enyo.application.db.getFeedURLList(feed, storyMarker.bind(this));
-		enyo.application.db.markAllUnStarred(feed);
+		enyo.application.db.markAllUnStarred(feed, function() {
+			enyo.application.notifyFeedListChanged();
+			enyo.application.notifyStoryListChanged();
+		});
 	},
 
 	/**

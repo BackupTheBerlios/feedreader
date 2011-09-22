@@ -134,6 +134,9 @@ enyo.kind({
 		name:	"parser",
 		kind:	"SimpleHtmlParser"
 	}, {
+		name:	"connChecker",
+		kind:	"ConnectionChecker"
+	}, {
 		kind: 					"DialogPrompt",
 		name:					"subscribeDialog",
 		title: 					$L("Subscribe to feed"),
@@ -181,7 +184,7 @@ enyo.kind({
 		this.$.scanButton.setCaption($L("Scanning for feeds..."));
 		this.$.scanButton.setActive(true);
 
-		enyo.application.connChecker.checkConnection(this.connectionAvailable, this.connectionNotAvailable);
+		this.$.connChecker.checkConnection(this.connectionAvailable, this.connectionNotAvailable);
 	},
 
 	setupRow: function(sender, index) {

@@ -195,7 +195,8 @@ enyo.kind({
 		enyo.application.prefs.rilUser = this.$.rilUsername.getValue();
 		enyo.application.prefs.rilPassword = this.$.rilPassword.getValue();
 
-		enyo.application.prefs.save();
+		enyo.application.prefs.save(true);
+
 		this.doPrefsSaved();
 	},
 

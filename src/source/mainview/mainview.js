@@ -65,6 +65,14 @@ enyo.kind({
 		}, {
 			name:					"scrim",
 			kind:					"ScrimSpinner"
+		}, {
+			name:					"preferences",
+			kind:					"Preferences",
+			onPrefsSaved:			"prefsSaved"
+		}, {
+			name:					"feedImporter",
+			kind:					"FeedImporter",
+			onBackClick:			"importerClosed"
 		}]
 	}, {
 		name:					"errorDialog",
@@ -75,14 +83,6 @@ enyo.kind({
 	}, {
 		name:					"helpDialog",
 		kind:					"HelpDialog"
-	}, {
-		name:					"preferences",
-		kind:					"Preferences",
-		onPrefsSaved:			"prefsSaved"
-	}, {
-		name:					"feedImporter",
-		kind:					"FeedImporter",
-		onBackClick:			"importerClosed"
 	}, {
 		name:					"editFeedDialog",
 		kind:					"EditFeedDialog",
