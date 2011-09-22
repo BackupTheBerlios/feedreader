@@ -2,8 +2,12 @@
  * Changes to Palm styles
  */
 
+.palm-scrim {
+  -webkit-background-size: 100% 100%;
+}
+
 .palm-dashboard-icon {
-    background: url(../icon48.png) center center no-repeat;	
+    background: url(../icon48.png) center center no-repeat;
 }
 
 .icon.rss {
@@ -57,7 +61,7 @@ div.hidden {
 
 div.floatcontainer {
 	width: 100%;
-	overflow: auto;	
+	overflow: auto;
 }
 
 div.floatright {
@@ -80,7 +84,7 @@ span.underline {
 }
 
 span.italic {
-	font-style: italic;	
+	font-style: italic;
 }
 
 /* images */
@@ -215,20 +219,20 @@ img {
 }
 
 .list-fade-top {
-	position: fixed; 
-	top: 0; 
+	position: fixed;
+	top: 0;
 	z-index: 10000;
-	height: 54px; 
+	height: 54px;
 	width: 100%;
 	background: url(../images/fade-top.png) top center repeat-x;
 	-webkit-palm-mouse-target: ignore;
 }
 
 .list-fade-bottom {
-	position: fixed; 
-	bottom: 0; 
+	position: fixed;
+	bottom: 0;
 	z-index: 10000;
-	height: 54px; 
+	height: 54px;
 	width: 100%;
 	background: url(../images/fade-bottom.png) bottom center repeat-x;
 	-webkit-palm-mouse-target: ignore;
@@ -236,11 +240,11 @@ img {
 
 /* feed icons */
 .feed-icon.allitems {
-    background: url(../images/lists/icon-allitems.png) center no-repeat;	
+    background: url(../images/lists/icon-allitems.png) center no-repeat;
 }
 
 .feed-icon.starred {
-    background: url(../images/lists/icon-starred.png) center no-repeat;	
+    background: url(../images/lists/icon-starred.png) center no-repeat;
 }
 
 .feed-icon.rss {
@@ -289,7 +293,7 @@ img {
 	position: relative;
  	float: right;
 	top: 2px;
-	right: -10px; 
+	right: -10px;
 	font-weight: bold;
  	line-height: 23px;
  	height: 24px;
@@ -398,7 +402,7 @@ img {
 }
 
 .normal-text {
-	font-weight: normal; 
+	font-weight: normal;
 }
 
 .bold-text {
@@ -451,7 +455,7 @@ h3 {
 	position:relative;
 	left: 8px;
 	top: 10px;
-	width: 32px; 
+	width: 32px;
 	height: 32px;
 	background: url(../images/web-icon.png) no-repeat bottom;
 	vertical-align: bottom;
