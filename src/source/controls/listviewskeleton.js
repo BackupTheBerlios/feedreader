@@ -112,9 +112,11 @@ enyo.kind({
 
 	insertItems: function(page, offset, items) {
 		try {
-			if(items.length > 0) {
-				var count = offset + items.length;
-				for(var i = offset; i < count; i++) {
+			var count = offset + this.$.list.getPageSize();
+			for(var i = offset; i < count; i++) {
+				if(i - offset >= items.length) {
+					this.items[i] = null;
+				} else {
 					this.items[i] = items[i - offset];
 				}
 			}

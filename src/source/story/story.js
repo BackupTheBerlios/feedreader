@@ -263,7 +263,7 @@ enyo.kind({
 					this.$.loadSpinner.show();
 				}
 				this.$.picture.setSrc(this.story.picture);
-				this.$.Checker.checkConnection(enyo.application.nop, this.noConnection);
+				this.$.connChecker.checkConnection(enyo.application.nop, this.noConnection);
 			}
 			this.$.backButton.hide();
 			this.$.forwardButton.hide();
