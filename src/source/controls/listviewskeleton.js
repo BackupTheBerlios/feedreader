@@ -77,8 +77,6 @@ enyo.kind({
 	discardPage: function(sender, page) {
 		// Do not discard pages currently visible to avoid flicker.
 		if((page < this.$.list.getTopPage()) || (page > this.$.list.getBottomPage())) {
-			this.log("DISCARDING page", page);
-
 			var count = this.$.list.getPageSize();
 			var offset = count * page;
 
@@ -105,7 +103,6 @@ enyo.kind({
 
 		// Check if we couldn't find the item. If not, reset the item highlighting.
 		if(this.selectedIndex < 0) {
-			this.log(this.kindName, "LVS> Couldn't find selected item! Deselecting", this.lastSelIndex);
 			this.deselectRow(this.lastSelIndex);
 		}
 
