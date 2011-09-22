@@ -271,9 +271,9 @@ enyo.kind({
 					this.$.webView.clearHistory();
 					this.$.webView.setUrl(this.urls[0].href);
 					this.$.loadSpinner.show();
-					this.$.backButton.show();
-					this.$.forwardButton.show();
 				}
+				this.$.backButton.show();
+				this.$.forwardButton.show();
 			}
 		}
 

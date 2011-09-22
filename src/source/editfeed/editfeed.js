@@ -111,10 +111,10 @@ enyo.kind({
 				kind:	"SelectorItem",
 				items:	[{
 					caption:	$L("Show story"),
-					value:		0
+					value:		true
 				}, {
 					caption:	$L("Show webpage"),
-					value:		1
+					value:		false
 				}],
 				caption:	$L("Show"),
 				onChange:	"detailModeChanged"
@@ -182,7 +182,7 @@ enyo.kind({
 
 		this.feed.showDetailCaption = true;
 		this.feed.showDetailSummary = true;
-		this.feed.fullStory = this.$.detailMode == 0;
+		this.feed.fullStory = this.$.detailMode.getValue();
 
 		this.feed.showPicture = this.$.showPicture.getValue();
 		this.feed.showMedia = this.$.showMedia.getValue();
@@ -251,8 +251,6 @@ enyo.kind({
 			listMode = 2;
 		}
 
-		detailMode = this.feed.fullStory ? 0 : 1;
-
 		this.$.name.setValue(this.feed.title);
 		this.$.url.setValue(this.feed.url);
 		this.$.activateFeed.setValue(this.feed.enabled);
@@ -261,7 +259,7 @@ enyo.kind({
 		this.$.password.setValue(this.feed.password);
 
 		this.$.listMode.setValue(listMode);
-		this.$.detailMode.setValue(detailMode);
+		this.$.detailMode.setValue(this.feed.fullStory);
 		this.$.sortMode.setValue(this.feed.sortMode);
 
 		this.$.showPicture.setValue(this.feed.showPicture);

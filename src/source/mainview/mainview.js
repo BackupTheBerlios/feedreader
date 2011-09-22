@@ -63,17 +63,6 @@ enyo.kind({
 				}]
 			}]
 		}, {
-			name:					"preferences",
-			kind:					"Preferences",
-			onPrefsSaved:			"prefsSaved"
-		}, {
-			name:					"feedImporter",
-			kind:					"FeedImporter",
-			onBackClick:			"importerClosed"
-		}, {
-			name:					"editFeedDialog",
-			kind:					"EditFeedDialog"
-		}, {
 			name:					"scrim",
 			kind:					"ScrimSpinner"
 		}]
@@ -86,6 +75,18 @@ enyo.kind({
 	}, {
 		name:					"helpDialog",
 		kind:					"HelpDialog"
+	}, {
+		name:					"preferences",
+		kind:					"Preferences",
+		onPrefsSaved:			"prefsSaved"
+	}, {
+		name:					"feedImporter",
+		kind:					"FeedImporter",
+		onBackClick:			"importerClosed"
+	}, {
+		name:					"editFeedDialog",
+		kind:					"EditFeedDialog",
+		onFeedSaved:			"feedSaved"
 	}, {
 		kind:					"AppMenu",
 		components:				[{
@@ -193,6 +194,14 @@ enyo.kind({
 		enyo.asyncMethod(this, function() {
 			this.$.licenseDialog.openAtCenter();
 		});
+	},
+
+	//
+	// Edit feed events
+	//
+
+	feedSaved: function() {
+		this.$.storyView.refresh();
 	},
 
 	//
