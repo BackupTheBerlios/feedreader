@@ -133,8 +133,9 @@ enyo.kind({
 			onclick:	"shareViaIM"
 		}]
 	}, {
-		name:			"sortMenu",
-		kind:			"EnhancedMenu"
+		name:				"sortMenu",
+		kind:				"EnhancedMenu",
+		autoCloseSubItems:	false
 	}],
 
 	//
@@ -265,7 +266,7 @@ enyo.kind({
 	//
 
 	sortClicked: function(sender, event) {
-		var items = [{
+		var visibleItems = [{
 			kind:		"MenuCheckItem",
 			caption:	$L("Show all stories"),
 			checked:	(this.feed.sortMode & 0x00FF) == 0,
@@ -281,7 +282,34 @@ enyo.kind({
 			checked:	(this.feed.sortMode & 0x00FF) == 2,
 			onclick:	"showNew"
 		}];
-		this.$.sortMenu.setItems(items);
+
+		var items = undefined;
+		if((this.feed.feedType == feedTypes.ftAllItems) ||
+		   (this.feed.feedType == feedTypes.ftStarred)) {
+			items = [{
+				kind:		"MenuItem",
+				caption:	$L("Visible stories"),
+				open:		true,
+				components:	visibleItems
+			}, {
+				kind:		"MenuItem",
+				caption:	$L("Ordering"),
+				open:		true,
+				components:	[{
+					kind:		"MenuCheckItem",
+					caption:	$L("Order by feed"),
+					checked:	(this.feed.sortMode & 0x0100) == 0,
+					onclick:	"orderToggled"
+				}, {
+					kind:		"MenuCheckItem",
+					caption:	$L("Order by date"),
+					checked:	(this.feed.sortMode & 0x0100) != 0,
+					onclick:	"orderToggled"
+				}]
+			}]
+		}
+
+		this.$.sortMenu.setItems(items || visibleItems);
 		this.$.sortMenu.openAtEvent(event);
 	},
 
