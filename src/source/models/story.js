@@ -41,6 +41,13 @@ Story.prototype.deleted = false;
  * @param	proto		{object}		story object to clone
  */
 function Story(proto) {
+	if(proto.feedType) {
+		this.feedType = proto.feedType;
+	}
+	if(proto.feedTitle) {
+		this.feedTitle = proto.feedTitle;
+	}
+
 	this.id = proto.id;
 	this.fid = proto.fid;
 	this.uuid = proto.uuid;

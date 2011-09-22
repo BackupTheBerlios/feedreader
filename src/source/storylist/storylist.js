@@ -162,6 +162,7 @@ enyo.kind({
 			}
 		}
 
+		// Set the contents.
 		this.$.storyTitle.setContent(this.feed.showListCaption ? story.title : "");
 		this.$.storyText.setContent(this.feed.showListSummary ? summary : "");
 		this.$.starButton.setChecked(story.isStarred);
@@ -173,24 +174,46 @@ enyo.kind({
 		this.$.storyTitle.applyStyle("font-size", enyo.application.prefs.largeFont ? "18px" : "16px");
 		this.$.storyText.applyStyle("font-size", enyo.application.prefs.largeFont ? "17px" : "15px");
 
-		if((this.feed.sortMode & 0x0100) == 0x0100) {
-			// Check feed ids
-		} else {
-			this.$.feedDivider.canGenerate = false;
+		// Set the feedDivider.
+		var feedTitle = "";
+		this.$.feedDivider.canGenerate = false;
+		if((this.feed.feedType == feedTypes.ftAllItems) ||
+		   (this.feed.feedType == feedTypes.ftStarred)) {
+			if((this.feed.sortMode & 0x0100) != 0x0100) {
+				if((index == 0) ||
+				   (this.items[index].fid != this.items[index - 1].fid)) {
+
+					this.log(enyo.json.stringify(story));
+					this.$.feedDivider.setCaption(enyo.application.feeds.getFeedTitle({
+						feedType:	story.feedType,
+						title:		story.feedTitle
+					}));
+					this.$.feedDivider.canGenerate = true;
+				}
+			} else {
+				feedTitle = enyo.application.feeds.getFeedTitle({
+					feedType:	story.feedType,
+					title:		story.feedTitle
+				}) + ', ';
+			}
 		}
 
+		// Set the timeDivider.
+		this.$.timeDivider.canGenerate = false;
 		if((index == 0) ||
 		   (!enyo.application.feeds.getDateFormatter().datesEqual(this.items[index].pubdate, this.items[index - 1].pubdate))) {
 			this.$.timeDivider.setCaption(enyo.application.feeds.getDateFormatter().formatDate(story.pubdate));
 			this.$.timeDivider.canGenerate = true;
-			this.$.item.applyStyle("border-top", "none;");
-		} else {
-			this.$.timeDivider.setCaption("");
-			this.$.timeDivider.canGenerate = false;
-			this.$.item.applyStyle("border-top", "1px solid silver;");
+			dividerShown = true;
 		}
 
-		this.$.storyDate.setContent(enyo.application.feeds.getDateFormatter().formatTime(story.pubdate));
+		if(this.$.feedDivider.canGenerate || this.$.timeDivider.canGenerate) {
+			this.$.item.applyStyle("border-top", "none;");
+		} else {
+			this.$.item.applyStyle("border-top", "1px solid #EEEEEE;");
+		}
+
+		this.$.storyDate.setContent(feedTitle + enyo.application.feeds.getDateFormatter().formatTime(story.pubdate));
 
 		return true;
 	},

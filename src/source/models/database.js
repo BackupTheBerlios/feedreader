@@ -790,8 +790,7 @@ enyo.kind({
 
 		// Build the basic SELECT statement.
 		var selectStmt = "SELECT s.*," +
-						 "       f.title AS feedTitle, f.showListCaption AS showCaption," +
-						 "       f.showListSummary AS showSummary, f.fullStory" +
+						 "       f.title AS feedTitle, f.feedType AS feedType " +
 						 "  FROM stories AS s" +
 						 "  INNER JOIN feeds AS f ON (f.id = s.fid)" +
 						 "  WHERE (s.title LIKE '%' || ? || '%')" +
