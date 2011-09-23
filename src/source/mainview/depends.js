@@ -4,7 +4,6 @@ enyo.depends(
 	"../utils/simplehtmlparser.js",
 	"../utils/connection.js",
 
-	"../controls/viewheader.js",
 	"../controls/toggleitem.js",
 	"../controls/selectoritem.js",
 	"../controls/scrimspinner.js",
@@ -16,6 +15,7 @@ enyo.depends(
 	"../controls/dottedseparator.js",
 	"../controls/silverseparator.js",
 	"../controls/starbutton.js",
+	"../controls/enhancedaudio.js",
 
 	"../models/feed.js",
 

@@ -69,6 +69,11 @@ enyo.kind({
 	urls:			[],
 	originFeed:		null,
 
+	playAudio:		false,
+	playVideo:		false,
+	timer:			null,
+	_mediaSeeking:	false,
+
 	components:	[{
 		name:			"header",
 		kind:			"Toolbar",
@@ -161,6 +166,39 @@ enyo.kind({
 		onPageTitleChanged: "pageTitleChanged"
 	}, {
 		name:		"mediaControls",
+		showing:	false,
+		components:	[{
+			kind:	"HFlexBox",
+			pack:	"center",
+			components: [{
+				name:		"mediaSlider",
+				kind:		"ProgressSlider",
+				style:		"width: 94%",
+				minimum:	0,
+				maximum:	1000,
+				barMinimum:	0,
+				barMaximum:	1000,
+				onChanging:	"mediaSeeking",
+				onChange:	"mediaSeeked"
+			}]
+		}, {
+			kind:		"HFlexBox",
+			style:		"margin: 5px; font-size: 15px; font-weight: bold;",
+			components:	[{
+				name:		"mediaStart",
+				content:	"00:00"
+			}, {
+				name:		"mediaState",
+				style:		"text-align: center;",
+				content:	$L("Playing"),
+				flex:		1
+			}, {
+				name:		"mediaEnd",
+				content:	"99:99"
+			}]
+		}]
+	}, {
+		name:		"videoContainer",
 		showing:	false
 	}, {
 		name:		"bgContainer",
@@ -180,6 +218,12 @@ enyo.kind({
 			kind:		"GrabButton"
 		}, {
 			kind:		"Spacer"
+		}, {
+			name:		"mediaPlayButton",
+			kind:		"ToolButton",
+			icon:		"../../images/player/enyo-icon-play.png",
+			onclick:	"mediaPlayToggled",
+			showing:	false
 		}, {
 			name:		"shareButton",
 			kind:		"ToolButton",
@@ -202,6 +246,12 @@ enyo.kind({
 	}, {
 		name:	"connChecker",
 		kind:	"ConnectionChecker"
+	}, {
+		name:			"audio",
+		kind:			"EnhancedAudio",
+		onStateChanged:	"mediaStateChanged",
+		onProgress:		"mediaProgress",
+		onCanPlay:		"mediaCanPlay"
 	}],
 
 	//
@@ -221,7 +271,13 @@ enyo.kind({
 			this.$.bgContainer.show();
 			this.$.storyContainer.hide();
 			this.$.webView.hide();
+			this.$.mediaControls.hide();
 
+			this.setMediaTimer(false);
+			this.$.audio.setSrc("");
+			//this.$.video.setSrc("");
+
+			this.playVideo = this.playAudio = false;
 			this.isRefresh = false;
 			this.originFeed = null;
 			this.urls = [];
@@ -291,16 +347,13 @@ enyo.kind({
 			this.$.webView.hide();
 			this.$.storyContainer.show();
 			this.$.linkButton.setDisabled(this.urls.length <= 0);
-			if(this.story.audio || this.story.video) {
-				this.$.mediaControls.show();
-			} else {
-				this.$.mediaControls.hide();
-			}
 		} else {
-			this.$.mediaControls.hide();
 			this.$.storyContainer.hide();
 			this.$.webView.show();
 		}
+
+		this.setupMediaControls();
+
 		this.isRefresh = false;
 	},
 
@@ -310,7 +363,6 @@ enyo.kind({
 	},
 
 	pictureLoaded: function() {
-		this.log("STORY> picture loaded");
 		this.$.loadSpinner.hide();
 	},
 
@@ -346,6 +398,118 @@ enyo.kind({
 			enyo.application.openLink(this.urls[0].href);
 		} else if(this.urls.length > 1) {
 			// show a menu
+		}
+	},
+
+	//
+	// Media handling
+	//
+
+	setupMediaControls: function() {
+		if(this.originFeed.fullStory && ((this.story.audio.length > 0) || (this.story.video.length > 0))) {
+			this.$.mediaEnd.setContent("99:99");
+			this.$.mediaControls.show();
+			this.$.mediaPlayButton.show();
+			this.$.mediaPlayButton.setDisabled(true);
+			this.$.mediaSlider.setPosition(0);
+
+			// Prefer audio over video.
+			if(this.story.audio.length > 0) {
+				this.log("SL> This is an Audio-Podcast!");
+				this.playAudio = true;
+				this.playVideo = false;
+				this.$.audio.setSrc(this.story.audio);
+				//this.$.video.setSrc("");
+			} else {
+				this.log("SL> This is a Video-Podcast!");
+				this.playAudio = false;
+				this.playVideo = true;
+				this.$.audio.setSrc("");
+				this.$.video.setSrc(this.story.video);
+			}
+			this.setMediaTimer(true);
+		} else {
+			this.$.mediaControls.hide();
+			this.$.mediaPlayButton.hide();
+			this.playVideo = this.playAudio = false;
+			this.$.audio.setSrc("");
+			//this.$.video.setSrc("");
+			this.setMediaTimer(false);
+		}
+	},
+
+	mediaSeeking: function() {
+		this._mediaSeeking = true;
+		var mediaControl = this.playAudio ? this.$.audio : this.$.video;
+		var position = mediaControl.getDuration() * this.$.mediaSlider.getPosition() / 1000;
+		mediaControl.seek(position);
+	},
+
+	mediaSeeked: function() {
+		this.mediaSeeking();
+		this._mediaSeeking = false;
+	},
+
+	mediaPlayToggled: function(sender) {
+		enyo.nextTick(this, function() {
+			var mediaControl = this.playAudio ? this.$.audio : this.$.video;
+			if(mediaControl.getPlaying()) {
+				mediaControl.pause();
+				sender.setIcon("../../images/player/enyo-icon-play.png");
+				this.setMediaTimer(false);
+			} else {
+				mediaControl.play();
+				sender.setIcon("../../images/player/enyo-icon-pause.png");
+				this.setMediaTimer(true);
+			}
+		});
+	},
+
+	mediaStateChanged: function(sender) {
+		this.$.mediaState.setContent(sender.getReadableState());
+		var duration = enyo.application.feeds.getDateFormatter().formatTimeString(Math.min(sender.getDuration(), 480 * 60 + 59));
+		this.$.mediaEnd.setContent(duration);
+		var mediaControl = this.playAudio ? this.$.audio : this.$.video;
+		if(mediaControl && !mediaControl.getPlaying()) {
+			this.$.mediaPlayButton.setIcon("../../images/player/enyo-icon-play.png");
+		}
+	},
+
+	mediaCanPlay: function(sender) {
+		this.$.mediaPlayButton.setDisabled(false);
+	},
+
+	mediaProgress: function(sender) {
+		var buffered = sender.getBuffered();
+		var duration = sender.getDuration();
+
+		if(!this.seeking && buffered && duration) {
+			this.$.mediaSlider.setBarPosition(buffered.end(0) * 1000 / duration);
+		}
+	},
+
+	mediaUpdate: function(sender) {
+		if(!this._mediaSeeking) {
+			var duration = sender.getDuration();
+			var time = sender.getCurrentTime();
+
+			if(time && duration) {
+				var position = time * 1000 / duration;
+				this.$.mediaSlider.setPosition(position);
+			}
+		}
+		this.setMediaTimer(true);
+	},
+
+	setMediaTimer: function(active) {
+		var mediaControl = this.playAudio ? this.$.audio : this.$.video;
+		if(active && mediaControl && (mediaControl.getPlaying())) {
+			if(!this.timer) {
+				this.timer = window.setInterval(enyo.bind(this, this.mediaUpdate, mediaControl), 200);
+			}
+		} else if(this.timer) {
+			window.clearInterval(this.timer);
+			this.timer = null;
 		}
 	},
 
@@ -404,5 +568,10 @@ enyo.kind({
 		this.noConnection = enyo.bind(this, this.noConnection);
 
 		this.storyChanged();
+	},
+
+	destroy: function() {
+		this.setMediaTimer(false);
+		this.inherited(arguments);
 	}
 });

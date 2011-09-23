@@ -379,10 +379,7 @@ enyo.kind({
 						el = enclosures.length;
 						for(enc = 0; enc < el; enc++) {
 							url = enclosures.item(enc).getAttribute("url");
-							type = enclosures.item(enc).getAttribute("type");
-							if(!type) {
-								type = "";
-							}
+							type = enclosures.item(enc).getAttribute("type") || "";
 							if(url && (url.length > 0)) {
 								if(url.match(/.*\.jpg/i) ||
 								   url.match(/.*\.jpeg/i) ||
