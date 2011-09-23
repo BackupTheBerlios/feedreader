@@ -202,11 +202,10 @@ enyo.kind({
 	},
 
 	detailModeChanged: function() {
-		var state = this.$.detailMode.getValue() == 1;
-		this.log("DETAILMODE CHANGED", state);
-		this.$.showPicture.setDisabled(state);
-		this.$.showMedia.setDisabled(state);
-		this.$.allowHTML.setDisabled(state);
+		var state = this.$.detailMode.getValue();
+		this.$.showPicture.setDisabled(!state);
+		this.$.showMedia.setDisabled(!state);
+		this.$.allowHTML.setDisabled(!state);
 	},
 
 	resetButtons: function() {
