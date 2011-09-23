@@ -39,6 +39,20 @@ enyo.kind({
 		name:		"header",
 		className:	"enyo-toolbar-light"
 	}, {
+		name:		"searchBox",
+		showing:	false,
+		components:	[{
+			name:				"searchInput",
+			kind:				"SearchInput",
+			className:			"enyo-box-input",
+			keypressInputDelay:	250,
+			selectAllOnFocus:	true,
+			oninput:			"filterChanged",
+			onCancel:			"filterCanceled"
+		}, {
+			className:	"header-shadow"
+		}]
+	}, {
 			kind:		"EnhancedList",
 			name:		"list",
 			flex:		1,
@@ -335,8 +349,36 @@ enyo.kind({
 		this.setSortMode(this.feed.sortMode ^ 0x0100);
 	},
 
-	searchClicked: function() {
+	hideSearchBox: function(noRefresh) {
+		this.$.list.scrollToTop();
+		this.$.searchBox.hide();
+		this.$.searchInput.setValue("");
+		this.filter = "";
+		if(!noRefresh) {
+			this.refresh();
+		}
+	},
 
+	searchClicked: function() {
+		if(this.$.searchBox.getShowing()) {
+			this.hideSearchBox();
+		} else {
+			this.$.searchBox.show();
+			this.$.searchInput.forceFocus();
+		}
+	},
+
+	filterCanceled: function() {
+		this.filter = "";
+		this.$.searchInput.forceBlur();
+		this.$.list.scrollToTop();
+		this.refresh();
+	},
+
+	filterChanged: function() {
+		this.filter = this.$.searchInput.getValue();
+		this.$.list.scrollToTop();
+		this.refresh();
 	},
 
 	//
@@ -397,6 +439,8 @@ enyo.kind({
 		this.$.refreshButton.setDisabled(enyo.application.spooler.actionRunning || feedInvalid || !this.feed.enabled);
 		this.$.shareButton.setDisabled(feedInvalid);
 		this.$.searchButton.setDisabled(feedInvalid);
+
+		this.hideSearchBox(true);
 
 		if(!this.isRefresh) {
 			this.clear();

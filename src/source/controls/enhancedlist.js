@@ -118,5 +118,13 @@ enyo.kind({
 	 */
 	getBottomItemIndex: function() {
 		return ((this.$.buffer.bottom + 1) * this.getPageSize() - 1);
+	},
+
+	/**
+	 * Scroll to top.
+	 */
+	scrollToTop: function() {
+		this.$.scroller.$.scroll.setScrollPosition(0);
+		this.$.scroller.$.scroll.doScroll();
 	}
 });
