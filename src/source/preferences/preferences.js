@@ -103,6 +103,10 @@ enyo.kind({
 					name:		"notifyWhileRunning",
 					kind:		"ToggleItem",
 					caption:	$L("Show when running in background")
+				}, {
+					name:		"notifyWithSound",
+					kind:		"ToggleItem",
+					caption:	$L("Play sound when new stories arrive")
 				}]
 			}, {
 				kind:		"RowGroup",
@@ -172,6 +176,7 @@ enyo.kind({
 
 	notificationEnabledChanged: function() {
 		var notificationEnabled = this.$.notificationEnabled.getValue();
+		this.$.notifyWithSound.setDisabled(!notificationEnabled);
 		this.$.unobtrusiveNotifications.setDisabled(!notificationEnabled);
 		this.$.notifyWhileRunning.setDisabled(!notificationEnabled);
 		this.$.blinkingEnabled.setDisabled(!notificationEnabled);
@@ -183,6 +188,7 @@ enyo.kind({
 		enyo.application.prefs.updateOnStart = this.$.updateOnStart.getValue();
 
 		enyo.application.prefs.notificationEnabled = this.$.notificationEnabled.getValue();
+		enyo.application.prefs.notifyWithSound = this.$.notifyWithSound.getValue();
 		enyo.application.prefs.blinkingEnabled = this.$.blinkingEnabled.getValue();
 		enyo.application.prefs.notifyWhileRunning = this.$.notifyWhileRunning.getValue();
 		enyo.application.prefs.unobtrusiveNotifications = this.$.unobtrusiveNotifications.getValue();
@@ -208,6 +214,7 @@ enyo.kind({
 		this.$.updateOnStart.setValue(enyo.application.prefs.updateOnStart);
 
 		this.$.notificationEnabled.setValue(enyo.application.prefs.notificationEnabled);
+		this.$.notifyWithSound.setValue(enyo.application.prefs.notifyWithSound);
 		this.$.blinkingEnabled.setValue(enyo.application.prefs.blinkingEnabled);
 		this.$.notifyWhileRunning.setValue(enyo.application.prefs.notifyWhileRunning);
 		this.$.unobtrusiveNotifications.setValue(enyo.application.prefs.unobtrusiveNotifications);

@@ -30,6 +30,7 @@ enyo.kind({
 	storyKeepTime:				24 * 3,
 	updateOnStart:				true,
 	notificationEnabled:		true,
+	notifyWithSound:			false,
 	blinkingEnabled:			true,
 	notifyWhileRunning:			true,
 	unobtrusiveNotifications:	true,
@@ -85,6 +86,9 @@ enyo.kind({
 			if(settings.unobtrusiveNotifications !== undefined) {
 				this.unobtrusiveNotifications = settings.unobtrusiveNotifications;
 			}
+			if(settings.notifyWithSound !== undefined) {
+				this.notifyWithSound = settings.notifyWithSound;
+			}
 
 			this.rilUser = settings.rilUser || "";
 			this.rilPassword = settings.rilPassword || "";
@@ -106,6 +110,7 @@ enyo.kind({
 			notificationEnabled: 		this.notificationEnabled,
 			blinkingEnabled:			this.blinkingEnabled,
 			notifyWhileRunning:			this.notifyWhileRunning,
+			notifyWithSound:			this.notifyWithSound,
 			unobtrusiveNotifications:	this.unobtrusiveNotifications,
 			wakingEnabled: 				this.wakingEnabled,
 			summaryLength: 				this.summaryLength,

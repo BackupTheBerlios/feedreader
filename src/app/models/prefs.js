@@ -25,6 +25,7 @@ var prefs = Class.create({
 	storyKeepTime:			24 * 3,
 	updateOnStart:			true,
 	notificationEnabled:	true,
+	notifyWithSound:		false,
 	blinkingEnabled:		true,
 	notifyWhileRunning:		true,
 	wakingEnabled:			false,
@@ -34,28 +35,28 @@ var prefs = Class.create({
 	showChanges: 			false,
 	leftHanded: 			true,
 	enableRotation: 		true,
-	
+
 	rilUser: 				"",	// Read it Later
 	rilPassword:			"",
-	
+
 	gReaderUser:			"",	// Google Reader
 	gReaderPassword:		"",
-	
+
 	timer: {},
-	
+
 	initialize: function() {
 		this.cookie = new Mojo.Model.Cookie("comtegi-stuffAppFeedReaderPrefs");
 		this.setTimerSuccessHandler = this.setTimerSuccess.bind(this);
 		this.setTimerFailedHandler  = this.setTimerFailed.bind(this);
 	},
-	
+
 	load: function() {
 		var settings = this.cookie.get();
 		if(settings) {
 			this.updateInterval = settings.updateInterval;
 			this.notificationEnabled = settings.notificationEnabled;
 			this.wakingEnabled = settings.wakingEnabled;
-			
+
 			if(settings.version > 0) {
 				this.summaryLength = settings.summaryLength;
 				this.titleColor = settings.titleColor;
@@ -77,12 +78,15 @@ var prefs = Class.create({
 			if(settings.storyKeepTime !== undefined) {
 				this.storyKeepTime = settings.storyKeepTime;
 			}
-			
+			if(settings.notifyWithSound !== undefined) {
+				this.notifyWithSound = settings.notifyWithSound;
+			}
+
 			this.rilUser = settings.rilUser || "";
 			this.rilPassword = settings.rilPassword || "";
 			this.gReaderUser = settings.gReaderUser || "";
 			this.gReaderPassword = settings.gReaderPassword || "";
-			
+
 			if(settings.version < FeedReader.versionInt) {
 				this.showChanges = true;
 				this.save(false);
@@ -90,7 +94,7 @@ var prefs = Class.create({
 		}
 		FeedReader.ril.checkCredentials();
 	},
-	
+
 	save: function(showCredentialsWarning) {
 		this.cookie.put({
 			version: 				FeedReader.versionInt,
@@ -99,6 +103,7 @@ var prefs = Class.create({
 			notificationEnabled: 	this.notificationEnabled,
 			blinkingEnabled:		this.blinkingEnabled,
 			notifyWhileRunning:		this.notifyWhileRunning,
+			notifyWithSound:		this.notifyWithSound,
 			wakingEnabled: 			this.wakingEnabled,
 			summaryLength: 			this.summaryLength,
 			titleColor: 			this.titleColor,
@@ -114,15 +119,15 @@ var prefs = Class.create({
 		this.setTimer();
 		FeedReader.ril.checkCredentials(showCredentialsWarning);
 	},
-	
+
 	setTimerSuccess: function(response) {
 		Mojo.Log.info("Timer successfully set");
 	},
-	
+
 	setTimerFailed: function(reponse) {
 		Mojo.Log.warn("Unable to set timer:", response);
 	},
-	
+
 	setTimer: function() {
         if (this.updateInterval > 0) {
 			var hours, minutes, seconds;
@@ -134,7 +139,7 @@ var prefs = Class.create({
 				hours   = parseInt(this.updateInterval / 60, 10);
 				minutes = this.updateInterval % 60;
 				seconds = 0;
-				
+
 				if(hours < 10) {
 					hours = "0" + hours;
 				}
@@ -145,9 +150,9 @@ var prefs = Class.create({
 					seconds = "0" + seconds;
 				}
 			}
-			
+
 			var t = new Template("#{h}:#{m}:#{s}");
-			
+
             this.timer = new Mojo.Service.Request("palm://com.palm.power/timeout", {
                 method: "set",
                 parameters: {
@@ -178,6 +183,6 @@ var prefs = Class.create({
 				onSuccess: this.setTimerSuccessHandler,
                 onFailure: this.setTimerFailedHandler
 			});
-		}	
+		}
 	}
 });
