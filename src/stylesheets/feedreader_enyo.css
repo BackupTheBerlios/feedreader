@@ -172,6 +172,12 @@ span.italic {
 	margin-right: 5px;
 }
 
+.player-image {
+	background-image: url('../images/player-icon.png');
+	float: left;
+	margin-right: 5px;
+}
+
 /* misc */
 
 h1 {

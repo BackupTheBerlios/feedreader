@@ -36,9 +36,10 @@ enyo.kind({
 
 	nodeTag:	"audio",
 
-	_connected:		false,
-	_mediaState:	mediaStates.stopped,
-	_seeking:		false,
+	_connected:				false,
+	_mediaState:			mediaStates.stopped,
+	_seeking:				false,
+	_domEventDispatcher: 	null,
 
 	events:	{
 		onCanPlay:			"",
@@ -68,6 +69,9 @@ enyo.kind({
 		this._mediaState = mediaStates.buffering;
 		this.doStateChanged();
 		this.setAttribute("src", this.src);
+		if(this.hasNode()) {
+			this.node.load();
+		}
 	},
 
 	preloadChanged: function() {
@@ -77,9 +81,9 @@ enyo.kind({
 
 	audioClassChanged: function() {
 		if(this.audioClass) {
-			this.audio.setAttribute("x-palm-media-audio-class", this.audioClass);
+			this.setAttribute("x-palm-media-audio-class", this.audioClass);
 		} else {
-			this.audio.removeAttribute("x-palm-media-audio-class");
+			this.removeAttribute("x-palm-media-audio-class");
 		}
 	},
 
@@ -254,6 +258,8 @@ enyo.kind({
 		this.inherited(arguments);
 		this.srcChanged();
 		this.preloadChanged();
+
+		this._domEventDispatcher = enyo.bind(this, this.dispatchDomEvent);
 	},
 
 	rendered: function() {
@@ -261,15 +267,15 @@ enyo.kind({
 		if(this.hasNode()) {
 			if(!this._connected) {
 				this._connected = true;
-				this.node.addEventListener('canplay', enyo.bind(this, this.dispatchDomEvent))
-				this.node.addEventListener('progress', enyo.bind(this, this.dispatchDomEvent))
-				this.node.addEventListener('canplaythough', enyo.bind(this, this.dispatchDomEvent))
-				this.node.addEventListener('seeking', enyo.bind(this, this.dispatchDomEvent))
-				this.node.addEventListener('seeked', enyo.bind(this, this.dispatchDomEvent))
-				this.node.addEventListener('abort', enyo.bind(this, this.dispatchDomEvent))
-				this.node.addEventListener('ended', enyo.bind(this, this.dispatchDomEvent))
-				this.node.addEventListener('error', enyo.bind(this, this.dispatchDomEvent))
-				this.node.addEventListener('stalled', enyo.bind(this, this.dispatchDomEvent))
+				this.node.addEventListener('canplay', this._domEventDispatcher);
+				this.node.addEventListener('progress', this._domEventDispatcher);
+				this.node.addEventListener('canplaythough', this._domEventDispatcher);
+				this.node.addEventListener('seeking', this._domEventDispatcher);
+				this.node.addEventListener('seeked', this._domEventDispatcher);
+				this.node.addEventListener('abort', this._domEventDispatcher);
+				this.node.addEventListener('ended', this._domEventDispatcher);
+				this.node.addEventListener('error', this._domEventDispatcher);
+				this.node.addEventListener('stalled', this._domEventDispatcher);
 			}
 		}
 	}

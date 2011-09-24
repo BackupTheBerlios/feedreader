@@ -20,6 +20,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+var mediaKinds = {
+	none:	0,
+	audio:	1,
+	video:	2
+};
+
 enyo.kind({
 	name:	"HeaderInfoLabel",
 	kind:	"HFlexBox",
@@ -69,9 +75,8 @@ enyo.kind({
 	urls:			[],
 	originFeed:		null,
 
-	playAudio:		false,
-	playVideo:		false,
-	timer:			null,
+	_mediaKind:		mediaKinds.none,
+	_timer:			null,
 	_mediaSeeking:	false,
 
 	components:	[{
@@ -150,6 +155,14 @@ enyo.kind({
 				className:			"weblink-button",
 				caption:			$L("Open Weblink"),
 				onclick:			"linkClicked"
+			}, {
+				name:				"playVideoButton",
+				kind:				"IconButton",
+				icon:				"player-image",
+				iconIsClassName:	true,
+				className:			"weblink-button",
+				caption:			$L("Play Video"),
+				onclick:			"playVideoClicked"
 			}]
 		}]
 	}, {
@@ -198,9 +211,6 @@ enyo.kind({
 			}]
 		}]
 	}, {
-		name:		"videoContainer",
-		showing:	false
-	}, {
 		name:		"bgContainer",
 		kind:		"HFlexBox",
 		className:	"basic-back",
@@ -244,14 +254,19 @@ enyo.kind({
 			onclick:	"shareViaIM"
 		}]
 	}, {
-		name:	"connChecker",
-		kind:	"ConnectionChecker"
+		name:			"connChecker",
+		kind:			"ConnectionChecker"
 	}, {
 		name:			"audio",
 		kind:			"EnhancedAudio",
 		onStateChanged:	"mediaStateChanged",
 		onProgress:		"mediaProgress",
 		onCanPlay:		"mediaCanPlay"
+	}, {
+		name: 			"videoPlayer",
+		kind: 			"PalmService",
+		service:		"palm://com.palm.applicationManager/",
+		method:			"launch"
 	}],
 
 	//
@@ -275,9 +290,8 @@ enyo.kind({
 
 			this.setMediaTimer(false);
 			this.$.audio.setSrc("");
-			//this.$.video.setSrc("");
 
-			this.playVideo = this.playAudio = false;
+			this._mediaKind = mediaKinds.none;
 			this.isRefresh = false;
 			this.originFeed = null;
 			this.urls = [];
@@ -406,41 +420,56 @@ enyo.kind({
 	//
 
 	setupMediaControls: function() {
-		if(this.originFeed.fullStory && ((this.story.audio.length > 0) || (this.story.video.length > 0))) {
-			this.$.mediaEnd.setContent("99:99");
-			this.$.mediaControls.show();
-			this.$.mediaPlayButton.show();
-			this.$.mediaPlayButton.setDisabled(true);
-			this.$.mediaSlider.setPosition(0);
+		try {
+			if(this.originFeed.fullStory && (this.story.audio.length > 0)) {
+				this.$.mediaEnd.setContent("99:99");
+				this.$.mediaControls.show();
+				this.$.mediaPlayButton.show();
+				this.$.mediaPlayButton.setDisabled(true);
+				this.$.mediaSlider.setPosition(0);
 
-			// Prefer audio over video.
-			if(this.story.audio.length > 0) {
-				this.log("SL> This is an Audio-Podcast!");
-				this.playAudio = true;
-				this.playVideo = false;
+				this._mediaKind = mediaKinds.audio;
 				this.$.audio.setSrc(this.story.audio);
-				//this.$.video.setSrc("");
+				this.setMediaTimer(true);
 			} else {
-				this.log("SL> This is a Video-Podcast!");
-				this.playAudio = false;
-				this.playVideo = true;
+				this.$.mediaControls.hide();
+				this.$.mediaPlayButton.hide();
+				this._mediaKind = mediaKinds.none;
 				this.$.audio.setSrc("");
-				this.$.video.setSrc(this.story.video);
+				this.setMediaTimer(false);
 			}
-			this.setMediaTimer(true);
-		} else {
-			this.$.mediaControls.hide();
-			this.$.mediaPlayButton.hide();
-			this.playVideo = this.playAudio = false;
-			this.$.audio.setSrc("");
-			//this.$.video.setSrc("");
-			this.setMediaTimer(false);
+
+			// Once webOS 3.x is able to play the video inside the app,
+			// this should be changed to provide the player inside
+			// the app. In this case the storyContainer should be hidden
+			// and a videoContainer should be shown.
+			// This kind is programmed to be easily changeable once this
+			// is possible.
+			if(this.story.video.length > 0) {
+				this.$.playVideoButton.show();
+			} else {
+				this.$.playVideoButton.hide();
+			}
+		} catch(e) {
+			this.error("SETUP MEDIA EX>", e);
+		}
+	},
+
+	getMediaControl: function() {
+		switch(this._mediaKind) {
+			case mediaKinds.audio:
+				return this.$.audio;
+			case mediaKinds.video:
+				return null;
+				// return this.$.video; /* Uncomment this once available */
+			default:
+				return null;
 		}
 	},
 
 	mediaSeeking: function() {
 		this._mediaSeeking = true;
-		var mediaControl = this.playAudio ? this.$.audio : this.$.video;
+		var mediaControl = this.getMediaControl();
 		var position = mediaControl.getDuration() * this.$.mediaSlider.getPosition() / 1000;
 		mediaControl.seek(position);
 	},
@@ -452,7 +481,7 @@ enyo.kind({
 
 	mediaPlayToggled: function(sender) {
 		enyo.nextTick(this, function() {
-			var mediaControl = this.playAudio ? this.$.audio : this.$.video;
+			var mediaControl = this.getMediaControl();
 			if(mediaControl.getPlaying()) {
 				mediaControl.pause();
 				sender.setIcon("../../images/player/enyo-icon-play.png");
@@ -466,12 +495,16 @@ enyo.kind({
 	},
 
 	mediaStateChanged: function(sender) {
-		this.$.mediaState.setContent(sender.getReadableState());
-		var duration = enyo.application.feeds.getDateFormatter().formatTimeString(Math.min(sender.getDuration(), 480 * 60 + 59));
-		this.$.mediaEnd.setContent(duration);
-		var mediaControl = this.playAudio ? this.$.audio : this.$.video;
-		if(mediaControl && !mediaControl.getPlaying()) {
-			this.$.mediaPlayButton.setIcon("../../images/player/enyo-icon-play.png");
+		try {
+			this.$.mediaState.setContent(sender.getReadableState());
+			var duration = enyo.application.feeds.getDateFormatter().formatTimeString(Math.min(sender.getDuration(), 480 * 60 + 59));
+			this.$.mediaEnd.setContent(duration);
+			var mediaControl = this.getMediaControl();
+			if(mediaControl && !mediaControl.getPlaying()) {
+				this.$.mediaPlayButton.setIcon("../../images/player/enyo-icon-play.png");
+			}
+		} catch(e) {
+			this.log("STATE CHANGED EX>", e);
 		}
 	},
 
@@ -502,15 +535,24 @@ enyo.kind({
 	},
 
 	setMediaTimer: function(active) {
-		var mediaControl = this.playAudio ? this.$.audio : this.$.video;
+		var mediaControl = this.getMediaControl();
 		if(active && mediaControl && (mediaControl.getPlaying())) {
-			if(!this.timer) {
-				this.timer = window.setInterval(enyo.bind(this, this.mediaUpdate, mediaControl), 200);
+			if(!this._timer) {
+				this._timer = window.setInterval(enyo.bind(this, this.mediaUpdate, mediaControl), 200);
 			}
-		} else if(this.timer) {
-			window.clearInterval(this.timer);
-			this.timer = null;
+		} else if(this._timer) {
+			window.clearInterval(this._timer);
+			this._timer = null;
 		}
+	},
+
+	playVideoClicked: function() {
+		this.$.videoPlayer.call({
+            id:	"com.palm.app.videoplayer",
+            params: {
+                target: this.story.video
+            }
+        }, {});
 	},
 
 	//
