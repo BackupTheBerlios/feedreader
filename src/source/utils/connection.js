@@ -42,8 +42,6 @@ enyo.kind({
 	 */
 	checkConnection: function(onSuccess, onFail) {
 		onFail = onFail || this.defaultOnFail;
-
-		this.log("CONN> checking internet connection availability");
 		this.$.connectionService.call({}, {
 			onSuccessHandler: onSuccess,
 			onFailureHandler: onFail
@@ -63,7 +61,6 @@ enyo.kind({
 			if(result.isInternetConnectionAvailable) {
 				request.onSuccessHandler();
 			} else {
-				this.log("CONN> no internet connection available");
 				request.onFailureHandler();
 			}
 		} catch(e) {
