@@ -350,12 +350,16 @@ enyo.kind({
 	},
 
 	hideSearchBox: function(noRefresh) {
-		this.$.list.scrollToTop();
-		this.$.searchBox.hide();
-		this.$.searchInput.setValue("");
-		this.filter = "";
-		if(!noRefresh) {
-			this.refresh();
+		if(this.$.searchBox.getShowing()) {
+			if(this.filter != "") {
+				this.$.list.scrollToTop();
+			}
+			this.$.searchBox.hide();
+			this.$.searchInput.setValue("");
+			this.filter = "";
+			if(!noRefresh) {
+				this.refresh();
+			}
 		}
 	},
 
@@ -440,10 +444,9 @@ enyo.kind({
 		this.$.shareButton.setDisabled(feedInvalid);
 		this.$.searchButton.setDisabled(feedInvalid);
 
-		this.hideSearchBox(true);
-
 		if(!this.isRefresh) {
 			this.clear();
+			this.hideSearchBox(true);
 		} else {
 			this.refresh();
 		}
