@@ -230,7 +230,7 @@ enyo.kind({
 	},
 
 	feedChanged: function() {
-		if(this.feed == null) {
+		if(!this.feed) {
 			this.adding = true;
 			this.feed = new Feed();
 			this.setCaption($L("Add feed"));

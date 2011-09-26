@@ -1,9 +1,10 @@
 FeedReader - A RSS Feed Aggregator for Palm WebOS
 Copyright (C) 2009, 2010, 2011 Timo Tegtmeier
 
-The icons icon-play.png, icon-pause.png, web-icon.png, email-icon.png are Copyright Palm, Inc.
+The icons icon-play.png, icon-pause.png, web-icon.png,
+email-icon.png, player-icon are Copyright Palm, Inc.
 The script Math.uuid.js is Copyright 2009 Robert Kieffer.
-The script simplehtmlparser.hs is Copyright 2004 Erik Arvidsson.
+The script simplehtmlparser.js is Copyright 2004 Erik Arvidsson.
 
 License
 =======
@@ -34,6 +35,7 @@ Changelog
 Version 3.0.0 (feature release)
 -------------------------------
  * support for TouchPad added
+ * improved compatibility with Pre 3
 
 Version 2.1.4 (maintenance release)
 -----------------------------------
@@ -133,7 +135,7 @@ Version 1.2 (Feature Release)
  * Changed the license to GNU GPL v3
  * Feeds can be imported from websites
  * The standard support scene is now used
- * Added a scrim to every the main scenes, so user will see the scene once
+ * Added a scrim to every of the main scenes, so user will see the scene once
    it is fully setup
 
 Version 1.1.1 (Maintenance Release)

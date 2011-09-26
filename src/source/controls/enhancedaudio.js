@@ -172,7 +172,7 @@ enyo.kind({
 				return $L("Stopped");
 			default:
 				if(this._seeking) {
-					return $L("Seeking")
+					return $L("Seeking");
 				} else {
 					if(this._mediaState == mediaStates.playing) {
 						return $L("Playing");

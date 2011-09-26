@@ -182,7 +182,7 @@ enyo.kind({
 
 		// Build the menu items.
 		var feed = this.items[event.rowIndex];
-		var items = new Array({
+		var items = [{
 			caption:	$L("Mark all stories read"),
 			onclick:	"menuMarkAllRead"
 		}, {
@@ -191,7 +191,7 @@ enyo.kind({
 		}, {
 			caption:	$L("Unstar all stories"),
 			onclick:	"menuMarkAllUnStarred"
-		});
+		}];
 
 		if((feed.feedType != feedTypes.ftStarred) && (feed.feedType != feedTypes.ftAllItems)) {
 			items.push({

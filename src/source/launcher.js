@@ -72,6 +72,7 @@ enyo.kind({
 		enyo.application.ril = new RILService();
 		enyo.application.prefs = new Prefs();
 		enyo.application.timer = new Timer();
+		enyo.application.connChecker = new ConnectionChecker();
 
 		// Initialize helper objects.
 		enyo.application.prefs.load();
@@ -122,7 +123,7 @@ enyo.kind({
 		return this._doOpenDashboard({
 			newCount:	newCount,
 			isUpdate:	false
-		})
+		});
 	},
 
 	openUpdateDashboard: function(force) {
@@ -133,7 +134,7 @@ enyo.kind({
 		return this._doOpenDashboard({
 			newCount:	-1,
 			isUpdate:	true
-		}, force)
+		}, force);
 	},
 
 	_doOpenDashboard: function(params, force) {

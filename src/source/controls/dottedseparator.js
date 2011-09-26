@@ -24,4 +24,4 @@ enyo.kind({
 	name:		"DottedSeparator",
 	kind:		"Control",
 	className:	"dotted-separator"
-})
+});

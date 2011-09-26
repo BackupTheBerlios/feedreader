@@ -20,21 +20,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-Story.prototype.id = 0;
-Story.prototype.fid = 0;
-Story.prototype.uuid = "";
-Story.prototype.title = "";
-Story.prototype.summary = "";
-Story.prototype.picture = "";
-Story.prototype.audio = "";
-Story.prototype.video = "";
-Story.prototype.isRead = false;
-Story.prototype.isNew = false;
-Story.prototype.isStarred = false;
-Story.prototype.pubdate = 0;
-Story.prototype.flag = false;
-Story.prototype.deleted = false;
-
 /**
  * Create a new Story.
  *
@@ -63,3 +48,18 @@ function Story(proto) {
 	this.flag = proto.flag;
 	this.deleted = proto.deleted;
 }
+
+Story.prototype.id = 0;
+Story.prototype.fid = 0;
+Story.prototype.uuid = "";
+Story.prototype.title = "";
+Story.prototype.summary = "";
+Story.prototype.picture = "";
+Story.prototype.audio = "";
+Story.prototype.video = "";
+Story.prototype.isRead = false;
+Story.prototype.isNew = false;
+Story.prototype.isStarred = false;
+Story.prototype.pubdate = 0;
+Story.prototype.flag = false;
+Story.prototype.deleted = false;

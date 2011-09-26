@@ -34,28 +34,6 @@ var feedTypes = {
 	ftATOM:		3
 };
 
-Feed.prototype.title =				"";
-Feed.prototype.url =				"";
-Feed.prototype.feedType =			feedTypes.ftRSS;
-Feed.prototype.feedOrder =			0;
-Feed.prototype.enabled =			1;
-Feed.prototype.showPicture =		1;
-Feed.prototype.showMedia =			1;
-Feed.prototype.showListSummary =	1;
-Feed.prototype.showDetailSummary =	1;
-Feed.prototype.showListCaption =	1;
-Feed.prototype.showDetailCaption =	1;
-Feed.prototype.sortMode =			0;
-Feed.prototype.allowHTML =			1;
-Feed.prototype.numNew =				0;
-Feed.prototype.numUnRead =			0;
-Feed.prototype.preventDelete =		false;
-Feed.prototype.username =			"";
-Feed.prototype.password =			"";
-Feed.prototype.fullStory =			true;
-Feed.prototype.category =			0;
-Feed.prototype.categoryName =		"Uncategorized";
-	
 /**
  * Create a new Feed.
  *
@@ -103,3 +81,25 @@ function Feed(proto) {
 		}
 	}
 }
+
+Feed.prototype.title =				"";
+Feed.prototype.url =				"";
+Feed.prototype.feedType =			feedTypes.ftRSS;
+Feed.prototype.feedOrder =			0;
+Feed.prototype.enabled =			1;
+Feed.prototype.showPicture =		1;
+Feed.prototype.showMedia =			1;
+Feed.prototype.showListSummary =	1;
+Feed.prototype.showDetailSummary =	1;
+Feed.prototype.showListCaption =	1;
+Feed.prototype.showDetailCaption =	1;
+Feed.prototype.sortMode =			0;
+Feed.prototype.allowHTML =			1;
+Feed.prototype.numNew =				0;
+Feed.prototype.numUnRead =			0;
+Feed.prototype.preventDelete =		false;
+Feed.prototype.username =			"";
+Feed.prototype.password =			"";
+Feed.prototype.fullStory =			true;
+Feed.prototype.category =			0;
+Feed.prototype.categoryName =		"Uncategorized";

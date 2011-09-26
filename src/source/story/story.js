@@ -254,9 +254,6 @@ enyo.kind({
 			onclick:	"shareViaIM"
 		}]
 	}, {
-		name:			"connChecker",
-		kind:			"ConnectionChecker"
-	}, {
 		name:			"audio",
 		kind:			"EnhancedAudio",
 		onStateChanged:	"mediaStateChanged",
@@ -333,7 +330,9 @@ enyo.kind({
 					this.$.loadSpinner.show();
 				}
 				this.$.picture.setSrc(this.story.picture);
-				this.$.connChecker.checkConnection(enyo.application.nop, this.noConnection);
+				enyo.application.connChecker.checkConnection(
+					enyo.application.nop,
+					this.noConnection);
 			}
 			this.$.backButton.hide();
 			this.$.forwardButton.hide();

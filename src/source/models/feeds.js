@@ -41,9 +41,6 @@ enyo.kind({
 	}, {
 		name:		"cpConverter",
 		kind:		"CodePageConverter"
-	}, {
-		name:		"connChecker",
-		kind:		"ConnectionChecker"
 	}],
 
 	interactiveUpdate: false,		// true if the update is interactive
@@ -113,7 +110,7 @@ enyo.kind({
 	 */
 	doUpdateFeed: function(feed) {
 		try {
-			this.$.connChecker.checkConnection(
+			enyo.application.connChecker.checkConnection(
 				enyo.bind(this, this.haveConnection, feed),
 				enyo.bind(this, this.haveNoConnection, feed)
 			);
@@ -579,7 +576,6 @@ enyo.kind({
 	markAllRead: function(feed) {
 		enyo.application.db.markAllRead(feed, 1, function() {
 			enyo.application.notifyFeedListChanged();
-			enyo.application.notifyStoryListChanged();
 		});
 	},
 
@@ -591,7 +587,6 @@ enyo.kind({
 	markStoryRead: function(story) {
 		enyo.application.db.markStoryRead(story, function() {
 			enyo.application.notifyFeedListChanged();
-			enyo.application.notifyStoryListChanged();
 		});
 	},
 
@@ -603,7 +598,6 @@ enyo.kind({
 	markAllUnRead: function(feed) {
 		enyo.application.db.markAllRead(feed, 0, function() {
 			enyo.application.notifyFeedListChanged();
-			enyo.application.notifyStoryListChanged();
 		});
 	},
 
@@ -615,7 +609,6 @@ enyo.kind({
 	markStarred: function(story) {
 		enyo.application.db.markStarred(story, function() {
 			enyo.application.notifyFeedListChanged();
-			enyo.application.notifyStoryListChanged();
 		});
 
 		var storyMarker = function(feed, story, urls) {
@@ -644,7 +637,6 @@ enyo.kind({
 		enyo.application.db.getFeedURLList(feed, storyMarker.bind(this));
 		enyo.application.db.markAllUnStarred(feed, function() {
 			enyo.application.notifyFeedListChanged();
-			enyo.application.notifyStoryListChanged();
 		});
 	},
 
@@ -672,7 +664,6 @@ enyo.kind({
 	deleteStory: function(story) {
 		var onSuccess = function() {
 			enyo.application.notifyFeedListChanged();
-			enyo.application.notifyStoryListChanged();
 		};
 		var onFail = function(transaction, error) {
 			enyo.application.notifyStoryListChanged();
@@ -773,7 +764,7 @@ enyo.kind({
 		var icon = "";
 		var suffix = "";
 		if(enyo.application.scrimMode) {
-			icon = "starred"
+			icon = "starred";
 		} else {
 			switch(feed.feedType) {
 				case feedTypes.ftAllItems:	icon = "allitems";	break;

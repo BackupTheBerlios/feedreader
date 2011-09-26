@@ -124,18 +124,15 @@ enyo.kind({
 			kind:		"Spacer"
 		}]
 	}, {
-		name:		"webService",
-		kind:		"WebService",
-		method:		"get",
-		handleAs:	"text",
-		onSuccess:	"retrievalSuccess",
-		onFailure:	"retrievalFailed"
-	}, {
 		name:	"parser",
 		kind:	"SimpleHtmlParser"
 	}, {
-		name:	"connChecker",
-		kind:	"ConnectionChecker"
+		name:					"webService",
+		kind:					"WebService",
+		method:					"GET",
+		handleAs:				"text",
+		onSuccess:				"retrievalSuccess",
+		onFailure:				"retrievalFailed"
 	}, {
 		kind: 					"DialogPrompt",
 		name:					"subscribeDialog",
@@ -184,7 +181,7 @@ enyo.kind({
 		this.$.scanButton.setCaption($L("Scanning for feeds..."));
 		this.$.scanButton.setActive(true);
 
-		this.$.connChecker.checkConnection(this.connectionAvailable, this.connectionNotAvailable);
+		enyo.application.connChecker.checkConnection(this.connectionAvailable, this.connectionNotAvailable);
 	},
 
 	setupRow: function(sender, index) {
@@ -204,7 +201,7 @@ enyo.kind({
 		this.index = event.rowIndex;
 
 		var msg = enyo.macroize($L('Do you want to subscribe to "{$feed}"?'), { feed: this.items[this.index].title });
-		this.$.subscribeDialog.setMessage(msg)
+		this.$.subscribeDialog.setMessage(msg);
 		this.$.subscribeDialog.open();
 	},
 
@@ -219,7 +216,9 @@ enyo.kind({
 	},
 
 	connectionAvailable: function() {
-		this.$.webService.call({}, { url: this.url });
+		enyo.application.webService.call({}, {
+			url: this.url
+		});
 	},
 
 	connectionNotAvailable: function() {
@@ -240,7 +239,7 @@ enyo.kind({
 				this.inHeader = true;
 				this.$.parser.parse(response, this.parserHandler);
 			} catch(e) {
-				this.error("PARSE EXCEPTION>", e)
+				this.error("PARSE EXCEPTION>", e);
 			}
 			this.$.list.punt();
 		} else {

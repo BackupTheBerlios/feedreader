@@ -41,8 +41,7 @@ enyo.kind({
 	}],
 
 	checkedChanged: function() {
-		var image = "../../images/lists/"
-				  + (this.checked ? "starred-icon.png" : "star-icon.png");
+		var image = "../../images/lists/" + (this.checked ? "starred-icon.png" : "star-icon.png");
 		this.$.image.setSrc(image);
 	},
 

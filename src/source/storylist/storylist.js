@@ -320,7 +320,7 @@ enyo.kind({
 					checked:	(this.feed.sortMode & 0x0100) != 0,
 					onclick:	"orderToggled"
 				}]
-			}]
+			}];
 		}
 
 		this.$.sortMenu.setItems(items || visibleItems);

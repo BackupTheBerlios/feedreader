@@ -36,9 +36,6 @@ enyo.kind({
 		name:			"webService",
 		kind:			"WebService",
 		handleAs:		"text"
-	}, {
-		name:			"connChecker",
-		kind:			"ConnectionChecker"
 	}],
 
 	/** @private
@@ -95,8 +92,9 @@ enyo.kind({
 
 		this.showAuthFeedback = withFeedback;
 		this.log("RIL> checking", this.showAuthFeedback);
-		this.$.connChecker.checkConnection(enyo.bind(this, this.doCheckCredentials),
-										   enyo.bind(this, this.noConnection));
+		enyo.application.connChecker.checkConnection(
+			enyo.bind(this, this.doCheckCredentials),
+			enyo.bind(this, this.noConnection));
 	},
 
 	/** @private
@@ -158,7 +156,9 @@ enyo.kind({
 		if(!this.enabled()) {
 			return;
 		}
-		this.$.connChecker.checkConnection(enyo.bind(this, this.doAddURL, title, url), enyo.application.nop);
+		enyo.application.connChecker.checkConnection(
+			enyo.bind(this, this.doAddURL, title, url),
+			enyo.application.nop);
 	},
 
 	/** @private
@@ -208,7 +208,9 @@ enyo.kind({
 		}
 
 		this.log("RIL> Removing URL", url);
-		this.$.connChecker.checkConnection(enyo.bind(this, this.doRemoveURL, url));
+		enyo.application.connChecker.checkConnection(
+			enyo.bind(this, this.doRemoveURL, url),
+			enyo.application.nop);
 	},
 
 	/**
@@ -222,7 +224,9 @@ enyo.kind({
 		}
 
 		this.log("RIL> Removing URLs");
-		this.$.connChecker.checkConnection(enyo.bind(this, this.doRemoveURLs, urls));
+		enyo.application.connChecker.checkConnection(
+			enyo.bind(this, this.doRemoveURLs, urls),
+			enyo.application.nop);
 	},
 
 	/** @private
